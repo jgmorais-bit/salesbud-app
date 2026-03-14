@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalesBud · Propostas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   BRAND TOKENS
+═══════════════════════════════════════════════ */
+:root {
+  --pink:        #FB2491;
+  --pink-light:  #FF5CB0;
+  --pink-pale:   #FFF0F7;
+  --pink-border: rgba(251,36,145,0.18);
+  --navy:        #001550;
+  --navy-mid:    #1C2A7A;
+  --navy-soft:   #2D3E9E;
+  --white:       #FFFFFF;
+  --bg:          #F6F8FC;
+  --bg2:         #EDF0F7;
+  --surface:     #FFFFFF;
+  --border:      #E2E7F0;
+  --border2:     #CDD4E5;
+  --text:        #001550;
+  --text2:       #3D4E70;
+  --text3:       #7D8FAD;
+  --text4:       #A8B4CC;
+  --green:       #00C48C;
+  --green-bg:    rgba(0,196,140,0.09);
+  --amber:       #F59E0B;
+  --amber-bg:    rgba(245,158,11,0.09);
+  --red:         #EF4444;
+  --red-bg:      rgba(239,68,68,0.09);
+  --radius:      14px;
+  --radius-sm:   9px;
+  --radius-xs:   6px;
+  --shadow:      0 2px 12px rgba(0,21,80,0.08);
+  --shadow-md:   0 6px 28px rgba(0,21,80,0.13);
+  --shadow-pink: 0 4px 20px rgba(251,36,145,0.28);
+  --nav-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════ */
+#screen-login {
+  align-items: stretch;
+  background: var(--white);
+}
+
+.login-left {
+  flex: 1;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 64px 72px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-left::before {
+  content: '';
+  position: absolute;
+  right: -120px; bottom: -120px;
+  width: 400px; height: 400px;
+  background: var(--pink);
+  border-radius: 50%;
+  opacity: 0.18;
+}
+
+.login-left::after {
+  content: '';
+  position: absolute;
+  right: 40px; bottom: 80px;
+  width: 180px; height: 180px;
+  background: var(--pink);
+  border-radius: 50%;
+  opacity: 0.28;
+}
+
+@media (max-width: 700px) {
+  .login-left { display: none; }
+  .login-right { width: 100%; padding: 40px 24px; }
+  #screen-login { flex-direction: column; }
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 64px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-brand-icon {
+  width: 44px; height: 44px;
+  background: var(--pink);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 22px;
+  color: white;
+}
+
+.login-brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 22px;
+  color: white;
+}
+
+.login-brand-name span { color: var(--pink); }
+
+.login-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px; font-weight: 800;
+  color: white; line-height: 1.15;
+  letter-spacing: -1.5px; margin-bottom: 20px;
+  position: relative; z-index: 1;
+}
+
+.login-headline em { font-style: normal; color: var(--pink); }
+
+.login-tagline {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  position: relative; z-index: 1;
+}
+
+.login-right {
+  width: 480px;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 64px 56px;
+  background: var(--white);
+}
+
+.login-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 700;
+  color: var(--navy); margin-bottom: 6px; letter-spacing: -0.5px;
+}
+
+.login-subtitle { font-size: 14px; color: var(--text3); margin-bottom: 36px; }
+
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+
+.form-field label {
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+.form-field input, .form-field select {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--navy); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+
+.form-field input:focus, .form-field select:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px var(--pink-border);
+}
+
+.form-field input::placeholder { color: var(--text4); }
+
+.btn-primary {
+  width: 100%; padding: 14px;
+  background: var(--pink); color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: var(--shadow-pink); margin-top: 8px;
+}
+
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.login-error {
+  background: var(--red-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-xs);
+  padding: 10px 14px; font-size: 13px; color: var(--red);
+  margin-bottom: 14px; display: none;
+}
+
+/* ═══════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════ */
+#screen-app { flex-direction: row; align-items: stretch; }
+
+.sidenav {
+  width: var(--nav-w); background: var(--navy);
+  display: flex; flex-direction: column;
+  padding: 28px 0;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+}
+
+.sidenav-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 22px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 12px;
+}
+
+.sidenav-brand-icon {
+  width: 34px; height: 34px; background: var(--pink);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; color: white;
+}
+
+.sidenav-brand-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: white; }
+.sidenav-brand-name span { color: var(--pink); }
+
+.nav-section { padding: 0 12px; margin-bottom: 4px; }
+
+.nav-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(255,255,255,0.28);
+  padding: 10px 10px 4px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background 0.13s;
+  font-size: 13.5px; font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  user-select: none; margin-bottom: 2px;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-item.active { background: rgba(251,36,145,0.18); color: white; }
+.nav-icon { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); display: inline-block; flex-shrink: 0; }
+.nav-item.active .nav-icon { background: var(--pink); }
+
+.sidenav-bottom {
+  margin-top: auto; padding: 0 12px;
+  border-top: 1px solid rgba(255,255,255,0.07); padding-top: 16px;
+}
+
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); }
+
+.user-avatar {
+  width: 32px; height: 32px; background: var(--pink);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; text-transform: uppercase;
+}
+
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+.btn-logout {
+  background: none; border: none;
+  color: rgba(255,255,255,0.35); cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  padding: 4px 8px; transition: color 0.13s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-logout:hover { color: var(--red); }
+
+.app-content { margin-left: var(--nav-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+.page-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 22px 36px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.page-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+.page-subtitle { font-size: 13px; color: var(--text3); margin-top: 1px; }
+
+.page { display: none; flex: 1; padding: 32px 36px; }
+.page.active { display: block; }
+
+/* ═══════════════════════════════════════════════
+   BANNER — template update alert (FEATURE: alerta troca de template)
+═══════════════════════════════════════════════ */
+#template-update-banner {
+  display: none;
+  background: linear-gradient(90deg, #FFFBEB 0%, #FFF7ED 100%);
+  border-bottom: 2px solid #FED7AA;
+  padding: 12px 36px;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 73px;
+  z-index: 49;
+}
+
+#template-update-banner .banner-icon { font-size: 18px; flex-shrink: 0; }
+#template-update-banner .banner-text { flex: 1; font-size: 13px; color: #92400E; line-height: 1.4; }
+#template-update-banner .banner-text strong { color: #78350F; }
+#template-update-banner .banner-dismiss {
+  background: none; border: 1.5px solid #FED7AA; border-radius: 6px;
+  padding: 5px 12px; font-size: 12px; font-weight: 600; color: #D97706;
+  cursor: pointer; font-family: inherit; flex-shrink: 0;
+  transition: background 0.13s;
+}
+#template-update-banner .banner-dismiss:hover { background: #FEF3C7; }
+
+/* ═══════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════ */
+.section-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+
+.search-input {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 14px 9px 36px;
+  font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  color: var(--navy); outline: none; width: 240px;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237D8FAD' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 12px center;
+}
+.search-input:focus { border-color: var(--pink); }
+
+.btn-add {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 18px; background: var(--pink); color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.13s, transform 0.1s;
+  box-shadow: var(--shadow-pink);
+}
+.btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.table-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 13px 18px; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text3); text-align: left; background: var(--bg); border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+tbody td { padding: 14px 18px; font-size: 13.5px; color: var(--text2); vertical-align: middle; }
+
+.td-name { font-weight: 600; color: var(--navy); display: flex; align-items: center; gap: 10px; }
+.td-avatar { width: 30px; height: 30px; background: var(--navy-mid); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; text-transform: uppercase; }
+
+.badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-admin { background: rgba(251,36,145,0.1); color: var(--pink); }
+.badge-seller { background: rgba(28,42,122,0.1); color: var(--navy-mid); }
+.badge-active { background: var(--green-bg); color: var(--green); }
+.badge-inactive { background: var(--bg2); color: var(--text3); }
+
+.row-actions { display: flex; gap: 6px; }
+
+.btn-icon {
+  height: 30px; padding: 0 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--border); border-radius: var(--radius-xs);
+  background: none; cursor: pointer; font-size: 12px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; white-space: nowrap; color: var(--text3);
+  transition: border-color 0.13s, color 0.13s, background 0.13s;
+}
+.btn-icon:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-pale); }
+.btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,21,80,0.42); backdrop-filter: blur(4px);
+  z-index: 200; display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white); border-radius: var(--radius);
+  padding: 32px; width: 480px; max-width: calc(100vw - 40px);
+  box-shadow: var(--shadow-md);
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--navy); }
+.btn-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text3); line-height: 1; transition: color 0.13s; }
+.btn-close:hover { color: var(--navy); }
+
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modal-grid .full { grid-column: 1 / -1; }
+
+.modal-footer { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+.btn-secondary { padding: 10px 20px; background: none; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--text2); cursor: pointer; transition: border-color 0.13s, background 0.13s; }
+.btn-secondary:hover { border-color: var(--border2); background: var(--bg); }
+
+.btn-save { padding: 10px 24px; background: var(--pink); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: opacity 0.13s; box-shadow: var(--shadow-pink); }
+.btn-save:hover { opacity: 0.88; }
+
+/* ═══════════════════════════════════════════════
+   PROPOSTA LAYOUT
+═══════════════════════════════════════════════ */
+.proposta-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Two-column layout for Base page */
+.proposal-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .proposta-layout, .proposal-grid { grid-template-columns: 1fr; }
+  .panel-sticky { position: static; }
+}
+
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow); margin-bottom: 20px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.card-section-title {
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.field-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field-row:last-child { margin-bottom: 0; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: 0.03em; }
+
+.field-input, .field-select {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 13px;
+  font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  color: var(--navy); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none; width: 100%;
+}
+.field-input:focus, .field-select:focus { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-border); }
+.field-input::placeholder { color: var(--text4); }
+.field-input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+.field-error-msg { font-size: 11.5px; color: var(--red); margin-top: 3px; display: none; }
+.field-error-msg.show { display: block; }
+
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 5px;
+  border-radius: 99px; background: var(--bg2); outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--pink);
+  box-shadow: 0 2px 8px rgba(251,36,145,0.4); cursor: pointer;
+}
+
+.slider-header { display: flex; justify-content: space-between; align-items: center; }
+.slider-val { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--navy); }
+.slider-val small { font-size: 12px; font-weight: 500; color: var(--text3); font-family: 'DM Sans', sans-serif; }
+
+.integ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.integ-card { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: border-color 0.13s, background 0.13s, box-shadow 0.13s; user-select: none; }
+.integ-card:hover { border-color: var(--border2); background: var(--bg); }
+.integ-card.active { border-color: var(--pink); background: var(--pink-pale); box-shadow: 0 0 0 3px var(--pink-border); }
+.integ-card-name { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.integ-card-sub { font-size: 11px; color: var(--text3); }
+.integ-card.active .integ-card-name { color: var(--pink); }
+
+.integ-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.integ-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: pointer; font-family: inherit; text-align: left; font-size: 13px; font-weight: 600; color: var(--text); transition: all 0.13s; min-height: 52px; }
+.integ-btn span { font-size: 11px; font-weight: 500; color: var(--text3); }
+.integ-btn:hover { border-color: var(--border2); background: var(--bg); }
+.integ-btn.active { border-color: var(--pink); background: var(--pink-pale); color: var(--pink); }
+.integ-btn.active span { color: var(--pink); opacity: 0.75; }
+
+.toggle-row { display: flex; gap: 8px; }
+.toggle-btn { flex: 1; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.13s; text-align: center; }
+.toggle-btn:hover { border-color: var(--border2); }
+.toggle-btn.active { border-color: var(--pink); background: var(--pink-pale); color: var(--pink); font-weight: 600; }
+
+.disc-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.disc-preset { padding: 4px 12px; border: 1.5px solid var(--border); border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--text2); cursor: pointer; background: none; transition: all 0.13s; font-family: 'DM Sans', sans-serif; }
+.disc-preset:hover { border-color: var(--pink); color: var(--pink); }
+.disc-preset.active { border-color: var(--pink); background: var(--pink); color: white; }
+.disc-preset.needs-approval { border-color: #F59E0B; color: #D97706; background: #FFFBEB; }
+.disc-preset.needs-approval.active { background: #F59E0B !important; color: white !important; border-color: #F59E0B; }
+
+.panel-sticky { position: sticky; top: 80px; }
+
+.proposta-card {
+  background: #1A2D6B; border-radius: var(--radius); padding: 24px;
+  color: white; margin-bottom: 16px; position: relative; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.proposta-card::after { content: ''; position: absolute; right: -50px; bottom: -60px; width: 180px; height: 180px; background: var(--pink); border-radius: 50%; opacity: 0.15; }
+
+.empresa-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.empresa-name { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: -0.3px; }
+.empresa-name.empty { color: rgba(255,255,255,0.2); font-style: italic; }
+
+.meta-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.meta-pill { background: rgba(255,255,255,0.08); border-radius: 99px; padding: 4px 10px; font-size: 11px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 5px; }
+.meta-pill span { color: white; font-weight: 600; }
+
+.price-display { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 18px; position: relative; z-index: 1; }
+.price-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.price-main { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; color: white; letter-spacing: -1.5px; line-height: 1; }
+.price-original { font-size: 13px; color: rgba(255,255,255,0.35); text-decoration: line-through; margin-top: 3px; display: none; }
+
+.price-rows { display: flex; flex-direction: column; gap: 0; }
+.price-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.price-row:last-child { border-bottom: none; }
+.price-row.total { font-weight: 700; color: var(--navy); padding-top: 12px; }
+.price-row-label { color: var(--text2); }
+.price-row-val { font-weight: 600; }
+.price-row-val.green { color: var(--green); }
+.price-row-val.pink { color: var(--pink); }
+.price-row-val.amber { color: var(--amber); }
+.price-row-val.red { color: var(--red); }
+.price-row-val.dim { color: var(--text3); }
+
+.scope-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); padding: 4px 0; }
+.scope-dot { width: 6px; height: 6px; background: var(--pink); border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+.whats-card { background: var(--green-bg); border: 1.5px solid rgba(0,196,140,0.2); border-radius: var(--radius-sm); padding: 14px 16px; display: none; }
+.whats-card-price { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--green); margin-bottom: 2px; }
+.whats-card-desc { font-size: 11.5px; color: var(--text2); }
+
+.premium-alert { background: rgba(245,158,11,0.08); border: 1.5px solid rgba(245,158,11,0.2); border-radius: var(--radius-sm); padding: 14px 16px; display: none; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--amber); margin-bottom: 16px; }
+
+.payload-wrap { background: var(--navy); border-radius: var(--radius-sm); padding: 14px 16px; position: relative; }
+.payload-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.payload-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+.copy-btn { font-size: 11px; color: rgba(255,255,255,0.4); background: none; border: none; cursor: pointer; font-family: 'DM Mono', monospace; transition: color 0.13s; }
+.copy-btn:hover { color: var(--pink); }
+.payload-code { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.6); white-space: pre; overflow-x: auto; max-height: 200px; overflow-y: auto; line-height: 1.6; }
+.json-key { color: #93C5FD; }
+.json-str { color: #86EFAC; }
+.json-num { color: #FCA5A5; }
+
+.btn-gerar { width: 100%; padding: 15px; background: var(--pink); color: white; border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; box-shadow: var(--shadow-pink); letter-spacing: -0.2px; margin-bottom: 10px; }
+.btn-gerar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(251,36,145,0.42); }
+.btn-gerar:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-gerar-wrap { position: relative; display: block; width: 100%; }
+.btn-gerar-wrap .btn-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--navy); color: white; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 6px; white-space: nowrap; pointer-events: none; z-index: 100; }
+.btn-gerar-wrap .btn-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--navy); }
+.btn-gerar-wrap:hover .btn-tooltip { display: block; }
+
+/* ═══════════════════════════════════════════════
+   DIAGNÓSTICO TAGS
+═══════════════════════════════════════════════ */
+.diag-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.diag-row:last-child { border-bottom: none; }
+.diag-label { font-size: 13px; font-weight: 600; color: var(--text2); flex: 1; }
+.diag-sub { padding-left: 14px; border-left: 2px solid var(--pink); margin-left: 4px; margin-top: 4px; }
+.diag-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+.diag-tag.on { background: rgba(251,36,145,.1); color: var(--pink); border: 1.5px solid rgba(251,36,145,.25); }
+.diag-tag.off { background: #F6F8FC; color: var(--text3); border: 1.5px solid var(--border); }
+
+.time-card { background: #F6F8FC; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; }
+.time-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.time-card-title { font-size: 13px; font-weight: 700; color: var(--navy); }
+.time-remove { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 17px; padding: 0 4px; line-height: 1; }
+.time-remove:hover { color: #e53e3e; }
+.time-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.time-field label { font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 3px; }
+.time-field input { width: 100%; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; background: white; font-family: inherit; box-sizing: border-box; }
+.time-field input:focus { outline: none; border-color: var(--pink); }
+.time-total { margin-top: 8px; font-size: 12px; color: var(--text3); font-weight: 600; }
+.time-total strong { color: var(--navy); }
+
+.vendedor-chip { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.vendedor-chip-avatar { width: 36px; height: 36px; background: var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; text-transform: uppercase; flex-shrink: 0; }
+.vendedor-chip-info { flex: 1; }
+.vendedor-chip-name { font-size: 13.5px; font-weight: 600; color: var(--navy); }
+.vendedor-chip-sub { font-size: 11.5px; color: var(--text3); }
+
+.integ-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text2); margin-top: 8px; }
+.tag { display: inline-flex; padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.tag-lite { background: rgba(0,196,140,0.12); color: var(--green); }
+.tag-basico { background: rgba(28,42,122,0.1); color: var(--navy-mid); }
+.tag-intermediario { background: rgba(245,158,11,0.12); color: var(--amber); }
+.tag-premium { background: rgba(251,36,145,0.1); color: var(--pink); }
+
+/* ═══════════════════════════════════════════════
+   STATUS BADGES
+═══════════════════════════════════════════════ */
+.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid transparent; transition: background 0.13s; -webkit-appearance: none; appearance: none; }
+.status-enviada, select.status-enviada      { background:#EFF6FF; color:#2563EB; border-color:#BFDBFE; }
+.status-negociacao, select.status-negociacao { background:#FFFBEB; color:#D97706; border-color:#FDE68A; }
+.status-aprovada, select.status-aprovada    { background:#F0FDF4; color:#16A34A; border-color:#BBF7D0; }
+.status-perdida, select.status-perdida      { background:#FEF2F2; color:#DC2626; border-color:#FCA5A5; }
+select.status-badge option { background: white; color: var(--text); }
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+.toast { position: fixed; bottom: 28px; right: 28px; background: var(--navy); color: white; padding: 12px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-md); z-index: 999; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s; pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   SPINNER
+═══════════════════════════════════════════════ */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════
+   FALLBACK MODAL (FEATURE: fallback n8n)
+═══════════════════════════════════════════════ */
+#fallback-overlay { display: none; position: fixed; inset: 0; background: rgba(0,21,80,0.5); backdrop-filter: blur(4px); z-index: 300; align-items: center; justify-content: center; }
+#fallback-overlay.show { display: flex; }
+.fallback-modal { background: white; border-radius: 16px; padding: 32px; max-width: 460px; width: 90%; box-shadow: 0 20px 60px rgba(0,20,60,.2); animation: modalIn .2s ease; }
+.fallback-modal h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--navy); margin: 0 0 8px; }
+.fallback-modal p { font-size: 13px; color: var(--text3); margin: 0 0 20px; line-height: 1.6; }
+.fallback-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1.5px solid var(--border); }
+.fallback-step-num { width: 24px; height: 24px; background: var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; flex-shrink: 0; }
+.fallback-step-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.fallback-step-text strong { color: var(--navy); display: block; margin-bottom: 2px; }
+.fallback-copy-box { background: var(--navy); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+.fallback-copy-box span { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.fallback-copy-btn { background: var(--pink); border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; color: white; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+.fallback-actions { display: flex; gap: 10px; }
+.fallback-actions .btn-dismiss { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; }
+.fallback-actions .btn-retry { flex: 2; padding: 10px; border: none; border-radius: var(--radius-sm); background: var(--navy); color: white; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* ═══════════════════════════════════════════════
+   MOTIVO DE PERDA MODAL (FEATURE)
+═══════════════════════════════════════════════ */
+#perda-overlay { display: none; position: fixed; inset: 0; background: rgba(0,21,80,0.45); backdrop-filter: blur(4px); z-index: 250; align-items: center; justify-content: center; }
+#perda-overlay.show { display: flex; }
+.perda-modal { background: white; border-radius: 16px; padding: 28px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,20,60,.2); animation: modalIn .2s ease; }
+.perda-modal h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: var(--navy); margin: 0 0 6px; }
+.perda-modal p { font-size: 13px; color: var(--text3); margin: 0 0 18px; line-height: 1.5; }
+.perda-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.perda-opt { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; transition: all 0.13s; text-align: left; }
+.perda-opt:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.perda-opt.selected { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+.perda-obs { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); resize: vertical; min-height: 60px; margin-bottom: 14px; box-sizing: border-box; }
+.perda-obs:focus { outline: none; border-color: var(--pink); }
+.perda-actions { display: flex; gap: 8px; }
+.perda-actions .btn-skip { flex: 1; padding: 9px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text3); cursor: pointer; }
+.perda-actions .btn-confirmar { flex: 2; padding: 9px; border: none; border-radius: var(--radius-sm); background: var(--red); color: white; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* ═══════════════════════════════════════════════
+   HUBSPOT PREFILL BANNER (FEATURE)
+═══════════════════════════════════════════════ */
+#hubspot-prefill-banner {
+  display: none;
+  background: linear-gradient(90deg, #EFF6FF 0%, #F0F9FF 100%);
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  align-items: center;
+  gap: 10px;
+}
+#hubspot-prefill-banner .hs-icon { font-size: 18px; flex-shrink: 0; }
+#hubspot-prefill-banner .hs-text { flex: 1; font-size: 13px; color: #1E40AF; }
+#hubspot-prefill-banner .hs-text strong { display: block; font-weight: 700; margin-bottom: 2px; }
+#hubspot-prefill-banner .hs-loading { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3B82F6; }
+.hs-spinner { width: 12px; height: 12px; border: 2px solid rgba(59,130,246,0.3); border-top-color: #3B82F6; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+
+/* ═══════════════════════════════════════════════
+   CONFIG TABLE
+═══════════════════════════════════════════════ */
+.rph-header-note { font-size: 10px; font-weight: 500; color: var(--text3); font-style: italic; margin-left: 4px; }
+.import-drop-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 24px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 10px; }
+.import-drop-area:hover, .import-drop-area.drag-over { border-color: var(--pink); background: var(--pink-pale); }
+.import-drop-area p { margin: 4px 0; font-size: 13px; color: var(--text3); }
+.import-drop-area strong { color: var(--navy); }
+.import-preview { overflow-x: auto; margin-top: 12px; }
+.import-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.import-preview th { padding: 5px 8px; font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; border-bottom: 2px solid var(--border); }
+.import-preview td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+
+/* ═══════════════════════════════════════════════
+   APPROVAL MODAL
+═══════════════════════════════════════════════ */
+.approval-overlay { display: none; position: fixed; inset: 0; background: rgba(0,20,60,.45); z-index: 1000; align-items: center; justify-content: center; }
+.approval-overlay.show { display: flex; }
+.approval-modal { background: white; border-radius: 16px; padding: 32px 28px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,20,60,.18); }
+.approval-modal h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--navy); margin: 0 0 6px; }
+.approval-modal p { font-size: 13px; color: var(--text3); margin: 0 0 18px; line-height: 1.6; }
+.approval-field { margin-bottom: 14px; }
+.approval-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.approval-field input, .approval-field textarea, .approval-field select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); box-sizing: border-box; }
+.approval-field textarea { resize: vertical; min-height: 72px; }
+.approval-actions { display: flex; gap: 10px; margin-top: 20px; }
+.approval-actions .btn-cancel { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; }
+.approval-actions .btn-solicitar { flex: 2; padding: 10px; border: none; border-radius: var(--radius-sm); background: var(--navy); color: white; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* ═══════════════════════════════════════════════
+   SUPABASE STATUS INDICATOR
+═══════════════════════════════════════════════ */
+#db-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #D1D5DB; display: inline-block; margin-right: 4px; transition: background 0.3s; }
+#db-status-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(0,196,140,0.5); }
+#db-status-dot.error { background: var(--red); }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.hint { font-size: 11.5px; color: var(--text3); margin-top: 5px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+.empty-state-sub { font-size: 13px; }
+
+/* KPI cards */
+#hist-kpis > div { background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     SCREEN: LOGIN
+══════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="login-brand-icon">S</div>
+      <div>
+        <div class="login-brand-name">Sales<span>bud</span><span style="color:var(--pink)">′</span></div>
+      </div>
+    </div>
+    <div class="login-headline">Propostas<br>feitas em<br><em>segundos.</em></div>
+    <div class="login-tagline">Boosting sales, empowering humans</div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-subtitle">Entre com seu email e senha para continuar</div>
+    <div id="login-error" class="login-error">Email ou senha inválidos.</div>
+    <div class="form-field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="seu@salesbud.com.br" autocomplete="email" />
+    </div>
+    <div class="form-field">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div style="margin-top:24px;font-size:12px;color:var(--text4);text-align:center;line-height:1.6;">
+      Conta gerenciada pelo administrador SalesBud.<br>Em caso de problemas, contate o admin.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SCREEN: APP
+══════════════════════════ -->
+<div id="screen-app" class="screen">
+
+  <nav class="sidenav">
+    <div class="sidenav-brand">
+      <div class="sidenav-brand-icon">S</div>
+      <div class="sidenav-brand-name">Sales<span>bud</span>′</div>
+    </div>
+    <div class="nav-section" id="nav-main">
+      <div class="nav-section-label">Propostas</div>
+      <div class="nav-item active" onclick="navTo('proposta')" id="nav-proposta"><span class="nav-icon"></span> Novos Clientes</div>
+      <div class="nav-item" onclick="navTo('base')" id="nav-base"><span class="nav-icon"></span> Clientes de Base</div>
+      <div class="nav-item" onclick="navTo('historico')" id="nav-historico"><span class="nav-icon"></span> Histórico</div>
+    </div>
+    <div class="nav-section" id="nav-admin-section" style="display:none">
+      <div class="nav-section-label">Administração</div>
+      <div class="nav-item" onclick="navTo('usuarios')" id="nav-usuarios"><span class="nav-icon"></span> Usuários</div>
+      <div class="nav-item" onclick="navTo('config')" id="nav-config"><span class="nav-icon"></span> Configurações</div>
+    </div>
+    <div class="sidenav-bottom">
+      <div style="padding:0 12px 8px;display:flex;align-items:center;gap:6px">
+        <span id="db-status-dot"></span>
+        <span id="db-status-label" style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600">Banco de dados</span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="nav-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="nav-username">—</div>
+          <div class="user-role" id="nav-userrole">—</div>
+        </div>
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-content">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="page-title">Gerar Proposta</div>
+        <div class="page-subtitle" id="page-subtitle">Preencha os dados do cliente e configure o pacote</div>
+      </div>
+      <button id="btn-nova-proposta" onclick="novaPropostaConfirm()" style="display:none;padding:9px 18px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-family:inherit;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap">
+        + Nova Proposta
+      </button>
+    </div>
+
+    <!-- TEMPLATE UPDATE BANNER (FEATURE) -->
+    <div id="template-update-banner">
+      <span class="banner-icon">📋</span>
+      <div class="banner-text">
+        <strong id="banner-template-msg">Template atualizado</strong>
+        <span id="banner-template-sub">Versão nova disponível — todos os cálculos usarão o template atualizado.</span>
+      </div>
+      <button class="banner-dismiss" onclick="dismissTemplateBanner()">Entendi</button>
+    </div>
+
+    <!-- ══ PAGE: PROPOSTA ══ -->
+    <div class="page active" id="page-proposta">
+      <div class="proposta-layout">
+        <div>
+          <!-- HubSpot Prefill Banner (FEATURE) -->
+          <div id="hubspot-prefill-banner">
+            <span class="hs-icon">🔗</span>
+            <div class="hs-text">
+              <strong id="hs-banner-title">Carregando dados do HubSpot...</strong>
+              <div class="hs-loading" id="hs-loading-indicator"><span class="hs-spinner"></span> Buscando informações do deal...</div>
+            </div>
+          </div>
+
+          <div class="vendedor-chip" id="vendedor-chip">
+            <div class="vendedor-chip-avatar" id="chip-avatar">?</div>
+            <div class="vendedor-chip-info">
+              <div class="vendedor-chip-name" id="chip-name">—</div>
+              <div class="vendedor-chip-sub" id="chip-sub">—</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Cliente</div>
+            <div class="field-row">
+              <label class="field-label">Nome da empresa <span style="color:var(--pink)">*</span></label>
+              <input class="field-input" id="empresa" placeholder="Ex: Acme Corporation" oninput="update()" />
+              <span class="field-error-msg" id="err-empresa">Campo obrigatório</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field-row" style="margin-bottom:0">
+                <label class="field-label">Nome do contato</label>
+                <input class="field-input" id="contato-nome" placeholder="Ex: Maria Silva" oninput="update()" style="margin-top:4px" />
+              </div>
+              <div class="field-row" style="margin-bottom:0">
+                <label class="field-label">E-mail do contato</label>
+                <input class="field-input" type="email" id="contato-email" placeholder="Ex: maria@empresa.com" oninput="update()" style="margin-top:4px" />
+                <span class="field-error-msg" id="err-email">E-mail inválido</span>
+              </div>
+            </div>
+            <div class="field-row">
+              <label class="field-label">CRM atual</label>
+              <select class="field-select" id="crm" onchange="update()">
+                <option value="">Selecione o CRM</option>
+                <option>HubSpot</option><option>Pipedrive</option><option>RD Station</option>
+                <option>Salesforce</option><option>Moskit</option><option>Ploomes</option>
+                <option>Notion</option><option>Zoho CRM</option>
+                <option value="api-aberta">CRM com API aberta</option>
+                <option>Outro</option><option>Sem CRM</option>
+              </select>
+              <div id="crm-api-aviso" style="display:none;margin-top:6px;padding:7px 11px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:6px;font-size:12px;color:#92400E;font-weight:500">
+                ⚠️ Integração via API aberta — sujeita a <strong>consulta de viabilidade técnica</strong> antes da contratação.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pacote de Horas</div>
+            <div class="field-row" style="margin-bottom:16px">
+              <label class="field-label" style="margin-bottom:6px;display:block">Horas mensais contratadas</label>
+              <div style="display:flex;gap:10px;align-items:center">
+                <input type="number" class="field-input" id="horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="update()" style="font-size:18px;font-weight:700;color:var(--navy);width:140px;flex-shrink:0" />
+                <div id="horas-acima-aviso" style="display:none;flex:1;background:#FFF7ED;border:2px solid #FED7AA;border-radius:var(--radius-sm);padding:14px 16px">
+                  <div style="font-size:12px;font-weight:700;color:#C2410C;margin-bottom:6px;letter-spacing:.03em;text-transform:uppercase">Volume acima da tabela</div>
+                  <div style="font-size:14px;font-weight:600;color:#92400E" id="horas-acima-calc">Calculando...</div>
+                </div>
+                <div id="horas-interpolado-aviso" style="display:none;flex:1;background:#F0FDF4;border:2px solid #86EFAC;border-radius:var(--radius-sm);padding:14px 16px">
+                  <div style="font-size:12px;font-weight:700;color:#15803D;margin-bottom:6px;letter-spacing:.03em;text-transform:uppercase">Horas fora da tabela</div>
+                  <div style="font-size:14px;font-weight:600;color:#166534;margin-bottom:10px" id="horas-interpolado-calc">—</div>
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <div style="font-size:13px;color:#15803D;font-weight:500" id="horas-proxima-faixa"></div>
+                    <button id="btn-arredondar" onclick="arredondarHoras()" style="padding:8px 18px;background:#16A34A;color:white;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.01em">
+                      ↑ Arredondar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px">Calculadora de consumo</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="calc-usuarios" value="7" min="1" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Horas/dia por user</label><input type="number" class="field-input" id="calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Dias úteis/mês</label><input type="number" class="field-input" id="calc-dias" value="22" min="1" max="31" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa mensal</div>
+                  <div style="font-size:16px;font-weight:800;color:var(--navy)" id="calc-resultado">~308h/mês</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="calc-formula">7 × 2h × 22 dias</div>
+                </div>
+                <button onclick="aplicarCalcHoras()" style="padding:9px 16px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar esse valor</button>
+              </div>
+            </div>
+            <div id="pacote-selecionado" style="background:var(--navy);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote contratado</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;letter-spacing:-0.5px" id="horas-label">300h</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">por mês · usuários ilimitados</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Mensalidade</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="pacote-preco-label">R$ 1.490</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="pacote-idx-label">pacote 5 de 17</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Integração CRM</div>
+            <div class="integ-grid">
+              <div class="integ-card" onclick="selectInteg('lite',this)"><div class="integ-card-name">Lite</div><div class="integ-card-sub">Gratuito · Plug and play</div></div>
+              <div class="integ-card active" onclick="selectInteg('basico',this)"><div class="integ-card-name">Básico</div><div class="integ-card-sub">R$ 1.200 setup · 5 campos</div></div>
+              <div class="integ-card" onclick="selectInteg('intermediario',this)"><div class="integ-card-name">Intermediário</div><div class="integ-card-sub">R$ 3.000 setup · +R$ 499/mês</div></div>
+              <div class="integ-card" onclick="selectInteg('premium',this)"><div class="integ-card-name">Premium</div><div class="integ-card-sub">Sob consulta · Big Deal</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">WhatsApp</div>
+            <div class="field-row">
+              <label class="field-label">Incluir WhatsApp?</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="whats-sim" onclick="toggleWhats(true)">Sim</button>
+                <button class="toggle-btn" id="whats-nao" onclick="toggleWhats(false)">Não</button>
+              </div>
+            </div>
+            <div id="whats-users-wrap" class="field-row">
+              <label class="field-label">Número de usuários WhatsApp</label>
+              <input type="number" class="field-input" id="whats-users" value="5" min="1" max="200" oninput="update()" />
+              <div style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-bottom:1px solid var(--border)">
+                  <div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Usuários</div>
+                  <div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:right">Preço/user</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">1 – 5 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 100/user</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">6 – 10 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 90/user</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">11 – 20 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 80/user</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">21 – 30 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 70/user</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">31 – 50 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 60/user</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr"><div style="padding:6px 10px;color:var(--text2)">51+ users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 50/user</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Desconto</div>
+            <div class="field-row">
+              <label class="field-label">Desconto na mensalidade &nbsp;<span id="desc-label" style="font-size:14px;font-weight:700;color:var(--pink)">0%</span></label>
+              <input type="hidden" id="desconto" value="0">
+              <div class="disc-presets" id="disc-presets-novos" style="margin-top:8px">
+                <button class="disc-preset active" onclick="setDisc(0,this,'proposta')">0%</button>
+                <button class="disc-preset" onclick="setDisc(5,this,'proposta')">5%</button>
+                <button class="disc-preset" onclick="setDisc(10,this,'proposta')">10%</button>
+              </div>
+              <div style="margin-top:10px;padding:9px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:12px;color:#92400E;line-height:1.5">
+                ⚠️ <strong>Descontos válidos somente para primeiras assinaturas contratuais</strong> realizadas dentro do mês de validade da proposta.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel-sticky">
+          <div class="proposta-card">
+            <div class="empresa-label">Proposta para</div>
+            <div class="empresa-name empty" id="company-display">Nome da empresa</div>
+            <div class="meta-pills" id="meta-pills"></div>
+            <div class="price-display">
+              <div class="price-label">Mensalidade total</div>
+              <div id="price-desconto-badge" style="display:none;margin-bottom:10px;padding:9px 13px;background:rgba(251,36,145,.10);border:1.5px solid rgba(251,36,145,.35);border-radius:10px;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;font-weight:800;color:var(--pink)" id="price-desconto-pct"></span>
+                  <span style="font-size:12px;font-weight:700;color:var(--pink)" id="price-desconto-reais"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:11px;color:rgba(255,255,255,.45);text-decoration:line-through" id="price-desconto-original"></span>
+                  <span style="font-size:11px;color:rgba(255,255,255,.3)">·</span>
+                  <span style="font-size:11px;font-weight:600;color:#86EFAC" id="price-desconto-anual"></span>
+                </div>
+              </div>
+              <div class="price-main" id="price-main">R$ 1.490</div>
+              <div id="price-main-sub" style="display:none;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-top:4px"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Breakdown</div>
+            <div class="price-rows" id="price-rows"></div>
+            <div id="integ-badge-wrap"></div>
+            <div id="scope-section" style="margin-top:14px;display:none">
+              <div class="divider"></div>
+              <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Escopo da integração</div>
+              <div id="scope-items"></div>
+            </div>
+          </div>
+
+          <div class="premium-alert" id="premium-alert">Pacote Premium requer avaliação manual. Não é possível gerar proposta automática.</div>
+
+          <div class="whats-card" id="whats-card" style="margin-bottom:16px">
+            <div class="whats-card-price" id="whats-price-display"></div>
+            <div class="whats-card-desc" id="whats-desc"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="payload-wrap">
+              <div class="payload-header">
+                <span class="payload-title">Payload → n8n</span>
+                <button class="copy-btn" onclick="copyPayload()">Copiar</button>
+              </div>
+              <div class="payload-code" id="payload"></div>
+            </div>
+          </div>
+
+          <div class="btn-gerar-wrap">
+            <span class="btn-tooltip" id="btn-gen-tooltip">Preencha empresa e CRM para continuar</span>
+            <button class="btn-gerar" id="btn-gen" onclick="gerarProposta()" disabled>Gerar Proposta</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="btn-salvar" onclick="salvarProposta('proposta')" style="flex:1;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar proposta</button>
+            <button id="btn-pdf" onclick="baixarPDF('proposta')" style="flex:1;padding:10px;background:white;color:var(--pink);border:2px solid var(--pink);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">⬇ Baixar PDF</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);text-align:center;line-height:1.5;margin-top:6px">A proposta será enviada para seu e-mail assim que gerada.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: CLIENTES DE BASE ══ -->
+    <div class="page" id="page-base">
+      <div class="proposal-grid">
+        <div class="left-col">
+          <div class="card" style="margin-bottom:16px">
+            <div class="vendedor-chip" id="base-vendedor-chip" style="margin-bottom:0">
+              <div class="vendedor-chip-avatar" id="base-chip-avatar">?</div>
+              <div class="vendedor-chip-info">
+                <div class="vendedor-chip-name" id="base-chip-name">—</div>
+                <div class="vendedor-chip-sub" id="base-chip-sub">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-section-title">Cliente</div>
+            <div class="field-row">
+              <label class="field-label">Empresa <span style="color:var(--pink)">*</span></label>
+              <input class="field-input" id="base-empresa" placeholder="Ex: Acme Corporation" oninput="updateBase()" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field-row" style="margin-bottom:0">
+                <label class="field-label">Nome do contato</label>
+                <input class="field-input" id="base-contato-nome" placeholder="Ex: Maria Silva" oninput="updateBase()" style="margin-top:4px" />
+              </div>
+              <div class="field-row" style="margin-bottom:0">
+                <label class="field-label">E-mail</label>
+                <input class="field-input" type="email" id="base-contato-email" placeholder="Ex: maria@empresa.com" oninput="updateBase()" style="margin-top:4px" />
+              </div>
+            </div>
+            <div class="field-row">
+              <label class="field-label">CRM utilizado</label>
+              <select class="field-select" id="base-crm" onchange="updateBase()">
+                <option value="">Selecione o CRM</option>
+                <option>HubSpot</option><option>Pipedrive</option><option>RD Station</option>
+                <option>Salesforce</option><option>Ploomes</option><option>GoHighLevel</option><option>Outros / Sem CRM</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-section-title">Consumo Atual</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label class="field-label">Horas contratadas</label>
+                <input type="number" class="field-input" id="base-horas-atual" placeholder="Ex: 300" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+              </div>
+              <div>
+                <label class="field-label">Usuários ativos</label>
+                <input type="number" class="field-input" id="base-usuarios-atual" value="5" min="1" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <label class="field-label">Valor mensal pago (R$)</label>
+              <input type="number" class="field-input" id="base-valor-atual" placeholder="Ex: 1490" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-section-title">O que o cliente já usa</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansão</div>
+            <div class="diag-row"><span class="diag-label">Integração CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Não</button></div></div>
+            <div class="diag-sub" id="diag-crm-sub" style="display:none">
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">CRM nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crmnativo-sim" onclick="setDiag('crmNativo',true)">Sim</button><button class="toggle-btn active" id="diag-crmnativo-nao" onclick="setDiag('crmNativo',false)">Não</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos personalizados?</span><div class="toggle-row"><button class="toggle-btn" id="diag-campos-sim" onclick="setDiag('campos',true)">Sim</button><button class="toggle-btn active" id="diag-campos-nao" onclick="setDiag('campos',false)">Não</button></div></div>
+              <div class="diag-sub" id="diag-campos-sub" style="display:none;margin-top:8px"><label class="field-label" style="font-size:12px">Quantos campos</label><input type="number" class="field-input" id="diag-ncampos" value="3" min="1" max="20" oninput="updateBase()" style="width:80px;margin-top:4px" /></div>
+            </div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Integração Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voip-sim" onclick="setDiag('voip',true)">Sim</button><button class="toggle-btn active" id="diag-voip-nao" onclick="setDiag('voip',false)">Não</button></div></div>
+            <div class="diag-sub" id="diag-voip-sub" style="display:none;margin-top:8px">
+              <div class="diag-row"><span class="diag-label" style="font-size:12px">Voip nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipnativo-sim" onclick="setDiag('voipNativo',true)">Sim</button><button class="toggle-btn active" id="diag-voipnativo-nao" onclick="setDiag('voipNativo',false)">Não</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos no Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipcampos-sim" onclick="setDiag('voipCampos',true)">Sim</button><button class="toggle-btn active" id="diag-voipcampos-nao" onclick="setDiag('voipCampos',false)">Não</button></div></div>
+            </div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Não</button></div></div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Customer Success?</span><div class="toggle-row"><button class="toggle-btn" id="diag-cs-sim" onclick="setDiag('cs',true)">Sim</button><button class="toggle-btn active" id="diag-cs-nao" onclick="setDiag('cs',false)">Não</button></div></div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Dev / customização?</span><div class="toggle-row"><button class="toggle-btn" id="diag-extras-sim" onclick="setDiag('extras',true)">Sim</button><button class="toggle-btn active" id="diag-extras-nao" onclick="setDiag('extras',false)">Não</button></div></div>
+          </div>
+        </div><!-- /left-col -->
+
+        <div class="right-col">
+          <div class="card" id="base-diag-card" style="margin-bottom:16px;min-height:80px">
+            <div class="card-section-title" style="margin-bottom:10px">Diagnóstico de Expansão</div>
+            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span></div>
+            <div id="base-sugestao-hint" style="font-size:12px;color:var(--text3);line-height:1.5"></div>
+          </div>
+
+          <div class="card" id="base-comparativo" style="margin-bottom:16px;display:none">
+            <div class="card-section-title">Atual × Proposta</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:#F6F8FC;border-radius:var(--radius-sm);padding:14px">
+                <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">ATUAL</div>
+                <div style="font-size:18px;font-weight:800;color:var(--navy)" id="base-comp-atual-horas">—</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:2px" id="base-comp-atual-preco">—</div>
+              </div>
+              <div style="background:var(--navy);border-radius:var(--radius-sm);padding:14px">
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;margin-bottom:6px">PROPOSTA</div>
+                <div style="font-size:18px;font-weight:800;color:white" id="base-comp-novo-horas">—</div>
+                <div style="font-size:13px;font-weight:700;color:var(--pink);margin-top:2px" id="base-comp-novo-preco">—</div>
+              </div>
+            </div>
+            <div id="base-delta-card" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(251,36,145,.08);border:1.5px solid rgba(251,36,145,.15);font-size:13px;font-weight:700;color:var(--pink);text-align:center"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-section-title">Calcular Horas da Proposta</div>
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuários</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
+                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 × 2h × 22 dias</div>
+                </div>
+                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
+              </div>
+            </div>
+            <div style="margin-bottom:14px">
+              <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
+              <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
+            </div>
+            <div id="base-pacote-card" style="background:var(--navy);border-radius:var(--radius-sm);padding:16px 18px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;letter-spacing:-0.5px" id="base-horas-label">300h</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-pacote-idx">R$/h base do tier</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Nova Mensalidade</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="base-preco-label">R$ 1.490</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-delta-label">—</div>
+                <div style="font-size:11px;margin-top:3px;display:none" id="base-desconto-info"></div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header" style="display:none">Total c/ WhatsApp</div>
+                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-section-title">Adicionais</div>
+            <div class="field-row">
+              <label class="field-label">Adicionar WhatsApp?</label>
+              <div class="toggle-row"><button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button><button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button></div>
+            </div>
+            <div id="base-whats-wrap" class="field-row">
+              <label class="field-label">Usuários WhatsApp</label>
+              <input type="number" class="field-input" id="base-whats-users" value="5" min="1" max="200" oninput="updateBase()" />
+            </div>
+            <div class="field-row" style="margin-top:14px">
+              <label class="field-label">Integração CRM</label>
+              <div class="integ-btns" id="base-integ-btns">
+                <button class="integ-btn" onclick="selectBaseInteg('lite',this)">Lite<span>Grátis</span></button>
+                <button class="integ-btn active" onclick="selectBaseInteg('basico',this)">Básico<span>R$ 1.200</span></button>
+                <button class="integ-btn" onclick="selectBaseInteg('intermediario',this)">Intermediário<span>R$ 3.000 + R$ 499/mês</span></button>
+                <button class="integ-btn" onclick="selectBaseInteg('premium',this)">Premium<span>Sob consulta</span></button>
+              </div>
+            </div>
+            <div class="field-row" style="margin-top:14px">
+              <label class="field-label">Desconto &nbsp;<span class="slider-val" id="base-desc-label" style="font-size:16px">0%</span></label>
+              <input type="hidden" id="base-desconto" value="0">
+              <div class="disc-presets" id="disc-presets-base" style="margin-top:8px">
+                <button class="disc-preset active" onclick="setDisc(0,this,'base')">0%</button>
+                <button class="disc-preset" onclick="setDisc(5,this,'base')">5%</button>
+                <button class="disc-preset" onclick="setDisc(10,this,'base')">10%</button>
+              </div>
+              <div style="margin-top:10px;padding:9px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:12px;color:#92400E;line-height:1.5">
+                ⚠️ <strong>Descontos válidos somente para primeiras assinaturas contratuais</strong> realizadas dentro do mês de validade da proposta.
+              </div>
+              <div style="margin-top:6px;font-size:11px;color:#D97706;font-weight:600">Acima de 10% requer aprovação do responsável comercial</div>
+            </div>
+          </div>
+
+          <div class="premium-alert" id="base-premium-alert" style="display:none">
+            <div style="font-weight:700;color:var(--navy);margin-bottom:4px">Integração Premium</div>
+            <div style="font-size:13px;color:var(--text2)">Orçamento personalizado — valor definido após levantamento técnico.</div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px">PAYLOAD → n8n</div>
+              <button class="copy-btn" onclick="copyBasePayload()" style="color:var(--text3)">Copiar</button>
+            </div>
+            <div class="payload-code" id="base-payload" style="background:var(--navy);border-radius:var(--radius-sm);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.6"></div>
+          </div>
+
+          <div class="btn-gerar-wrap">
+            <span class="btn-tooltip" id="base-btn-gen-tooltip">Preencha o nome da empresa para continuar</span>
+            <button class="btn-gerar" id="base-btn-gen" onclick="gerarPropostaBase()" disabled>Gerar Proposta de Upsell</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button onclick="salvarProposta('base')" style="flex:1;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar proposta</button>
+            <button onclick="baixarPDF('base')" style="flex:1;padding:10px;background:white;color:var(--pink);border:2px solid var(--pink);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">⬇ Baixar PDF</button>
+          </div>
+        </div><!-- /right-col -->
+      </div>
+    </div>
+
+    <!-- ══ PAGE: HISTÓRICO ══ -->
+    <div class="page" id="page-historico">
+      <div class="section-toolbar" style="margin-bottom:20px">
+        <div style="display:flex;gap:10px;flex:1;flex-wrap:wrap">
+          <input class="search-input" id="hist-search" placeholder="Buscar por empresa, vendedor..." oninput="renderHistorico()" style="flex:1;min-width:200px" />
+          <select id="hist-tipo" onchange="renderHistorico()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:white;color:var(--text);cursor:pointer">
+            <option value="">Todos os tipos</option>
+            <option value="novo">Novos Clientes</option>
+            <option value="upsell_base">Clientes de Base</option>
+          </select>
+          <select id="hist-vendedor" onchange="renderHistorico()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:white;color:var(--text);cursor:pointer">
+            <option value="">Todos os vendedores</option>
+          </select>
+        </div>
+        <div id="hist-capacity-warn" style="display:none;margin-bottom:12px;padding:10px 14px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:#D97706"></div>
+        <div style="display:flex;gap:8px">
+          <button onclick="exportHistorico()" style="padding:9px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit">Exportar CSV</button>
+        </div>
+      </div>
+      <div id="hist-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table style="width:100%">
+          <thead>
+            <tr>
+              <th style="width:110px">Data</th>
+              <th>Empresa</th>
+              <th style="width:80px">Tipo</th>
+              <th>Vendedor</th>
+              <th style="width:70px">Horas</th>
+              <th style="width:130px">Valor/mês</th>
+              <th style="width:130px">Status</th>
+              <th style="width:80px">Desconto</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="hist-tbody"></tbody>
+        </table>
+        <div id="hist-empty" style="display:none;padding:48px;text-align:center">
+          <div style="font-size:13px;color:var(--text3);font-weight:500">Nenhuma proposta registrada ainda.</div>
+          <div style="font-size:12px;color:var(--text4);margin-top:4px">As propostas aparecem aqui após serem geradas.</div>
+        </div>
+      </div>
+      <div id="hist-loading" style="display:none;padding:40px;text-align:center;color:var(--text3);font-size:13px">
+        <span class="spinner" style="border-color:rgba(0,21,80,.2);border-top-color:var(--navy)"></span> Carregando histórico...
+      </div>
+    </div>
+
+    <!-- ══ PAGE: USUÁRIOS ══ -->
+    <div class="page" id="page-usuarios">
+      <div class="section-toolbar">
+        <input class="search-input" id="user-search" placeholder="Buscar por nome ou email..." oninput="renderTabela()" />
+        <button class="btn-add" onclick="abrirModal()">+ Novo usuário</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th><th>Cargo</th><th>Email</th><th>Telefone</th><th>Perfil</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+        <div id="users-empty" class="empty-state" style="display:none">
+          <div class="empty-state-icon">—</div>
+          <div class="empty-state-title">Nenhum usuário encontrado</div>
+          <div class="empty-state-sub">Adicione o primeiro membro do time</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: CONFIG ══ -->
+    <div class="page" id="page-config">
+      <div style="max-width:760px;margin:0 auto">
+
+        <!-- SUPABASE CONFIG (FEATURE) -->
+        <div class="card" style="margin-bottom:20px;border-color:#BFDBFE;background:#F8FBFF">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Supabase — Banco de Dados</span>
+            <span id="cfg-supabase-status" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F6F8FC;color:var(--text3)">Não configurado</span>
+          </div>
+          <p style="font-size:13px;color:var(--text3);margin:0 0 14px;line-height:1.6">
+            Configure o Supabase para histórico compartilhado entre vendedores, autenticação segura e visibilidade do gestor.<br>
+            <strong style="color:var(--navy)">Passo a passo abaixo.</strong>
+          </p>
+          <div style="background:white;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Setup em 3 passos</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+                <span style="width:20px;height:20px;background:var(--navy);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">1</span>
+                <span>Acesse <a href="https://supabase.com" target="_blank" style="color:var(--pink);font-weight:600">supabase.com</a> → New Project → anote a <strong>URL</strong> e a <strong>anon key</strong></span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+                <span style="width:20px;height:20px;background:var(--navy);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">2</span>
+                <span>No Supabase → SQL Editor → execute o script abaixo para criar as tabelas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+                <span style="width:20px;height:20px;background:var(--navy);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">3</span>
+                <span>Cole a URL e a anon key nos campos abaixo e clique em Salvar e Testar</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--navy);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;position:relative">
+            <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">SQL — cole no Supabase SQL Editor</div>
+            <pre id="supabase-sql" style="font-family:'DM Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.7);white-space:pre-wrap;line-height:1.6;margin:0">-- Tabela de propostas (histórico compartilhado)
+CREATE TABLE IF NOT EXISTS propostas (
+  id            BIGSERIAL PRIMARY KEY,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  vendedor_id   INTEGER,
+  vendedor_nome TEXT,
+  tipo_proposta TEXT DEFAULT 'novo',
+  nome_empresa  TEXT,
+  crm_cliente   TEXT,
+  contato_nome  TEXT,
+  contato_email TEXT,
+  pacote_horas  TEXT,
+  preco_mensalidade TEXT,
+  preco_setup   TEXT,
+  desconto_pct  INTEGER DEFAULT 0,
+  integ_tipo    TEXT,
+  whatsapp_info TEXT,
+  status_proposta TEXT DEFAULT 'enviada',
+  motivo_perda  TEXT,
+  payload_json  JSONB,
+  data_proposta TEXT,
+  validade_proposta TEXT
+);
+
+-- Habilita RLS (Row Level Security)
+ALTER TABLE propostas ENABLE ROW LEVEL SECURITY;
+
+-- Policy: todos os usuários autenticados podem ler e inserir
+CREATE POLICY "Acesso total para autenticados"
+  ON propostas FOR ALL
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');</pre>
+            <button onclick="copySql()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;font-family:inherit">Copiar SQL</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <label class="field-label">Supabase URL</label>
+              <input class="field-input" id="cfg-supabase-url" placeholder="https://xxxx.supabase.co" style="margin-top:4px;font-size:12px;font-family:'DM Mono',monospace" />
+            </div>
+            <div>
+              <label class="field-label">Anon Key (pública)</label>
+              <input class="field-input" id="cfg-supabase-key" placeholder="eyJhbGci..." style="margin-top:4px;font-size:12px;font-family:'DM Mono',monospace" />
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="salvarSupabase()" style="padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar e testar</button>
+            <button onclick="testarSupabase()" style="padding:9px 18px;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Só testar</button>
+          </div>
+        </div>
+
+        <!-- Webhook -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Webhook n8n</span>
+            <span id="cfg-webhook-status" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F6F8FC;color:var(--text3)">Não testado</span>
+          </div>
+          <p style="font-size:13px;color:var(--text3);margin:0 0 14px">URL do webhook que recebe o payload e dispara a automação no n8n.</p>
+          <div style="display:flex;gap:10px">
+            <input class="field-input" id="cfg-webhook-url" placeholder="https://seu-n8n.com/webhook/gerar-proposta" style="flex:1;font-family:'DM Mono',monospace;font-size:13px" />
+            <button onclick="salvarConfig()" style="padding:10px 18px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
+            <button onclick="testarWebhook()" style="padding:10px 18px;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Testar</button>
+          </div>
+        </div>
+
+        <!-- Template Google Slides -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">Template da Proposta</div>
+          <p style="font-size:13px;color:var(--text3);margin:0 0 14px">URL do template no Google Slides. Ao salvar uma nova versão, um alerta será exibido para todos os vendedores.</p>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="field-label">URL do template (Google Slides)</label>
+              <input class="field-input" id="cfg-template-url" placeholder="https://docs.google.com/presentation/d/..." style="margin-top:4px;font-size:12px;font-family:'DM Mono',monospace" />
+            </div>
+            <div>
+              <label class="field-label">Versão (ex: v2.1 — Mar/2026)</label>
+              <input class="field-input" id="cfg-template-versao" placeholder="v2.1 — Mar/2026" style="margin-top:4px" />
+            </div>
+          </div>
+          <button onclick="salvarTemplate()" style="padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar template</button>
+        </div>
+
+        <!-- Import tabela -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">Importar nova tabela de preços</div>
+          <p style="font-size:13px;color:var(--text3);margin:0 0 14px">Arraste o arquivo <strong>.xlsx</strong> da planilha SalesBud ou um <strong>.csv</strong> com colunas Horas e Valor Final.</p>
+          <div class="import-drop-area" id="import-drop-area">
+            <div style="font-size:28px;color:var(--border);margin-bottom:8px">↑</div>
+            <p><strong>Clique ou arraste o arquivo aqui</strong></p>
+            <p style="font-size:11px">.xlsx da planilha SalesBud · ou CSV · máx 2 MB</p>
+          </div>
+          <div id="import-preview-area" style="display:none"></div>
+        </div>
+
+        <!-- Tabela de preços -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Tabela de Preços</span>
+            <div style="display:flex;gap:8px">
+              <button onclick="resetarTabela()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrão</button>
+              <button onclick="salvarTabelaPrecos()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar tabela</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px" id="cfg-price-table">
+              <thead>
+                <tr style="border-bottom:2px solid var(--border)">
+                  <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Pacote (horas)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Preço (R$/mês)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">R$/hora <span class="rph-header-note">(calc.)</span></th>
+                  <th style="padding:8px 10px"></th>
+                </tr>
+              </thead>
+              <tbody id="cfg-price-tbody"></tbody>
+            </table>
+          </div>
+          <button onclick="adicionarLinhaTabela()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
+        </div>
+
+        <!-- Dados gerais -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">Dados para a Proposta</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="field-label">Validade padrão da proposta (dias)</label>
+              <input type="number" class="field-input" id="cfg-validade" value="15" min="1" max="90" style="margin-top:4px" />
+            </div>
+            <div>
+              <label class="field-label">Desconto máximo sem aprovação (%)</label>
+              <input type="number" class="field-input" id="cfg-desconto-max" value="10" min="0" max="60" style="margin-top:4px" />
+            </div>
+          </div>
+          <button onclick="salvarConfig()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar</button>
+        </div>
+
+        <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:var(--radius-sm);padding:14px 16px;font-size:12px;color:#166534;line-height:1.6">
+          <strong>Coleta de dados:</strong> cada proposta gerada é salva automaticamente — no Supabase (quando configurado) ou localmente como fallback. O histórico fica visível para todos os membros da equipe com Supabase ativo.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+</div><!-- /screen-app -->
+
+<!-- MODAL: USUÁRIO -->
+<div class="modal-overlay" id="modal-overlay" onclick="fecharModalSeSide(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Novo usuário</div>
+      <button class="btn-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-grid">
+      <div class="form-field full"><label>Nome completo</label><input type="text" id="m-nome" placeholder="Ex: João G. Morais" /></div>
+      <div class="form-field"><label>Cargo</label><input type="text" id="m-cargo" placeholder="Ex: Account Executive" /></div>
+      <div class="form-field"><label>Telefone</label><input type="tel" id="m-telefone" placeholder="+55 41 99999-9999" /></div>
+      <div class="form-field full"><label>Email (login)</label><input type="email" id="m-email" placeholder="nome@salesbud.com.br" /></div>
+      <div class="form-field"><label>Senha</label><input type="password" id="m-senha" placeholder="Mín. 6 caracteres" /></div>
+      <div class="form-field"><label>Perfil</label><select id="m-perfil"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div>
+      <div class="form-field"><label>Cidade / Localização</label><input type="text" id="m-cidade" placeholder="Ex: Curitiba, PR" /></div>
+      <div class="form-field"><label>Status</label><select id="m-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div>
+    </div>
+    <div id="modal-error" style="font-size:13px;color:var(--red);margin-top:12px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" onclick="salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FALLBACK MODAL (FEATURE: fallback n8n) -->
+<div id="fallback-overlay">
+  <div class="fallback-modal">
+    <h3>⚠️ n8n indisponível</h3>
+    <p>O webhook não respondeu. Siga os passos abaixo para não perder essa proposta:</p>
+    <div class="fallback-step">
+      <div class="fallback-step-num">1</div>
+      <div class="fallback-step-text"><strong>Copie o payload abaixo</strong>O JSON com todos os dados da proposta está pronto para envio manual.</div>
+    </div>
+    <div class="fallback-copy-box">
+      <span id="fallback-payload-preview">{ "nome_empresa": "..." }</span>
+      <button class="fallback-copy-btn" onclick="copyFallbackPayload()">Copiar JSON</button>
+    </div>
+    <div class="fallback-step">
+      <div class="fallback-step-num">2</div>
+      <div class="fallback-step-text"><strong>Envie no canal interno</strong>Cole o JSON no canal <strong>#propostas</strong> no Slack ou WhatsApp do time técnico com a mensagem: <em>"n8n fora — disparo manual necessário"</em></div>
+    </div>
+    <div class="fallback-step">
+      <div class="fallback-step-num">3</div>
+      <div class="fallback-step-text"><strong>Proposta registrada</strong>O histórico local já foi salvo. Quando o n8n voltar, o time técnico dispara manualmente.</div>
+    </div>
+    <div class="fallback-actions">
+      <button class="btn-dismiss" onclick="closeFallback()">Fechar</button>
+      <button class="btn-retry" onclick="retryWebhook()"><span class="spinner"></span> Tentar novamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOTIVO DE PERDA MODAL (FEATURE) -->
+<div id="perda-overlay">
+  <div class="perda-modal">
+    <h3>Por que a proposta foi perdida?</h3>
+    <p>Isso nos ajuda a melhorar as próximas abordagens. Pode pular se preferir.</p>
+    <div class="perda-options">
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Preço')">💰 Preço</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Concorrente')">⚔️ Concorrente</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Sem decisão')">⏳ Sem decisão</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Timing ruim')">📅 Timing ruim</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Produto não atende')">🔧 Produto</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Outro')">💬 Outro</button>
+    </div>
+    <textarea class="perda-obs" id="perda-obs" placeholder="Observação opcional..."></textarea>
+    <div class="perda-actions">
+      <button class="btn-skip" onclick="closePerdaModal(null)">Pular</button>
+      <button class="btn-confirmar" onclick="confirmPerda()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVAL MODAL -->
+<div class="approval-overlay" id="approval-overlay">
+  <div class="approval-modal">
+    <h3>Solicitar desconto extra</h3>
+    <p>Descontos acima de <strong id="aprv-limite-pct">10%</strong> precisam de aprovação do responsável comercial. Preencha os campos abaixo — a solicitação será enviada junto com o payload.</p>
+    <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#166534">
+      <strong>Proposta:</strong> <span id="aprv-context">—</span><br>
+      <strong>Desconto solicitado:</strong> <span id="aprv-pct" style="font-weight:800;color:#D97706">—</span>
+    </div>
+    <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">💬</span>
+      <span>Após registrar, comunique o responsável comercial pelo canal interno antes de gerar a proposta.</span>
+    </div>
+    <div class="approval-field">
+      <label>Justificativa <span style="color:var(--pink)">*</span></label>
+      <textarea id="aprv-justificativa" placeholder="Ex: cliente estratégico, renovação, concorrente com preço menor..."></textarea>
+    </div>
+    <div class="approval-field">
+      <label>Validade da solicitação</label>
+      <select id="aprv-validade"><option value="24h">24 horas</option><option value="48h" selected>48 horas</option><option value="72h">72 horas</option><option value="7d">7 dias</option></select>
+    </div>
+    <div class="approval-actions">
+      <button class="btn-cancel" onclick="cancelarAprovacao()">Cancelar</button>
+      <button class="btn-solicitar" onclick="confirmarAprovacao()">Registrar solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ SUPABASE INIT ═══ */
+let supabaseClient = null;
+function initSupabase() {
+  const cfg = loadConfig();
+  if (!cfg.supabaseUrl || !cfg.supabaseKey) { updateDbStatus('disconnected'); return false; }
+  try { supabaseClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey); updateDbStatus('connected'); return true; }
+  catch(e) { updateDbStatus('error'); return false; }
+}
+function updateDbStatus(state) {
+  const dot = document.getElementById('db-status-dot'), lbl = document.getElementById('db-status-label');
+  if (!dot) return; dot.className = '';
+  if (state === 'connected') { dot.classList.add('connected'); if(lbl) lbl.textContent = 'Supabase conectado'; }
+  else if (state === 'error') { dot.classList.add('error'); if(lbl) lbl.textContent = 'Erro no banco'; }
+  else { if(lbl) lbl.textContent = 'Apenas local'; }
+}
+async function salvarSupabase() {
+  const url = document.getElementById('cfg-supabase-url').value.trim(), key = document.getElementById('cfg-supabase-key').value.trim();
+  if (!url || !key) { showToast('Preencha URL e Anon Key.', 'info'); return; }
+  saveConfig({ supabaseUrl: url, supabaseKey: key }); supabaseClient = null; initSupabase(); await testarSupabase();
+}
+async function testarSupabase() {
+  const s = document.getElementById('cfg-supabase-status');
+  if (!supabaseClient && !initSupabase()) { if(s){s.textContent='Não configurado';s.style.background='#FEF2F2';s.style.color='#DC2626';} return; }
+  try {
+    const { error } = await supabaseClient.from('propostas').select('id').limit(1);
+    if (error) throw error;
+    if(s){s.textContent='Conectado ✓';s.style.background='#F0FDF4';s.style.color='#16A34A';} updateDbStatus('connected'); showToast('Supabase conectado!','success');
+  } catch(e) { if(s){s.textContent='Erro: '+(e.message||'falha');s.style.background='#FEF2F2';s.style.color='#DC2626';} updateDbStatus('error'); showToast('Erro: '+(e.message||'verifique URL/key'),'info'); }
+}
+function copySql() { navigator.clipboard.writeText(document.getElementById('supabase-sql')?.textContent||'').then(()=>showToast('SQL copiado!','success')); }
+
+/* ═══ HISTÓRICO ═══ */
+const HIST_KEY = 'salesbud_historico';
+function histLoadLocal() { try { return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch { return []; } }
+function histSaveLocal(d) { try { localStorage.setItem(HIST_KEY, JSON.stringify(d.slice(0,500))); } catch { showToast('Armazenamento local cheio.','info'); } }
+function buildMetricsPayload(e) { return {...e, _vendedor_id: currentUser?.id||null, vendedor_nome: e.vendedor_nome||currentUser?.nome||'', _ts: new Date().toISOString(), _status_proposta:'enviada', _motivo_perda:null}; }
+function extractValorNum(s) { if(!s)return 0; const m=String(s).replace(/\./g,'').replace(',','.').match(/[\d.]+/); return m?parseFloat(m[0]):0; }
+async function histAdd(entry) {
+  const en = buildMetricsPayload(entry);
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('propostas').insert([{
+        vendedor_id:en._vendedor_id, vendedor_nome:en.vendedor_nome, tipo_proposta:en.tipo_proposta||'novo',
+        nome_empresa:en.nome_empresa, crm_cliente:en.crm_cliente, contato_nome:en.contato_nome, contato_email:en.contato_email,
+        pacote_horas:en.pacote_horas, preco_mensalidade:en.preco_mensalidade, preco_setup:en.preco_setup,
+        desconto_pct:en.desconto_pct||0, integ_tipo:en.descricao_setup, whatsapp_info:en.preco_whatsapp,
+        status_proposta:'enviada', data_proposta:en.data_proposta, validade_proposta:en.validade_proposta, payload_json:en,
+      }]);
+      if (error) throw error; return;
+    } catch(e) { console.warn('Supabase insert falhou:', e.message); }
+  }
+  const data = histLoadLocal(); data.unshift({...en, id:Date.now(), ts:new Date().toISOString()}); histSaveLocal(data);
+}
+async function atualizarStatusProposta(id, novoStatus, fonte) {
+  if (novoStatus==='perdida') { openPerdaModal(id,fonte); return; }
+  await _salvarStatusProposta(id, novoStatus, null, fonte);
+}
+async function _salvarStatusProposta(id, novoStatus, motivo, fonte) {
+  if (supabaseClient && fonte==='supabase') {
+    try { const p={status_proposta:novoStatus}; if(motivo)p.motivo_perda=motivo; const{error}=await supabaseClient.from('propostas').update(p).eq('id',id); if(error)throw error; }
+    catch(e) { showToast('Erro ao atualizar: '+e.message,'info'); }
+  } else {
+    const data=histLoadLocal(), idx=data.findIndex(d=>d.id===id);
+    if(idx!==-1){data[idx]._status_proposta=novoStatus; if(motivo)data[idx]._motivo_perda=motivo; histSaveLocal(data);}
+  }
+  const sel=document.querySelector(`select[data-prop-id="${id}"]`); if(sel) sel.className=`status-badge status-${novoStatus}`;
+  const labels={enviada:'Enviada',negociacao:'Negociação',aprovada:'Aprovada',perdida:'Perdida'};
+  showToast(`Status: ${labels[novoStatus]||novoStatus}`,'success'); renderHistorico();
+}
+async function renderHistorico() {
+  const loadingEl=document.getElementById('hist-loading'), tbodyEl=document.getElementById('hist-tbody'), emptyEl=document.getElementById('hist-empty');
+  if(loadingEl) loadingEl.style.display='block'; if(tbodyEl) tbodyEl.innerHTML='';
+  let data=[]; 
+  if (supabaseClient) {
+    try {
+      const{data:rows,error}=await supabaseClient.from('propostas').select('*').order('created_at',{ascending:false}).limit(500);
+      if(error)throw error;
+      data=rows.map(r=>({id:r.id,ts:r.created_at,tipo_proposta:r.tipo_proposta,nome_empresa:r.nome_empresa,crm_cliente:r.crm_cliente,contato_nome:r.contato_nome,contato_email:r.contato_email,vendedor_nome:r.vendedor_nome,pacote_horas:r.pacote_horas,preco_mensalidade:r.preco_mensalidade,preco_setup:r.preco_setup,desconto_pct:r.desconto_pct,_status_proposta:r.status_proposta,_motivo_perda:r.motivo_perda,data_proposta:r.data_proposta,detalhe_desconto:r.desconto_pct>0?`Desconto ${r.desconto_pct}% aplicado`:'',_fonte:'supabase'}));
+    } catch(e) { console.warn(e.message); data=histLoadLocal(); }
+  } else data=histLoadLocal();
+  if(loadingEl) loadingEl.style.display='none';
+  const search=(document.getElementById('hist-search')?.value||'').toLowerCase(), tipo=document.getElementById('hist-tipo')?.value||'', vend=document.getElementById('hist-vendedor')?.value||'';
+  const vs=document.getElementById('hist-vendedor');
+  if(vs){const vl=[...new Set(data.map(d=>d.vendedor_nome).filter(Boolean))],cur=vs.value;vs.innerHTML='<option value="">Todos os vendedores</option>'+vl.map(v=>`<option value="${esc(v)}" ${cur===v?'selected':''}>${esc(v)}</option>`).join('');}
+  const filtered=data.filter(d=>{const ms=!search||(d.nome_empresa||'').toLowerCase().includes(search)||(d.vendedor_nome||'').toLowerCase().includes(search);const mt=!tipo||d.tipo_proposta===tipo||(tipo==='novo'&&!d.tipo_proposta);const mv=!vend||d.vendedor_nome===vend;return ms&&mt&&mv;});
+  const ki=document.getElementById('hist-kpis');
+  if(ki){const tot=filtered.length,n=filtered.filter(d=>!d.tipo_proposta||d.tipo_proposta==='novo').length,u=filtered.filter(d=>d.tipo_proposta==='upsell_base').length,tv=filtered.reduce((s,d)=>s+extractValorNum(d.preco_mensalidade),0);ki.innerHTML=[{label:'Total de Propostas',val:tot},{label:'Novos Clientes',val:n},{label:'Upsell Base',val:u},{label:'Volume Total/mês',val:tv>0?fmt(tv):'—'}].map(k=>`<div><div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase">${k.label}</div><div style="font-size:22px;font-weight:800;color:var(--navy);font-family:'Syne',sans-serif;letter-spacing:-0.5px">${k.val}</div></div>`).join('');}
+  if(!filtered.length){if(emptyEl)emptyEl.style.display='block';return;} if(emptyEl)emptyEl.style.display='none';
+  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style='display:flex;gap:4px'><button onclick='editarProposta(${d.id},"${pf}")' style='font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600'>✏️</button><button onclick='excluirProposta(${d.id},"${pf}")' style='font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600'>🗑</button></div></td></tr>`}).join('');}
+}
+function exportHistorico() {
+  (async()=>{
+    let data=[]; if(supabaseClient){try{const{data:r}=await supabaseClient.from('propostas').select('*').order('created_at',{ascending:false});data=r||[];}catch{data=histLoadLocal();}}else data=histLoadLocal();
+    if(!data.length){showToast('Nenhuma proposta para exportar.','info');return;}
+    const headers=['data','tipo','empresa','vendedor','horas','valor_mes','setup','desconto_pct','crm','whatsapp','status','motivo_perda'];
+    const rows=data.map(d=>[d.data_proposta||(d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):''),d.tipo_proposta==='upsell_base'?'Base':'Novo',d.nome_empresa||'',d.vendedor_nome||'',d.pacote_horas||'',d.preco_mensalidade||'',d.preco_setup||'',d.desconto_pct!=null?d.desconto_pct+'%':'',d.crm_cliente||'',d.whatsapp_info||d.preco_whatsapp||'',d.status_proposta||d._status_proposta||'enviada',d.motivo_perda||d._motivo_perda||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+    const csv='﻿'+[headers.map(h=>`"${h}"`).join(','),...rows].join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=`salesbud_historico_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+    showToast(`${data.length} proposta(s) exportada(s).`,'success');
+  })();
+}
+
+/* ═══ MOTIVO PERDA ═══ */
+let _perdaContext=null;
+function openPerdaModal(id,fonte){_perdaContext={id,fonte};document.getElementById('perda-obs').value='';document.querySelectorAll('.perda-opt').forEach(b=>b.classList.remove('selected'));document.getElementById('perda-overlay').classList.add('show');}
+function selectPerdaOpt(el,val){document.querySelectorAll('.perda-opt').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');el.dataset.val=val;}
+function closePerdaModal(motivo){document.getElementById('perda-overlay').classList.remove('show');if(_perdaContext)_salvarStatusProposta(_perdaContext.id,'perdida',motivo,_perdaContext.fonte);_perdaContext=null;}
+function confirmPerda(){const s=document.querySelector('.perda-opt.selected'),obs=document.getElementById('perda-obs').value.trim();closePerdaModal([s?.dataset.val,obs].filter(Boolean).join(' — ')||null);}
+
+/* ═══ FALLBACK N8N ═══ */
+let _fallbackPayload='',_fallbackRetryFn=null;
+function showFallback(payloadStr,retryFn){_fallbackPayload=payloadStr;_fallbackRetryFn=retryFn;const p=document.getElementById('fallback-payload-preview');if(p){try{const o=JSON.parse(payloadStr);p.textContent=`{ "nome_empresa": "${o.nome_empresa||'...'}", "pacote_horas": "${o.pacote_horas||'...'}", ... }`;}catch{p.textContent=payloadStr.slice(0,80)+'...';}}navigator.clipboard?.writeText(payloadStr).catch(()=>{});document.getElementById('fallback-overlay').classList.add('show');}
+function closeFallback(){document.getElementById('fallback-overlay').classList.remove('show');_fallbackRetryFn=null;}
+function copyFallbackPayload(){navigator.clipboard.writeText(_fallbackPayload).then(()=>showToast('JSON copiado!','success'));}
+async function retryWebhook(){if(!_fallbackRetryFn)return;const btn=document.querySelector('.btn-retry');if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Tentando...';}await _fallbackRetryFn();if(btn){btn.disabled=false;btn.innerHTML='<span class="spinner"></span> Tentar novamente';}}
+
+/* ═══ TEMPLATE BANNER ═══ */
+const BANNER_DISMISS_KEY='salesbud_banner_dismissed_ver';
+function checkTemplateBanner(){const cfg=loadConfig(),dis=localStorage.getItem(BANNER_DISMISS_KEY)||'',cur=cfg.templateVersao||'',b=document.getElementById('template-update-banner');if(!b)return;if(cur&&cur!==dis){const m=document.getElementById('banner-template-msg'),s=document.getElementById('banner-template-sub');if(m)m.textContent=`Template atualizado — ${cur}`;if(s)s.textContent='Use sempre o link mais recente ao gerar propostas.';b.style.display='flex';}else b.style.display='none';}
+function dismissTemplateBanner(){localStorage.setItem(BANNER_DISMISS_KEY,loadConfig().templateVersao||'');const b=document.getElementById('template-update-banner');if(b)b.style.display='none';}
+function salvarTemplate(){const url=document.getElementById('cfg-template-url').value.trim(),versao=document.getElementById('cfg-template-versao').value.trim(),antes=loadConfig();if(versao&&versao!==antes.templateVersao)localStorage.removeItem(BANNER_DISMISS_KEY);saveConfig({templateUrl:url,templateVersao:versao});showToast('Template salvo.','success');checkTemplateBanner();}
+
+/* ═══ HUBSPOT PREFILL ═══ */
+async function checkHubSpotPrefill(){const params=new URLSearchParams(window.location.search),dealId=params.get('deal_id');if(!dealId)return;const banner=document.getElementById('hubspot-prefill-banner'),title=document.getElementById('hs-banner-title'),loader=document.getElementById('hs-loading-indicator');if(banner)banner.style.display='flex';const wh=getWebhookUrl(),isConf=wh&&!wh.includes('SEU-N8N');if(!isConf){if(title)title.textContent='deal_id detectado — configure o webhook para ativar prefill';if(loader)loader.innerHTML=`<span style="color:#D97706;font-size:12px">deal_id: ${dealId}</span>`;return;}if(title)title.textContent='Carregando dados do HubSpot...';if(loader)loader.innerHTML='<span class="hs-spinner"></span> Buscando...';const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),10000);try{const res=await fetch(wh,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_action:'hubspot_prefill',deal_id:dealId}),signal:ctrl.signal});clearTimeout(to);if(!res.ok)throw new Error('HTTP '+res.status);const deal=await res.json();const fields={'empresa':deal.nome_empresa||deal.dealname||'','contato-nome':deal.contato_nome||deal.contact_name||'','contato-email':deal.contato_email||deal.contact_email||'','crm':deal.crm||''};Object.entries(fields).forEach(([id,val])=>{const el=document.getElementById(id);if(!el||!val)return;if(el.tagName==='SELECT'){const exists=[...el.options].some(o=>o.value===val);if(!exists){const opt=document.createElement('option');opt.value=val;opt.textContent=val;el.appendChild(opt);}}el.value=val;});update();if(title)title.textContent=`Dados carregados — ${deal.nome_empresa||deal.dealname||'Deal '+dealId}`;if(loader)loader.innerHTML=`<span style="color:#16A34A;font-size:12px;font-weight:600">✓ Preenchido automaticamente</span>`;}catch(e){clearTimeout(to);if(title)title.textContent=e.name==='AbortError'?'Timeout — preencha manualmente':'Falha ao buscar deal';if(loader)loader.innerHTML=`<span style="color:#D97706;font-size:12px">deal_id: ${dealId}</span>`;}}
+
+/* ═══ AUTH ═══ */
+const _h=s=>btoa(unescape(encodeURIComponent(s))),_c=(plain,stored)=>_h(plain)===stored;
+let DB={users:[{id:1,nome:'Rafael Weigand',cargo:'CEO',email:'rafael.weigand@salesbud.com.br',senha:_h('rafael123'),telefone:'',cidade:'Curitiba, PR',perfil:'admin',status:'ativo'},{id:2,nome:'Caio Barbosa',cargo:'Account Executive',email:'caio.barbosa@salesbud.com.br',senha:_h('caio123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:3,nome:'Carol Almeida',cargo:'Account Executive',email:'carol.almeida@salesbud.com.br',senha:_h('carol123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:4,nome:'Eduardo Zarur',cargo:'Account Executive',email:'eduardo.zarur@salesbud.com.br',senha:_h('eduardo123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:5,nome:'Fabio Daux',cargo:'Account Executive',email:'fabio.daux@salesbud.com.br',senha:_h('fabio123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:6,nome:'Gabrielle Garcia',cargo:'Account Executive',email:'gabrielle.garcia@salesbud.com.br',senha:_h('gabrielle123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:7,nome:'Isabelle Nied',cargo:'Account Executive',email:'isabelle.nied@salesbud.com.br',senha:_h('isabelle123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:8,nome:'Lilian Lopes',cargo:'Account Executive',email:'lilian.lopes@salesbud.com.br',senha:_h('lilian123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:9,nome:'Luana Bonin',cargo:'Account Executive',email:'luana.bonin@salesbud.com.br',senha:_h('luana123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:10,nome:'Lucas Winter',cargo:'Account Executive',email:'lucas.winter@salesbud.com.br',senha:_h('lucas123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:11,nome:'Matheus Weigand',cargo:'Account Executive',email:'matheus.weigand@salesbud.com.br',senha:_h('matheus123'),telefone:'',cidade:'Curitiba, PR',perfil:'vendedor',status:'ativo'},{id:12,nome:'João Guilherme Morais',cargo:'Account Executive',email:'joao.morais@salesbud.com.br',senha:_h('joao123'),telefone:'',cidade:'Curitiba, PR',perfil:'admin',status:'ativo'}],nextId:13};
+let currentUser=null,editingUserId=null;
+function fazerLogin(){const email=document.getElementById('login-email').value.trim().toLowerCase(),senha=document.getElementById('login-senha').value,errEl=document.getElementById('login-error'),btnEl=document.getElementById('btn-login'),user=DB.users.find(u=>u.email.toLowerCase()===email&&_c(senha,u.senha)&&u.status==='ativo');if(!user){errEl.style.display='block';document.getElementById('login-senha').value='';return;}errEl.style.display='none';if(btnEl){btnEl.disabled=true;btnEl.textContent='Entrando...';}currentUser=user;iniciarApp();if(btnEl){btnEl.disabled=false;btnEl.textContent='Entrar';}}
+function fazerLogout(){currentUser=null;mostrarScreen('login');document.getElementById('login-email').value='';document.getElementById('login-senha').value='';}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});document.getElementById('login-email').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});});
+
+/* ═══ APP INIT ═══ */
+function iniciarApp(){document.getElementById('nav-username').textContent=currentUser.nome.split(' ')[0];document.getElementById('nav-userrole').textContent=currentUser.perfil==='admin'?'Administrador':'Vendedor';document.getElementById('nav-avatar').textContent=initials(currentUser.nome);document.getElementById('nav-admin-section').style.display=currentUser.perfil==='admin'?'block':'none';document.getElementById('chip-avatar').textContent=initials(currentUser.nome);document.getElementById('chip-name').textContent=currentUser.nome;document.getElementById('chip-sub').textContent=[currentUser.cargo,currentUser.telefone].filter(Boolean).join(' · ');mostrarScreen('app');initSupabase();checkTemplateBanner();navTo('proposta');update();setTimeout(checkHubSpotPrefill,100);}
+function mostrarScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+
+/* ═══ NAV ═══ */
+const PAGE_META={proposta:{title:'Nova Proposta — Novos Clientes',subtitle:'Para o time de vendas · Preencha os dados e configure o pacote'},base:{title:'Nova Proposta — Clientes de Base',subtitle:'Para gestores de conta · Diagnóstico e upsell de clientes ativos'},historico:{title:'Histórico de Propostas',subtitle:'Registro de todas as propostas geradas pela equipe'},usuarios:{title:'Usuários',subtitle:'Gerencie os membros da equipe de vendas'},config:{title:'Configurações',subtitle:'Supabase, webhook, template e tabela de preços'}};
+function navTo(page){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('nav-'+page)?.classList.add('active');document.getElementById('page-'+page)?.classList.add('active');const m=PAGE_META[page];if(m){document.getElementById('page-title').textContent=m.title;document.getElementById('page-subtitle').textContent=m.subtitle;}if(page==='usuarios')renderTabela();if(page==='config'){initConfig();initImportArea();}if(page==='base')initBase();if(page==='historico')renderHistorico();const nb=document.getElementById('btn-nova-proposta');if(nb)nb.style.display=(page==='proposta'||page==='base')?'block':'none';}
+
+/* ═══ USUÁRIOS ═══ */
+function renderTabela(){const q=(document.getElementById('user-search')?.value||'').toLowerCase(),filtered=DB.users.filter(u=>u.nome.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)),tbody=document.getElementById('users-tbody'),empty=document.getElementById('users-empty');if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=filtered.map(u=>`<tr><td><div class="td-name"><div class="td-avatar">${initials(u.nome)}</div>${esc(u.nome)}</div></td><td>${esc(u.cargo||'—')}</td><td>${esc(u.email)}</td><td>${esc(u.telefone||'—')}</td><td><span class="badge ${u.perfil==='admin'?'badge-admin':'badge-seller'}">${u.perfil==='admin'?'Admin':'Vendedor'}</span></td><td><span class="badge ${u.status==='ativo'?'badge-active':'badge-inactive'}">${u.status==='ativo'?'Ativo':'Inativo'}</span></td><td><div class="row-actions"><button class="btn-icon" onclick="editarUsuario(${u.id})">Editar</button>${u.id!==currentUser.id?`<button class="btn-icon danger" onclick="toggleStatus(${u.id})">${u.status==='ativo'?'Desativar':'Ativar'}</button>`:''}</div></td></tr>`).join('');}
+function toggleStatus(id){const u=DB.users.find(u=>u.id===id);if(!u)return;u.status=u.status==='ativo'?'inativo':'ativo';renderTabela();showToast(u.status==='ativo'?'Reativado':'Desativado',u.status==='ativo'?'success':'info');}
+function abrirModal(user=null){editingUserId=user?user.id:null;document.getElementById('modal-title').textContent=user?'Editar usuário':'Novo usuário';['nome','cargo','email','telefone','cidade'].forEach(f=>{document.getElementById('m-'+f).value=user?.[f]||'';});document.getElementById('m-senha').value='';document.getElementById('m-perfil').value=user?.perfil||'vendedor';document.getElementById('m-status').value=user?.status||'ativo';document.getElementById('modal-error').style.display='none';document.getElementById('m-senha').placeholder=user?'Deixe vazio para manter':'Mín. 6 caracteres';document.getElementById('modal-overlay').classList.add('open');setTimeout(()=>document.getElementById('m-nome').focus(),100);}
+function editarUsuario(id){const u=DB.users.find(u=>u.id===id);if(u)abrirModal(u);}
+function fecharModal(){document.getElementById('modal-overlay').classList.remove('open');editingUserId=null;}
+function fecharModalSeSide(e){if(e.target===document.getElementById('modal-overlay'))fecharModal();}
+function salvarUsuario(){const nome=document.getElementById('m-nome').value.trim(),cargo=document.getElementById('m-cargo').value.trim(),email=document.getElementById('m-email').value.trim().toLowerCase(),senha=document.getElementById('m-senha').value,telefone=document.getElementById('m-telefone').value.trim(),cidade=document.getElementById('m-cidade').value.trim(),perfil=document.getElementById('m-perfil').value,status=document.getElementById('m-status').value,errEl=document.getElementById('modal-error');if(!nome||!email){errEl.textContent='Nome e email são obrigatórios.';errEl.style.display='block';return;}if(!editingUserId&&!senha){errEl.textContent='Defina uma senha.';errEl.style.display='block';return;}if(senha&&senha.length<6){errEl.textContent='Senha: mín. 6 caracteres.';errEl.style.display='block';return;}if(DB.users.find(u=>u.email===email&&u.id!==editingUserId)){errEl.textContent='Email já cadastrado.';errEl.style.display='block';return;}errEl.style.display='none';if(editingUserId){const u=DB.users.find(u=>u.id===editingUserId);Object.assign(u,{nome,cargo,email,telefone,cidade,perfil,status});if(senha)u.senha=_h(senha);if(currentUser.id===editingUserId){currentUser=u;document.getElementById('nav-username').textContent=u.nome.split(' ')[0];document.getElementById('nav-avatar').textContent=initials(u.nome);}showToast('Usuário atualizado.','success');}else{DB.users.push({id:DB.nextId++,nome,cargo,email,senha:_h(senha),telefone,cidade,perfil,status});showToast('Usuário criado.','success');}fecharModal();renderTabela();}
+
+/* ═══ TABELA PREÇOS ═══ */
+const TABELA_HORAS_DEFAULT=[{horas:50,preco:399},{horas:100,preco:599},{horas:150,preco:799},{horas:200,preco:990},{horas:300,preco:1490},{horas:400,preco:1990},{horas:500,preco:2490},{horas:750,preco:2990},{horas:1000,preco:3590},{horas:1250,preco:5390},{horas:1500,preco:6290},{horas:2000,preco:7990},{horas:3000,preco:12347},{horas:4000,preco:13558},{horas:5000,preco:16140},{horas:7500,preco:24210},{horas:10000,preco:32280}];
+const TABELA_VERSION=4;let tabelaEditavel=null;
+function getTabelaAtiva(){if(tabelaEditavel)return tabelaEditavel;try{const s=JSON.parse(localStorage.getItem('salesbud_tabela')||'null'),v=parseInt(localStorage.getItem('salesbud_tabela_ver')||'0');if(s&&s.length>0&&v>=TABELA_VERSION){tabelaEditavel=s;return s;}}catch{}tabelaEditavel=TABELA_HORAS_DEFAULT.map(t=>({...t}));return tabelaEditavel;}
+function calcPrecoExato(horas){const tab=getTabelaAtiva().map(t=>({...t,precoHora:t.preco/t.horas}));if(!horas||horas<=0)return{precoEfetivo:0,precoHora:0,tierIdx:0,horasEfetivas:0,exato:false};const ul=tab[tab.length-1],ie=tab.findIndex(t=>t.horas===horas);if(ie!==-1)return{precoEfetivo:tab[ie].preco,precoHora:tab[ie].precoHora,tierIdx:ie,horasEfetivas:horas,exato:true};if(horas>ul.horas)return{precoEfetivo:Math.round(horas*ul.precoHora),precoHora:ul.precoHora,tierIdx:tab.length-1,horasEfetivas:horas,exato:false,acimaDaTabela:true};let tierRef=tab[0],tierIdx=0;for(let i=tab.length-1;i>=0;i--){if(tab[i].horas<horas){tierRef=tab[i];tierIdx=i;break;}}return{precoEfetivo:Math.round(horas*tierRef.precoHora),precoHora:tierRef.precoHora,tierIdx,horasEfetivas:horas,exato:false,interpolado:true};}
+
+/* ═══ INTEG / WHATS ═══ */
+const INTEG={lite:{nome:'Lite',setup:0,fee:0,tag:'tag-lite',label:'Lite — Preenchimento de notas',descricao:'CRM Nativos SalesBud ou CRM com API aberta',scope:['Preenchimento de notas e observações no CRM','CRM Nativos SalesBud ou CRM com API aberta','Sob consulta de viabilidade técnica','SLA: 3 a 6 semanas']},basico:{nome:'Básico',setup:1200,fee:0,tag:'tag-basico',label:'Básico — até 5 campos personalizados',descricao:'CRM Nativos SalesBud ou CRM com API aberta',scope:['Tudo do Lite','Preenchimento de até 5 campos personalizados','CRM Nativos SalesBud ou CRM com API aberta','Sob consulta de viabilidade técnica','SLA: 3 a 6 semanas']},intermediario:{nome:'Intermediário',setup:3000,fee:499,tag:'tag-intermediario',label:'Intermediário — campos + criação de tarefas',descricao:'CRM Nativos SalesBud ou CRM com API aberta',scope:['Tudo do Básico','Preenchimento de até 10 campos personalizados','Criação de tarefas no CRM','Integração com até 2 pipelines','Sob consulta de viabilidade técnica','SLA: 3 a 6 semanas']},premium:{nome:'Premium',setup:null,fee:null,tag:'tag-premium',label:'Premium — sob consulta',descricao:'CRM Nativos SalesBud ou CRM com API aberta',scope:['Integrações totalmente customizadas','Qualquer funcionalidade tecnicamente viável','CRM Nativos SalesBud ou CRM com API aberta','Sob consulta de viabilidade técnica','Até 10 manutenções por ano','SLA: 3 a 6 semanas','Investimento sob consulta']}};
+const WHATS_TIERS=[{min:1,max:5,preco:100},{min:6,max:10,preco:90},{min:11,max:20,preco:80},{min:21,max:30,preco:70},{min:31,max:50,preco:60},{min:51,max:999,preco:50}];
+const fmt=v=>v==null?'Sob consulta':'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:0});
+function getWhatsPrice(u){return(WHATS_TIERS.find(t=>u>=t.min&&u<=t.max)||{preco:50}).preco;}
+function getTotalWhats(u){return getWhatsPrice(u)*u;}
+function initials(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ═══ STATE ═══ */
+let state={empresa:'',crm:'',contatoNome:'',contatoEmail:'',integKey:'basico',whatsAtivo:true,whatsUsers:5,desconto:0,_aprovacaoDesconto:null};
+function selectInteg(key,el){state.integKey=key;document.querySelectorAll('.integ-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');update();}
+function toggleWhats(val){state.whatsAtivo=val;document.getElementById('whats-sim').classList.toggle('active',val);document.getElementById('whats-nao').classList.toggle('active',!val);document.getElementById('whats-users-wrap').style.display=val?'flex':'none';update();}
+function onDescontoSlider(sliderId,modulo){const val=parseInt(document.getElementById(sliderId).value),lim=loadConfig().descontoMax??10;if(val>lim&&currentUser?.perfil!=='admin'){document.getElementById(sliderId).value=lim;const lid=sliderId==='desconto'?'desc-label':'base-desc-label';document.getElementById(lid).textContent=lim+'%';if(modulo==='proposta'){state.desconto=lim;update();}else{stateBase.desconto=lim;updateBase();}showToast(`Máximo sem aprovação: ${lim}%`,'info');return;}const lid=sliderId==='desconto'?'desc-label':'base-desc-label';document.getElementById(lid).textContent=val+'%';if(modulo==='proposta'){state.desconto=val;update();}else{stateBase.desconto=val;updateBase();}}
+function setDisc(val,el,modulo){const lim=loadConfig().descontoMax??10;if(val>lim&&currentUser?.perfil!=='admin'){pedirAprovacaoDesconto(val,modulo||'proposta');return;}if(!modulo||modulo==='proposta'){state.desconto=val;document.getElementById('desconto').value=Math.min(val,30);document.getElementById('desc-label').textContent=val+'%';document.querySelectorAll('#disc-presets-novos .disc-preset').forEach(b=>b.classList.remove('active'));}else{stateBase.desconto=val;document.getElementById('base-desconto').value=Math.min(val,40);document.getElementById('base-desc-label').textContent=val+'%';document.querySelectorAll('#disc-presets-base .disc-preset').forEach(b=>b.classList.remove('active'));}el.classList.add('active');if(!modulo||modulo==='proposta')update();else updateBase();}
+function validarEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function validarCampos(){let ok=true;const emp=document.getElementById('empresa').value.trim(),eml=document.getElementById('contato-email').value.trim();const eE=document.getElementById('err-empresa'),eM=document.getElementById('err-email'),elE=document.getElementById('empresa'),elM=document.getElementById('contato-email');if(!emp){eE?.classList.add('show');elE?.classList.add('error');ok=false;}else{eE?.classList.remove('show');elE?.classList.remove('error');}if(eml&&!validarEmail(eml)){eM?.classList.add('show');elM?.classList.add('error');ok=false;}else{eM?.classList.remove('show');elM?.classList.remove('error');}return ok;}
+
+/* ═══ UPDATE — com Total Geral ═══ */
+function update(){
+  state.empresa=document.getElementById('empresa').value.trim(); state.crm=document.getElementById('crm').value;
+  const crmApiEl=document.getElementById('crm-api-aviso');if(crmApiEl)crmApiEl.style.display=state.crm==='api-aberta'?'block':'none';
+  state.contatoNome=document.getElementById('contato-nome')?.value.trim()||''; state.contatoEmail=document.getElementById('contato-email')?.value.trim()||'';
+  state.whatsUsers=parseInt(document.getElementById('whats-users')?.value)||0; state.desconto=parseInt(document.getElementById('desconto').value)||0;
+  document.getElementById('desc-label').textContent=state.desconto+'%';
+  document.querySelectorAll('#disc-presets-novos .disc-preset').forEach(b=>b.classList.toggle('active',parseInt(b.textContent)===state.desconto));
+  const hd=parseInt(document.getElementById('horas-input').value)||0, r=calcPrecoExato(hd);
+  const aA=document.getElementById('horas-acima-aviso'),aI=document.getElementById('horas-interpolado-aviso');
+  if(r.acimaDaTabela){if(aA){aA.style.display='flex';document.getElementById('horas-acima-calc').textContent=`${hd.toLocaleString('pt-BR')}h × R$ ${r.precoHora.toFixed(3)}/h = ${fmt(r.precoEfetivo)}/mês`;}if(aI)aI.style.display='none';}
+  else if(r.interpolado){const tab2=getTabelaAtiva(),proxFaixa=tab2.find(t=>t.horas>hd);if(aI){aI.style.display='flex';document.getElementById('horas-interpolado-calc').textContent=`${hd.toLocaleString('pt-BR')}h × R$ ${r.precoHora.toFixed(3)}/h = ${fmt(r.precoEfetivo)}/mês`;const pf=document.getElementById('horas-proxima-faixa');const bArr=document.getElementById('btn-arredondar');if(pf&&proxFaixa){pf.textContent=`Próxima faixa: ${proxFaixa.horas.toLocaleString('pt-BR')}h = ${fmt(proxFaixa.preco)}/mês`;if(bArr){bArr.textContent=`↑ ${proxFaixa.horas.toLocaleString('pt-BR')}h`;bArr.dataset.target=proxFaixa.horas;}}else if(pf){pf.textContent='';}}if(aA)aA.style.display='none';}
+  else{if(aA)aA.style.display='none';if(aI)aI.style.display='none';}
+  document.getElementById('horas-label').textContent=r.horasEfetivas.toLocaleString('pt-BR')+'h';
+  document.getElementById('pacote-preco-label').textContent=fmt(r.precoEfetivo);
+  const tLen=getTabelaAtiva().length;
+  document.getElementById('pacote-idx-label').textContent=r.acimaDaTabela?`R$ ${r.precoHora.toFixed(3)}/h (acima da tabela)`:r.interpolado?`interpolado · R$ ${r.precoHora.toFixed(3)}/h`:`pacote ${r.tierIdx+1} de ${tLen}`;
+  const integ=INTEG[state.integKey],isPremium=state.integKey==='premium';
+  const precoBase=r.precoEfetivo, descVal=precoBase&&state.desconto>0?Math.round(precoBase*state.desconto/100):0;
+  const precoFinal=precoBase?precoBase-descVal:null, feeMensal=integ.fee||0;
+  const mensalSB=precoFinal!=null?precoFinal+feeMensal:null;                      /* mensalidade SalesBud (sem whats) */
+  const whatsTotal=state.whatsAtivo&&state.whatsUsers>0?getTotalWhats(state.whatsUsers):0;
+  const whatsPreco=state.whatsAtivo&&state.whatsUsers>0?getWhatsPrice(state.whatsUsers):0;
+  const totalGeral=mensalSB!=null?mensalSB+whatsTotal:null;                       /* TOTAL GERAL */
+  const compEl=document.getElementById('company-display');
+  if(state.empresa){compEl.textContent=state.empresa;compEl.classList.remove('empty');}else{compEl.textContent='Nome da empresa';compEl.classList.add('empty');}
+  const pills=document.getElementById('meta-pills');pills.innerHTML='';
+  if(state.crm)pills.innerHTML+=`<div class="meta-pill">CRM <span>${esc(state.crm)}</span></div>`;
+  pills.innerHTML+=`<div class="meta-pill">Horas <span>${r.horasEfetivas.toLocaleString('pt-BR')}h/mês</span></div>`;
+  if(state.whatsAtivo&&state.whatsUsers>0)pills.innerHTML+=`<div class="meta-pill">WhatsApp <span>${state.whatsUsers} users</span></div>`;
+  document.getElementById('integ-badge-wrap').innerHTML=`<div class="integ-badge"><span class="tag ${integ.tag}">${integ.nome}</span>${esc(integ.label)}</div>`;
+  const badgeEl=document.getElementById('price-desconto-badge');
+  if(state.desconto>0&&precoBase&&descVal>0&&badgeEl){badgeEl.style.display='flex';document.getElementById('price-desconto-pct').textContent=`−${state.desconto}% de desconto`;document.getElementById('price-desconto-reais').textContent=`− ${fmt(descVal)}/mês`;document.getElementById('price-desconto-original').textContent=`tabela: ${fmt(precoBase)}/mês`;document.getElementById('price-desconto-anual').textContent=`economia de ${fmt(descVal*12)}/ano`;}else if(badgeEl)badgeEl.style.display='none';
+  /* topo do card: total geral */
+  document.getElementById('price-main').textContent=totalGeral!=null?fmt(totalGeral):'—';
+  const pmSub=document.getElementById('price-main-sub');
+  if(pmSub){if(whatsTotal>0&&mensalSB!=null){pmSub.style.display='block';pmSub.textContent=`s/ WhatsApp: ${fmt(mensalSB)}/mês`;}else pmSub.style.display='none';}
+  /* BREAKDOWN */
+  let html='';
+  if(precoBase)html+=`<div class="price-row"><span class="price-row-label">Mensalidade SalesBud</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`;
+  if(descVal>0)html+=`<div class="price-row" style="flex-direction:column;align-items:stretch;gap:2px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="price-row-label">Desconto aplicado (${state.desconto}%)</span><span class="price-row-val red">− ${fmt(descVal)}/mês</span></div><div style="display:flex;justify-content:flex-end"><span style="font-size:11px;font-weight:600;color:#F87171;opacity:.85">↳ economia de ${fmt(descVal*12)}/ano</span></div></div>`;
+  if(feeMensal>0)html+=`<div class="price-row"><span class="price-row-label">Manutenção integração</span><span class="price-row-val amber">${fmt(feeMensal)}/mês</span></div>`;
+  if(mensalSB!=null&&(descVal>0||feeMensal>0||whatsTotal>0))html+=`<div class="price-row"><span class="price-row-label" style="color:var(--text3);font-size:12px">Subtotal s/ WhatsApp</span><span class="price-row-val" style="color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`;
+  if(whatsTotal>0)html+=`<div class="price-row"><span class="price-row-label">WhatsApp (${state.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`;
+  /* linha total geral em destaque */
+  if(totalGeral!=null){
+    if(whatsTotal>0){
+      html+=`<div class="price-row total" style="border-top:2px solid var(--navy);margin-top:6px;padding-top:12px"><span class="price-row-label" style="font-size:13px;font-weight:700;color:var(--text2)">Total s/ WhatsApp</span><span class="price-row-val" style="font-size:15px;font-weight:700;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`;
+      html+=`<div class="price-row total" style="margin-top:2px;padding-top:6px"><span class="price-row-label" style="font-size:14px;font-weight:800;color:var(--navy)">Total c/ WhatsApp</span><span class="price-row-val" style="font-size:17px;font-weight:800;color:var(--navy)">${fmt(totalGeral)}/mês</span></div>`;
+    } else {
+      html+=`<div class="price-row total" style="border-top:2px solid var(--navy);margin-top:6px;padding-top:12px"><span class="price-row-label" style="font-size:14px;font-weight:700;color:var(--navy)">Total geral / mês</span><span class="price-row-val" style="font-size:16px;font-weight:800;color:var(--navy)">${fmt(totalGeral)}/mês</span></div>`;
+    }
+  }
+  if(integ.setup!=null&&integ.setup>0)html+=`<div class="price-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3);font-size:12px">+ Setup integração <span style="font-size:11px;font-weight:500">(pagamento pontual, parcelável em até 12x)</span></span><span class="price-row-val amber">${fmt(integ.setup)}</span></div>`;
+  if(isPremium)html+=`<div class="price-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3);font-size:12px">+ Setup Premium <span style="font-size:11px;font-weight:500">(pagamento pontual, parcelável em até 12x)</span></span><span class="price-row-val dim">Sob consulta</span></div>`;
+  document.getElementById('price-rows').innerHTML=html;
+  document.getElementById('scope-section').style.display='block';
+  document.getElementById('scope-items').innerHTML=integ.scope.map(s=>`<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('');
+  const wc=document.getElementById('whats-card');
+  if(state.whatsAtivo&&state.whatsUsers>0){wc.style.display='block';document.getElementById('whats-price-display').textContent=fmt(whatsTotal)+'/mês';document.getElementById('whats-desc').textContent=`${state.whatsUsers} user(s) × ${fmt(whatsPreco)}/user = ${fmt(whatsTotal)}/mês · Cobrado separadamente`;}else wc.style.display='none';
+  document.getElementById('premium-alert').style.display=isPremium?'flex':'none';
+  renderPayload(r.horasEfetivas,integ,precoFinal,mensalSB,totalGeral,descVal,whatsTotal,whatsPreco);
+  const horasOk=hd>0,emailOk=!state.contatoEmail||validarEmail(state.contatoEmail),canGen=state.empresa&&!isPremium&&precoFinal!=null&&horasOk&&emailOk;
+  document.getElementById('btn-gen').disabled=!canGen;
+  const lim=loadConfig().descontoMax??10,bEl=document.getElementById('btn-gen');
+  if(bEl){if(state.desconto>lim&&state._aprovacaoDesconto?.status_aprovacao==='pendente'){bEl.textContent='Gerar (aprovação pendente)';bEl.style.background='#D97706';}else{bEl.textContent='Gerar Proposta';bEl.style.background='';}}
+  const tip=document.getElementById('btn-gen-tooltip');
+  if(tip){if(!state.empresa)tip.textContent='Preencha o nome da empresa';else if(!horasOk)tip.textContent='Informe o volume de horas';else if(!emailOk)tip.textContent='E-mail inválido';else if(isPremium)tip.textContent='Integração Premium é sob consulta';else tip.textContent='Pronto para gerar!';}
+}
+
+/* ═══ PAYLOAD ═══ */
+function renderPayload(horasEfetivas,integ,precoFinal,mensalSB,totalGeral,descVal,whatsTotal,whatsPreco){
+  if(!currentUser)return;const cfg=loadConfig(),hoje=new Date(),val=new Date(hoje.getTime()+(cfg.validadeProposta||15)*86400000),fmtD=d=>d.toLocaleDateString('pt-BR');
+  const data={nome_empresa:state.empresa||'',crm_cliente:state.crm||'',contato_nome:state.contatoNome||'',contato_email:state.contatoEmail||'',titulo_proposta:`Proposta ${integ.nome} — ${state.empresa||'(empresa)'}`,pacote_horas:String(horasEfetivas),preco_mensalidade:precoFinal?fmt(precoFinal)+'/mês':'Sob consulta',fee_manutencao:integ.fee>0?fmt(integ.fee)+'/mês':'Não incluso',preco_whatsapp:state.whatsAtivo&&state.whatsUsers>0?`${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`:'Não incluso',total_geral_mes:totalGeral?fmt(totalGeral)+'/mês':'Sob consulta',detalhe_desconto:descVal>0?`Desconto de ${state.desconto}% aplicado`:'Preço padrão',preco_setup:integ.setup!=null?(integ.setup===0?'Gratuito':fmt(integ.setup)):'Sob consulta',descricao_setup:integ.descricao,vendedor_nome:currentUser.nome,vendedor_email:currentUser.email,vendedor_telefone:currentUser.telefone||'',vendedor_cidade:currentUser.cidade||'',desconto_pct:state.desconto,aprovacao_desconto:state.desconto>10?(state._aprovacaoDesconto||null):null,template_url:cfg.templateUrl||'',template_versao:cfg.templateVersao||'',data_proposta:fmtD(hoje),validade_proposta:fmtD(val),tipo_proposta:'novo'};
+  const colored=JSON.stringify(data,null,2).replace(/"([^"]+)":/g,'<span class="json-key">"$1"</span>:').replace(/: "([^"]*)"/g,': <span class="json-str">"$1"</span>');
+  document.getElementById('payload').innerHTML=colored;
+}
+function copyPayload(){navigator.clipboard.writeText(document.getElementById('payload').textContent).then(()=>showToast('Payload copiado!','success'));}
+
+/* ═══ GERAR PROPOSTA ═══ */
+async function gerarProposta(){if(!validarCampos()){showToast('Corrija os campos em destaque.','info');return;}const btn=document.getElementById('btn-gen');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando...';const pr=document.getElementById('payload').textContent;let po={};try{po=JSON.parse(pr);}catch{}await histAdd({...po,tipo_proposta:po.tipo_proposta||'novo'});const wh=getWebhookUrl();if(!wh||wh.includes('SEU-N8N')){showFallback(pr,null);btn.innerHTML='Gerar Proposta';btn.disabled=false;return;}const makeReq=async()=>{const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),15000);try{const r=await fetch(wh,{method:'POST',headers:{'Content-Type':'application/json'},body:pr,signal:ctrl.signal});clearTimeout(to);if(r.ok){btn.innerHTML='✓ Proposta enviada!';btn.style.background='var(--green)';showToast('Proposta enviada! Verifique o Gmail.','success');setTimeout(()=>{btn.innerHTML='Gerar Proposta';btn.style.background='';btn.disabled=false;},4000);}else throw new Error('HTTP '+r.status);}catch(e){clearTimeout(to);btn.innerHTML='Gerar Proposta';btn.style.background='';btn.disabled=false;showFallback(pr,makeReq);}};await makeReq();}
+
+/* ═══ CALCULADORA ═══ */
+function calcPreviewHoras(){const u=parseFloat(document.getElementById('calc-usuarios').value)||0,h=parseFloat(document.getElementById('calc-hdia').value)||0,d=parseFloat(document.getElementById('calc-dias').value)||0,t=Math.round(u*h*d),el=document.getElementById('calc-resultado');el.textContent='~'+t.toLocaleString('pt-BR')+'h/mês';el.dataset.valor=t;document.getElementById('calc-formula').textContent=`${u} usuário(s) × ${h}h × ${d} dias`;}
+function aplicarCalcHoras(){const t=parseInt(document.getElementById('calc-resultado').dataset.valor)||0;if(!t)return;document.getElementById('horas-input').value=t;update();}
+
+/* ═══ RESET ═══ */
+function resetState(){state={empresa:'',crm:'',contatoNome:'',contatoEmail:'',integKey:'basico',whatsAtivo:true,whatsUsers:5,desconto:0,_aprovacaoDesconto:null};['empresa','contato-nome','contato-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('crm').value='';document.getElementById('horas-input').value='300';document.getElementById('whats-users').value='5';document.getElementById('desconto').value='0';document.getElementById('desc-label').textContent='0%';document.querySelectorAll('.integ-card').forEach((c,i)=>c.classList.toggle('active',i===1));document.getElementById('whats-sim').classList.add('active');document.getElementById('whats-nao').classList.remove('active');document.getElementById('whats-users-wrap').style.display='flex';['err-empresa','err-email','err-crm'].forEach(id=>document.getElementById(id)?.classList.remove('show'));['empresa','contato-email','crm'].forEach(id=>document.getElementById(id)?.classList.remove('error'));update();}
+function novaPropostaConfirm(){const p=document.querySelector('.page.active')?.id,d=p==='page-proposta'?(state.empresa||state.crm):(stateBase.empresa||stateBase.crm||stateBase.valorAtual);if(d&&!confirm('Limpar o formulário e começar nova proposta?'))return;if(p==='page-base')resetStateBase();else resetState();}
+
+/* ═══ STATE BASE ═══ */
+const stateBase={empresa:'',crm:'',contatoNome:'',contatoEmail:'',horasAtual:0,valorAtual:0,usuariosAtual:5,integKey:'basico',whatsAtivo:true,whatsUsers:5,desconto:0,_aprovacaoDesconto:null,diag:{crm:false,crmNativo:false,campos:false,nCampos:3,voip:false,voipNativo:false,voipCampos:false,whats:false,cs:false,extras:false}};
+function initBase(){const u=currentUser;if(u){document.getElementById('base-chip-avatar').textContent=initials(u.nome);document.getElementById('base-chip-name').textContent=u.nome;document.getElementById('base-chip-sub').textContent=`${u.cargo} · ${u.cidade}`;}updateBase();}
+function baseCalcPreview(){const u=parseFloat(document.getElementById('base-calc-usuarios')?.value)||0,h=parseFloat(document.getElementById('base-calc-hdia')?.value)||0,d=parseFloat(document.getElementById('base-calc-dias')?.value)||0,t=Math.round(u*h*d),el=document.getElementById('base-calc-resultado');if(el){el.textContent='~'+t.toLocaleString('pt-BR')+'h';el.dataset.valor=t;}const f=document.getElementById('base-calc-formula');if(f)f.textContent=`${u} × ${h}h × ${d} dias`;}
+function aplicarBaseCalc(){const t=parseInt(document.getElementById('base-calc-resultado')?.dataset.valor)||0;if(!t)return;document.getElementById('base-horas-input').value=t;updateBase();}
+const DIAG_ID={crm:'diag-crm',crmNativo:'diag-crmnativo',campos:'diag-campos',voip:'diag-voip',voipNativo:'diag-voipnativo',voipCampos:'diag-voipcampos',whats:'diag-whats',cs:'diag-cs',extras:'diag-extras'};
+function setDiag(key,val){stateBase.diag[key]=val;const base=DIAG_ID[key];if(base){document.getElementById(base+'-sim')?.classList.toggle('active',val);document.getElementById(base+'-nao')?.classList.toggle('active',!val);}document.getElementById('diag-crm-sub')?.style.setProperty('display',stateBase.diag.crm?'block':'none');document.getElementById('diag-voip-sub')?.style.setProperty('display',stateBase.diag.voip?'block':'none');document.getElementById('diag-campos-sub')?.style.setProperty('display',stateBase.diag.campos?'block':'none');updateBase();}
+function toggleBaseWhats(val){stateBase.whatsAtivo=val;document.getElementById('base-whats-sim').classList.toggle('active',val);document.getElementById('base-whats-nao').classList.toggle('active',!val);document.getElementById('base-whats-wrap').style.display=val?'flex':'none';updateBase();}
+function selectBaseInteg(key,el){stateBase.integKey=key;document.querySelectorAll('#base-integ-btns .integ-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');updateBase();}
+
+function updateBase(){
+  stateBase.empresa=document.getElementById('base-empresa')?.value.trim()||''; stateBase.crm=document.getElementById('base-crm')?.value||'';
+  stateBase.contatoNome=document.getElementById('base-contato-nome')?.value.trim()||''; stateBase.contatoEmail=document.getElementById('base-contato-email')?.value.trim()||'';
+  stateBase.horasAtual=parseInt(document.getElementById('base-horas-atual')?.value)||0; stateBase.valorAtual=parseFloat(document.getElementById('base-valor-atual')?.value)||0;
+  stateBase.usuariosAtual=parseInt(document.getElementById('base-usuarios-atual')?.value)||0; stateBase.whatsUsers=parseInt(document.getElementById('base-whats-users')?.value)||1;
+  stateBase.desconto=parseInt(document.getElementById('base-desconto')?.value)||0; stateBase.diag.nCampos=parseInt(document.getElementById('diag-ncampos')?.value)||0;
+  document.getElementById('base-desc-label').textContent=stateBase.desconto+'%';
+  const hd=parseInt(document.getElementById('base-horas-input')?.value)||0, r=calcPrecoExato(hd);
+  const precoBase=r.precoEfetivo, descVal=Math.round(precoBase*(stateBase.desconto/100)), precoFinal=precoBase-descVal;
+  const integ=INTEG[stateBase.integKey], feeInteg=integ.fee||0;
+  const whatsTotal=stateBase.whatsAtivo?getTotalWhats(stateBase.whatsUsers):0, whatsPreco=stateBase.whatsAtivo?getWhatsPrice(stateBase.whatsUsers):0;
+  const totalMensal=precoFinal+feeInteg+whatsTotal;
+  document.getElementById('base-horas-label').textContent=r.horasEfetivas.toLocaleString('pt-BR')+'h';
+  const tLen=getTabelaAtiva().length;document.getElementById('base-pacote-idx').textContent=r.acimaDaTabela?`R$ ${r.precoHora.toFixed(3)}/h (acima da tabela)`:r.interpolado?`interpolado · R$ ${r.precoHora.toFixed(3)}/h`:`pacote ${r.tierIdx+1} de ${tLen}`;
+  document.getElementById('base-preco-label').textContent=fmt(precoFinal);
+  {const dEl=document.getElementById('base-desconto-info');if(dEl){if(descVal>0){dEl.innerHTML=`<span style='color:#F87171;font-weight:700'>−${fmt(descVal)}/mês</span> &nbsp;<span style='color:rgba(255,255,255,.4);font-size:10px'>economia ${fmt(descVal*12)}/ano</span>`;dEl.style.display='block';}else dEl.style.display='none';}}
+  const bTgh=document.getElementById('base-total-label-header'),bTgl=document.getElementById('base-total-geral-label');
+  if(bTgh&&bTgl){if(whatsTotal>0){bTgh.style.display='block';bTgl.style.display='block';bTgl.textContent=fmt(totalMensal)+'/mês';}else{bTgh.style.display='none';bTgl.style.display='none';}}
+  const dl=document.getElementById('base-delta-label');if(dl&&stateBase.valorAtual>0){const dv=totalMensal-stateBase.valorAtual,p=Math.round(Math.abs(dv)/stateBase.valorAtual*100),s=dv>=0?'+':'';dl.innerHTML=dv!==0?`<span style="color:${dv>0?'var(--pink)':'var(--green)'};font-weight:700">${s}${fmt(dv)}/mês</span> <span style="opacity:.5">(${s}${p}%)</span>`:`<span style="opacity:.6">Mesmo valor atual</span>`;}else if(dl)dl.textContent='';
+  const cc=document.getElementById('base-comparativo');if(stateBase.horasAtual>0&&cc){cc.style.display='block';document.getElementById('base-comp-atual-horas').textContent=stateBase.horasAtual.toLocaleString('pt-BR')+'h/mês';document.getElementById('base-comp-atual-preco').textContent=stateBase.valorAtual>0?fmt(stateBase.valorAtual)+'/mês':'—';document.getElementById('base-comp-novo-horas').textContent=r.horasEfetivas.toLocaleString('pt-BR')+'h/mês';document.getElementById('base-comp-novo-preco').textContent=fmt(totalMensal)+'/mês';const dc=document.getElementById('base-delta-card');if(dc&&stateBase.valorAtual>0){const dv=totalMensal-stateBase.valorAtual,p=Math.round((dv/stateBase.valorAtual)*100),s=dv>=0?'+':'';dc.style.background=dv>0?'rgba(251,36,145,.08)':'rgba(0,196,140,.08)';dc.style.color=dv>0?'var(--pink)':'var(--green)';dc.innerHTML=`<span style="font-size:15px;font-weight:800">${s}${fmt(dv)}/mês</span><span style="font-size:11px;font-weight:600;opacity:.7;margin-left:8px">(${s}${p}% vs atual)</span>`;}}else if(cc)cc.style.display='none';
+  renderDiagTags();
+  document.getElementById('base-premium-alert').style.display=stateBase.integKey==='premium'?'block':'none';
+  renderBasePayload(r,integ,precoFinal,totalMensal,stateBase.desconto/100,whatsTotal,whatsPreco);
+  const horasOk=hd>0,baseCanGen=!!stateBase.empresa&&stateBase.integKey!=='premium'&&horasOk,bb=document.getElementById('base-btn-gen');if(bb)bb.disabled=!baseCanGen;
+  const ld=loadConfig().descontoMax??10;if(bb){if(stateBase.desconto>ld&&stateBase._aprovacaoDesconto?.status_aprovacao==='pendente'){bb.textContent='Gerar (aprovação pendente)';bb.style.background='#D97706';}else{bb.textContent='Gerar Proposta de Upsell';bb.style.background='';}}
+  const bt=document.getElementById('base-btn-gen-tooltip');if(bt){if(!stateBase.empresa)bt.textContent='Preencha o nome da empresa';else if(!horasOk)bt.textContent='Informe o volume de horas';else if(stateBase.integKey==='premium')bt.textContent='Premium é sob consulta';else bt.textContent='Pronto para gerar!';}
+}
+
+function renderDiagTags(){const d=stateBase.diag,el=document.getElementById('base-diag-tags');if(!el)return;const touched=d.crm||d.voip||d.whats||d.cs||d.extras;if(!touched){el.innerHTML='<span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span>';const h=document.getElementById('base-sugestao-hint');if(h)h.innerHTML='';return;}const ativos=[];if(d.crm)ativos.push(d.crmNativo?'CRM Nativo':'CRM Externo');if(d.crm&&d.campos)ativos.push(`${d.nCampos||'?'} campos CRM`);if(d.voip)ativos.push(d.voipNativo?'Voip Nativo':'Voip Externo');if(d.voip&&d.voipCampos)ativos.push('Campos Voip');if(d.whats)ativos.push('WhatsApp');if(d.cs)ativos.push('Customer Success');if(d.extras)ativos.push('Dev Custom');const opsAlta=[],opsMed=[];if(!d.crm)opsAlta.push('Ativar CRM');if(!d.voip)opsAlta.push('Integrar Voip');if(!d.whats)opsAlta.push('Ativar WhatsApp');if(d.crm&&!d.campos)opsMed.push('Campos personalizados');if(!d.cs)opsMed.push('Customer Success');if(!d.extras)opsMed.push('Dev / Automação');const score=ativos.length,sp=Math.round((score/7)*100),sc=score<=2?'#D97706':score<=4?'#2563EB':'var(--green)',sl=score<=2?'Baixa adoção':score<=4?'Adoção parcial':'Alta adoção';let html=`<div style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:#F6F8FC;border-radius:8px;border:1.5px solid var(--border)"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Score de Adoção</div><div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:${sp}%;background:${sc};border-radius:99px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${sc}">${score}/7</div><div style="font-size:10px;color:var(--text3);font-weight:600">${sl}</div></div></div>`;if(ativos.length)html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:100%;margin-bottom:5px">Ativo agora</div>`+ativos.map(a=>`<span class="diag-tag on">${a}</span>`).join('');if(opsAlta.length)html+=`<div style="font-size:10px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.05em;width:100%;margin-top:10px;margin-bottom:5px">Oportunidade prioritária</div>`+opsAlta.map(o=>`<span class="diag-tag" style="background:#FEF2F2;color:#DC2626;border:1.5px solid #FCA5A5">${o}</span>`).join('');if(opsMed.length)html+=`<div style="font-size:10px;font-weight:700;color:#D97706;text-transform:uppercase;letter-spacing:.05em;width:100%;margin-top:10px;margin-bottom:5px">Expansão possível</div>`+opsMed.map(o=>`<span class="diag-tag" style="background:#FFFBEB;color:#D97706;border:1.5px solid #FDE68A">${o}</span>`).join('');el.innerHTML=html;const hints=[];if(!d.crm&&!d.voip&&!d.whats)hints.push('Nenhum canal ativo — potencial amplo de expansão.');if(d.crm&&d.campos&&(d.nCampos||0)>=5)hints.push('Muitos campos — pacote Intermediário ou Premium recomendado.');if(!d.whats&&!d.voip)hints.push('Sem canal de comunicação ativo — abertura para proposta multi-canal.');const he=document.getElementById('base-sugestao-hint');if(he)he.innerHTML=hints.map(h=>`<div style="margin-bottom:5px;padding:6px 10px;background:#FFFBEB;border-left:3px solid #FDE68A;border-radius:0 6px 6px 0;font-size:12px;color:var(--text2)">${h}</div>`).join('');}
+
+function renderBasePayload(r,integ,precoFinal,totalMensal,descFrac,whatsTotal,whatsPreco){const u=currentUser||{},cfg=loadConfig(),hoje=new Date(),val=new Date(hoje);val.setDate(hoje.getDate()+(cfg.validadeProposta||15));const fmtD=d=>d.toLocaleDateString('pt-BR');const payload={tipo_proposta:'upsell_base',nome_empresa:stateBase.empresa,crm_cliente:stateBase.crm,contato_nome:stateBase.contatoNome||'',contato_email:stateBase.contatoEmail||'',num_usuarios:stateBase.usuariosAtual,horas_atual:String(stateBase.horasAtual||'—'),valor_atual:stateBase.valorAtual>0?`R$ ${stateBase.valorAtual.toLocaleString('pt-BR')}/mês`:'—',diag_crm:stateBase.diag.crm?'Sim':'Não',diag_voip:stateBase.diag.voip?'Sim':'Não',diag_whatsapp:stateBase.diag.whats?'Sim':'Não',diag_cs:stateBase.diag.cs?'Sim':'Não',titulo_proposta:`Proposta Upsell — ${stateBase.empresa||'Cliente'}`,pacote_horas:String(r.horasEfetivas),preco_mensalidade:`${fmt(precoFinal)}/mês`,fee_manutencao:integ.fee>0?fmt(integ.fee)+'/mês':'Não incluso',preco_whatsapp:stateBase.whatsAtivo?`${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`:'Não incluso',total_geral_mes:`${fmt(totalMensal)}/mês`,detalhe_desconto:stateBase.desconto>0?`Desconto ${stateBase.desconto}% aplicado`:'Preço padrão',preco_setup:integ.setup>0?fmt(integ.setup):'Gratuito',descricao_setup:integ.descricao,vendedor_nome:u.nome||'',vendedor_email:u.email||'',vendedor_telefone:u.telefone||'',vendedor_cidade:u.cidade||'',desconto_pct:stateBase.desconto,template_url:cfg.templateUrl||'',template_versao:cfg.templateVersao||'',data_proposta:fmtD(hoje),validade_proposta:fmtD(val)};const colored=JSON.stringify(payload,null,2).replace(/"([^"]+)":/g,`<span style="color:#93C5FD">"$1"</span>:`).replace(/: "([^"]*)"/g,`: <span style="color:#86EFAC">"$1"</span>`);document.getElementById('base-payload').innerHTML=colored;}
+function copyBasePayload(){navigator.clipboard.writeText(document.getElementById('base-payload').textContent).then(()=>showToast('Payload copiado','success'));}
+async function gerarPropostaBase(){const btn=document.getElementById('base-btn-gen');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando...';const raw=document.getElementById('base-payload').textContent;let po={};try{po=JSON.parse(raw);}catch{}await histAdd({...po});const wh=getWebhookUrl();if(!wh||wh.includes('SEU-N8N')){showFallback(raw,null);btn.disabled=false;btn.innerHTML='Gerar Proposta de Upsell';return;}const mkR=async()=>{const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),15000);try{const res=await fetch(wh,{method:'POST',headers:{'Content-Type':'application/json'},body:raw,signal:ctrl.signal});clearTimeout(to);if(!res.ok)throw new Error('HTTP '+res.status);showToast('Proposta gerada! Verifique o Gmail.','success');}catch(e){clearTimeout(to);showFallback(raw,mkR);}finally{btn.disabled=false;btn.innerHTML='Gerar Proposta de Upsell';}};await mkR();}
+function resetStateBase(){Object.assign(stateBase,{empresa:'',crm:'',contatoNome:'',contatoEmail:'',horasAtual:0,valorAtual:0,usuariosAtual:5,integKey:'basico',whatsAtivo:true,whatsUsers:5,desconto:0,_aprovacaoDesconto:null,diag:{crm:false,crmNativo:false,campos:false,nCampos:3,voip:false,voipNativo:false,voipCampos:false,whats:false,cs:false,extras:false}});['base-empresa','base-contato-nome','base-contato-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});[['base-crm',''],['base-horas-atual',''],['base-usuarios-atual','5'],['base-valor-atual',''],['base-horas-input','300'],['base-whats-users','5']].forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});document.getElementById('base-comparativo').style.display='none';updateBase();}
+
+/* ═══ APROVAÇÃO DESCONTO ═══ */
+let _aprovacaoModulo='proposta';
+function pedirAprovacaoDesconto(val,modulo){_aprovacaoModulo=modulo;const lim=loadConfig().descontoMax??10;document.getElementById('aprv-limite-pct').textContent=lim+'%';const empresa=modulo==='proposta'?state.empresa:stateBase.empresa;document.getElementById('aprv-context').textContent=empresa||'—';document.getElementById('aprv-pct').textContent=val+'%';document.getElementById('aprv-justificativa').value='';document.getElementById('approval-overlay').classList.add('show');}
+function cancelarAprovacao(){document.getElementById('approval-overlay').classList.remove('show');if(_aprovacaoModulo==='proposta'){state.desconto=0;document.getElementById('desconto').value=0;document.getElementById('desc-label').textContent='0%';document.querySelectorAll('#disc-presets-novos .disc-preset').forEach(b=>b.classList.toggle('active',b.textContent==='0%'));update();}else{stateBase.desconto=0;document.getElementById('base-desconto').value=0;document.getElementById('base-desc-label').textContent='0%';document.querySelectorAll('#disc-presets-base .disc-preset').forEach(b=>b.classList.toggle('active',b.textContent==='0%'));updateBase();}}
+function confirmarAprovacao(){const just=document.getElementById('aprv-justificativa').value.trim();if(!just){showToast('Preencha a justificativa.','info');return;}const pct=parseInt(document.getElementById('aprv-pct').textContent),vl=document.getElementById('aprv-validade').value,av={status_aprovacao:'pendente',justificativa:just,desconto_solicitado:pct,solicitante:currentUser?.nome,validade:vl,ts:new Date().toISOString()};document.getElementById('approval-overlay').classList.remove('show');if(_aprovacaoModulo==='proposta'){state.desconto=pct;state._aprovacaoDesconto=av;document.getElementById('desconto').value=Math.min(pct,30);document.getElementById('desc-label').textContent=pct+'%';document.querySelectorAll('#disc-presets-novos .disc-preset').forEach(b=>b.classList.toggle('active',parseInt(b.textContent)===pct));update();}else{stateBase.desconto=pct;stateBase._aprovacaoDesconto=av;document.getElementById('base-desconto').value=Math.min(pct,40);document.getElementById('base-desc-label').textContent=pct+'%';document.querySelectorAll('#disc-presets-base .disc-preset').forEach(b=>b.classList.toggle('active',parseInt(b.textContent)===pct));updateBase();}showToast(`Desconto ${pct}% registrado como pendente.`,'info');}
+
+/* ═══ CONFIG ═══ */
+const CONFIG_DEFAULT={webhookUrl:'https://SEU-N8N.com/webhook/gerar-proposta',templateUrl:'',templateVersao:'',validadeProposta:15,descontoMax:10,supabaseUrl:'',supabaseKey:''};
+function loadConfig(){try{return{...CONFIG_DEFAULT,...JSON.parse(localStorage.getItem('salesbud_config')||'{}')};}catch{return{...CONFIG_DEFAULT};}}
+function saveConfig(p){const m={...loadConfig(),...p};try{localStorage.setItem('salesbud_config',JSON.stringify(m));}catch{}return m;}
+function getWebhookUrl(){return loadConfig().webhookUrl||CONFIG_DEFAULT.webhookUrl;}
+function initConfig(){const cfg=loadConfig();document.getElementById('cfg-supabase-url').value=cfg.supabaseUrl||'';document.getElementById('cfg-supabase-key').value=cfg.supabaseKey||'';document.getElementById('cfg-webhook-url').value=cfg.webhookUrl||'';document.getElementById('cfg-template-url').value=cfg.templateUrl||'';document.getElementById('cfg-template-versao').value=cfg.templateVersao||'';document.getElementById('cfg-validade').value=cfg.validadeProposta||15;document.getElementById('cfg-desconto-max').value=cfg.descontoMax||10;const wh=document.getElementById('cfg-webhook-status');if(wh){if(!cfg.webhookUrl||cfg.webhookUrl.includes('SEU-N8N')){wh.textContent='Não configurado';wh.style.background='#FEF2F2';wh.style.color='#DC2626';}else{wh.textContent='Configurado';wh.style.background='#F0FDF4';wh.style.color='#16A34A';}}const se=document.getElementById('cfg-supabase-status');if(se){if(!cfg.supabaseUrl){se.textContent='Não configurado';se.style.background='#F6F8FC';se.style.color='var(--text3)';}else if(supabaseClient){se.textContent='Configurado';se.style.background='#F0FDF4';se.style.color='#16A34A';}}renderTabelaConfig();}
+function salvarConfig(){saveConfig({webhookUrl:document.getElementById('cfg-webhook-url').value.trim(),validadeProposta:parseInt(document.getElementById('cfg-validade').value)||15,descontoMax:parseInt(document.getElementById('cfg-desconto-max').value)||10});showToast('Configurações salvas.','success');initConfig();}
+function testarWebhook(){const url=document.getElementById('cfg-webhook-url').value.trim();if(!url||url.includes('SEU-N8N')){showToast('Configure a URL antes de testar.','info');return;}const btn=event.target;btn.textContent='Testando...';btn.disabled=true;const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),8000);fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true}),signal:ctrl.signal}).then(r=>{clearTimeout(to);showToast(r.ok?'Webhook ok.':'HTTP '+r.status+'.',r.ok?'success':'info');}).catch(e=>{clearTimeout(to);showToast(e.name==='AbortError'?'Timeout.':'Erro de conexão.','info');}).finally(()=>{btn.textContent='Testar';btn.disabled=false;initConfig();});}
+
+/* ═══ TABELA EDITOR ═══ */
+function renderTabelaConfig(){const tb=document.getElementById('cfg-price-tbody');if(!tb)return;const tab=getTabelaAtiva();tb.innerHTML=tab.map((row,i)=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px"><input type="number" value="${row.horas}" min="1" onchange="atualizarLinhaTabelaConfig(${i},'horas',this.value)" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px;text-align:right"><input type="number" value="${row.preco}" min="1" onchange="atualizarLinhaTabelaConfig(${i},'preco',this.value)" style="width:110px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy);text-align:right" /></td><td style="padding:6px 10px;text-align:right;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">R$ ${(row.preco/row.horas).toFixed(3).replace('.',',')}</td><td style="padding:6px 10px;text-align:right"><button onclick="removerLinhaTabela(${i})" style="font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer">rem</button></td></tr>`).join('');}
+function atualizarLinhaTabelaConfig(idx,field,val){const tab=getTabelaAtiva();tab[idx][field]=parseInt(val)||0;tab.sort((a,b)=>a.horas-b.horas);tabelaEditavel=tab;renderTabelaConfig();}
+function removerLinhaTabela(idx){const tab=getTabelaAtiva();if(tab.length<=2){showToast('Mínimo 2 faixas.','info');return;}tab.splice(idx,1);tabelaEditavel=tab;renderTabelaConfig();}
+function adicionarLinhaTabela(){const tab=getTabelaAtiva(),last=tab[tab.length-1];tab.push({horas:last.horas+100,preco:Math.round(last.preco*1.1)});tabelaEditavel=tab;renderTabelaConfig();}
+function salvarTabelaPrecos(){const tab=getTabelaAtiva();localStorage.setItem('salesbud_tabela',JSON.stringify(tab));localStorage.setItem('salesbud_tabela_ver',String(TABELA_VERSION));tabelaEditavel=tab;showToast('Tabela salva.','success');}
+function resetarTabela(){if(!confirm('Restaurar tabela original?'))return;tabelaEditavel=TABELA_HORAS_DEFAULT.map(t=>({...t}));localStorage.removeItem('salesbud_tabela');localStorage.removeItem('salesbud_tabela_ver');renderTabelaConfig();showToast('Tabela restaurada.','success');}
+
+/* ═══ IMPORT XLSX/CSV ═══ */
+function initImportArea(){const drop=document.getElementById('import-drop-area');if(!drop||drop.dataset.init==='1')return;drop.dataset.init='1';drop.addEventListener('click',()=>{const i=document.createElement('input');i.type='file';i.accept='.xlsx,.xls,.csv';i.onchange=e=>processImportFile(e.target.files[0]);i.click();});drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag-over');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag-over'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag-over');if(e.dataTransfer.files[0])processImportFile(e.dataTransfer.files[0]);});}
+function processImportFile(file){if(!file)return;const reader=new FileReader();reader.onload=e=>{try{let data=[];if(file.name.endsWith('.csv')){const lines=e.target.result.split('\n').filter(l=>l.trim()),headers=lines[0].split(/[;,]/).map(h=>h.trim().toLowerCase()),hi=headers.findIndex(h=>h.includes('hora')||h.includes('hour')),pi=headers.findIndex(h=>h.includes('prec')||h.includes('valor')||h.includes('price'));if(hi===-1||pi===-1){showToast('Colunas não encontradas. Use: Horas, Valor Final','info');return;}data=lines.slice(1).map(l=>{const cols=l.split(/[;,]/);return{horas:parseInt(cols[hi])||0,preco:parseFloat((cols[pi]||'0').replace(/[R$\s.]/g,'').replace(',','.'))||0};}).filter(r=>r.horas>0&&r.preco>0);}else{const wb=XLSX.read(e.target.result,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws);data=rows.map(r=>{const h=r['Horas']||r['horas']||r['HORAS'],p=r['Valor Final']||r['valor_final']||r['Preco']||r['preco']||r['Valor'];return h&&p?{horas:parseInt(h),preco:parseFloat(String(p).replace(/[R$\s.]/g,'').replace(',','.'))}:null;}).filter(Boolean);}if(!data.length){showToast('Nenhuma linha válida encontrada.','info');return;}data.sort((a,b)=>a.horas-b.horas);tabelaEditavel=data;const area=document.getElementById('import-preview-area');area.style.display='block';area.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">${data.length} faixas importadas ✓</div><div class="import-preview"><table><thead><tr><th>Horas</th><th>Preço</th><th>R$/h</th></tr></thead><tbody>${data.map(r=>`<tr><td>${r.horas.toLocaleString('pt-BR')}h</td><td>${fmt(r.preco)}</td><td>R$ ${(r.preco/r.horas).toFixed(3)}</td></tr>`).join('')}</tbody></table></div><button onclick="salvarTabelaPrecos()" style="margin-top:10px;padding:8px 16px;background:var(--pink);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar esta tabela</button>`;renderTabelaConfig();}catch(err){showToast('Erro ao processar arquivo: '+err.message,'info');}};if(file.name.endsWith('.csv'))reader.readAsText(file,'UTF-8');else reader.readAsArrayBuffer(file);}
+
+/* ═══ ARREDONDAR HORAS ═══ */
+function arredondarHoras(){const bArr=document.getElementById('btn-arredondar');const t=parseInt(bArr?.dataset.target)||0;if(!t)return;document.getElementById('horas-input').value=t;update();showToast('Arredondado para '+t.toLocaleString('pt-BR')+'h','success');}
+
+
+/* ═══ SALVAR PROPOSTA ═══ */
+function salvarProposta(modulo) {
+  const payloadEl = document.getElementById(modulo==='base' ? 'base-payload' : 'payload');
+  if (!payloadEl) { showToast('Nenhum dado para salvar.', 'info'); return; }
+  let obj = {}; try { obj = JSON.parse(payloadEl.textContent); } catch {}
+  if (!obj.nome_empresa) { showToast('Preencha ao menos o nome da empresa.', 'info'); return; }
+  histAdd({...obj, tipo_proposta: modulo==='base' ? 'upsell_base' : 'novo'});
+  showToast('Proposta salva no histórico!', 'success');
+}
+
+/* ═══ BAIXAR PDF ═══ */
+function baixarPDF(modulo) {
+  const payloadEl = document.getElementById(modulo==='base' ? 'base-payload' : 'payload');
+  if (!payloadEl) return;
+  let obj = {}; try { obj = JSON.parse(payloadEl.textContent); } catch {}
+  if (!obj.nome_empresa) { showToast('Preencha ao menos o nome da empresa.', 'info'); return; }
+
+  const empresa = obj.nome_empresa || 'Proposta';
+  const data = obj.data_proposta || new Date().toLocaleDateString('pt-BR');
+  const validade = obj.validade_proposta || '';
+  const vendedor = obj.vendedor_nome || '';
+  const horas = obj.pacote_horas || '—';
+  const mensalidade = obj.preco_mensalidade || '—';
+  const totalGeral = obj.total_geral_mes || mensalidade;
+  const setup = obj.preco_setup && obj.preco_setup !== 'Gratuito' ? obj.preco_setup : null;
+  const whats = obj.preco_whatsapp && obj.preco_whatsapp !== 'Não incluso' ? obj.preco_whatsapp : null;
+  const desconto = obj.detalhe_desconto && obj.detalhe_desconto !== 'Preço padrão' ? obj.detalhe_desconto : null;
+  const integ = obj.descricao_setup || '';
+  const scope = obj.descricao_setup || '';
+  const crm = obj.crm_cliente || '';
+  const contatoNome = obj.contato_nome || '';
+  const contatoEmail = obj.contato_email || '';
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Syne:wght@700;800&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; color:#1E2A3B; background:white; padding:48px; max-width:720px; margin:0 auto; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; padding-bottom:24px; border-bottom:2px solid #E8ECF2; }
+  .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:#1E2A3B; }
+  .logo span { color:#FB2491; }
+  .meta { text-align:right; font-size:12px; color:#6B7A99; }
+  h1 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:#1E2A3B; margin-bottom:4px; }
+  .sub { font-size:14px; color:#6B7A99; margin-bottom:32px; }
+  .section { margin-bottom:24px; }
+  .section-title { font-size:11px; font-weight:700; color:#6B7A99; text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+  .row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #E8ECF2; font-size:14px; }
+  .row:last-child { border-bottom:none; }
+  .row .label { color:#6B7A99; }
+  .row .val { font-weight:700; color:#1E2A3B; }
+  .row .val.green { color:#00C48C; }
+  .row .val.pink { color:#FB2491; }
+  .total-box { background:#1E2A3B; border-radius:12px; padding:20px 24px; margin:24px 0; display:flex; justify-content:space-between; align-items:center; }
+  .total-box .label { font-size:13px; color:rgba(255,255,255,.5); font-weight:600; }
+  .total-box .val { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:white; }
+  .setup-box { background:#FFF7ED; border:1.5px solid #FED7AA; border-radius:8px; padding:12px 16px; margin-top:12px; font-size:13px; color:#92400E; }
+  .footer { margin-top:40px; padding-top:20px; border-top:1px solid #E8ECF2; font-size:11px; color:#6B7A99; text-align:center; line-height:1.6; }
+  .validity { background:#F0FDF4; border:1.5px solid #BBF7D0; border-radius:8px; padding:10px 14px; font-size:12px; color:#166534; font-weight:600; text-align:center; margin-top:20px; }
+</style>
+</head><body>
+  <div class="header">
+    <div class="logo">Sales<span>Bud</span></div>
+    <div class="meta">Emitida em ${data}<br>Vendedor: ${vendedor}</div>
+  </div>
+
+  <h1>Proposta Comercial</h1>
+  <div class="sub">${empresa}${crm ? ' · ' + crm : ''}</div>
+
+  ${contatoNome || contatoEmail ? `<div class="section"><div class="section-title">Contato</div>${contatoNome ? `<div class="row"><span class="label">Nome</span><span class="val">${contatoNome}</span></div>` : ''}${contatoEmail ? `<div class="row"><span class="label">E-mail</span><span class="val">${contatoEmail}</span></div>` : ''}</div>` : ''}
+
+  <div class="section">
+    <div class="section-title">Pacote</div>
+    <div class="row"><span class="label">Volume de horas</span><span class="val">${horas}h/mês</span></div>
+    <div class="row"><span class="label">Mensalidade SalesBud</span><span class="val">${mensalidade}</span></div>
+    ${desconto ? `<div class="row"><span class="label">Desconto</span><span class="val pink">${desconto}</span></div>` : ''}
+    ${obj.fee_manutencao && obj.fee_manutencao !== 'Não incluso' ? `<div class="row"><span class="label">Manutenção integração</span><span class="val">${obj.fee_manutencao}</span></div>` : ''}
+    ${whats ? `<div class="row"><span class="label">WhatsApp</span><span class="val">${whats}</span></div>` : ''}
+  </div>
+
+  <div class="total-box">
+    <span class="label">Total mensal${whats ? ' (c/ WhatsApp)' : ''}</span>
+    <span class="val">${totalGeral}</span>
+  </div>
+
+  ${setup ? `<div class="setup-box">+ Setup de integração: <strong>${setup}</strong> — pagamento pontual, parcelável em até 12x</div>` : ''}
+
+  ${integ ? `<div class="section" style="margin-top:24px"><div class="section-title">Integração CRM</div><div class="row"><span class="label">Plano</span><span class="val">${integ}</span></div></div>` : ''}
+
+  <div class="validity">✓ Proposta válida até ${validade}</div>
+
+  <div class="footer">
+    SalesBud · Proposta gerada em ${data} por ${vendedor}<br>
+    Desconto válido somente para primeiras assinaturas contratuais realizadas dentro do mês de validade.
+  </div>
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (w) {
+    w.onload = () => { w.print(); };
+    showToast('PDF aberto — use "Salvar como PDF" ao imprimir.', 'success');
+  } else {
+    const a = document.createElement('a');
+    a.href = url; a.download = `Proposta_${empresa.replace(/\s+/g,'_')}_${data.replace(/\//g,'-')}.html`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('Arquivo baixado!', 'success');
+  }
+}
+
+/* ═══ EXCLUIR PROPOSTA ═══ */
+async function excluirProposta(id, fonte) {
+  if (!confirm('Excluir esta proposta? Esta ação não pode ser desfeita.')) return;
+  if (supabaseClient && fonte === 'supabase') {
+    try {
+      const { error } = await supabaseClient.from('propostas').delete().eq('id', id);
+      if (error) throw error;
+    } catch(e) { showToast('Erro ao excluir: ' + e.message, 'info'); return; }
+  } else {
+    const data = histLoadLocal().filter(d => d.id !== id);
+    histSaveLocal(data);
+  }
+  showToast('Proposta excluída.', 'success');
+  renderHistorico();
+}
+
+/* ═══ EDITAR PROPOSTA ═══ */
+let _editModal = null;
+async function editarProposta(id, fonte) {
+  let entry = null;
+  if (supabaseClient && fonte === 'supabase') {
+    try {
+      const { data, error } = await supabaseClient.from('propostas').select('*').eq('id', id).single();
+      if (error) throw error; entry = data;
+    } catch(e) { showToast('Erro ao carregar: ' + e.message, 'info'); return; }
+  } else {
+    entry = histLoadLocal().find(d => d.id === id);
+  }
+  if (!entry) { showToast('Proposta não encontrada.', 'info'); return; }
+  _editModal = { id, fonte, entry };
+
+  // Build modal
+  const overlay = document.createElement('div');
+  overlay.id = 'edit-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1E2A3B">Editar Proposta</h3>
+        <button onclick="fecharEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6B7A99">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label style="font-size:12px;font-weight:700;color:#6B7A99;display:block;margin-bottom:4px">Empresa</label>
+          <input id="edit-empresa" value="${esc(entry.nome_empresa||entry.empresa||'')}" style="width:100%;padding:8px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px" /></div>
+        <div><label style="font-size:12px;font-weight:700;color:#6B7A99;display:block;margin-bottom:4px">Contato</label>
+          <input id="edit-contato" value="${esc(entry.contato_nome||'')}" style="width:100%;padding:8px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px" /></div>
+        <div><label style="font-size:12px;font-weight:700;color:#6B7A99;display:block;margin-bottom:4px">E-mail</label>
+          <input id="edit-email" value="${esc(entry.contato_email||'')}" style="width:100%;padding:8px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px" /></div>
+        <div><label style="font-size:12px;font-weight:700;color:#6B7A99;display:block;margin-bottom:4px">Observação interna</label>
+          <textarea id="edit-obs" rows="3" style="width:100%;padding:8px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;resize:vertical">${esc(entry.obs_interna||entry._obs||'')}</textarea></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button onclick="fecharEditModal()" style="flex:1;padding:10px;background:none;border:2px solid #E8ECF2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:#6B7A99">Cancelar</button>
+        <button onclick="confirmarEdicao()" style="flex:1;padding:10px;background:#1E2A3B;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:white">Salvar alterações</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function fecharEditModal() {
+  document.getElementById('edit-overlay')?.remove();
+  _editModal = null;
+}
+
+async function confirmarEdicao() {
+  if (!_editModal) return;
+  const { id, fonte, entry } = _editModal;
+  const patch = {
+    nome_empresa: document.getElementById('edit-empresa').value.trim(),
+    contato_nome: document.getElementById('edit-contato').value.trim(),
+    contato_email: document.getElementById('edit-email').value.trim(),
+    obs_interna: document.getElementById('edit-obs').value.trim(),
+  };
+  if (supabaseClient && fonte === 'supabase') {
+    try {
+      const { error } = await supabaseClient.from('propostas').update(patch).eq('id', id);
+      if (error) throw error;
+    } catch(e) { showToast('Erro ao salvar: ' + e.message, 'info'); return; }
+  } else {
+    const data = histLoadLocal();
+    const idx = data.findIndex(d => d.id === id);
+    if (idx !== -1) { Object.assign(data[idx], patch, { empresa: patch.nome_empresa }); histSaveLocal(data); }
+  }
+  fecharEditModal();
+  showToast('Proposta atualizada!', 'success');
+  renderHistorico();
+}
+
+/* ═══ TOAST ═══ */
+let toastTimer;
+function showToast(msg,type='info'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
+</script>
+</body>
+</html>
