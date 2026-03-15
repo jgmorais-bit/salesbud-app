@@ -1096,7 +1096,11 @@ select.status-badge option { background: white; color: var(--text); }
     <!-- ══ PAGE: CLIENTES DE BASE ══ -->
     <div class="page" id="page-base">
       <div class="proposal-grid">
+
+        <!-- ══ COLUNA ESQUERDA ══ -->
         <div class="left-col">
+
+          <!-- 1. Vendedor -->
           <div class="card" style="margin-bottom:16px">
             <div class="vendedor-chip" id="base-vendedor-chip" style="margin-bottom:0">
               <div class="vendedor-chip-avatar" id="base-chip-avatar">?</div>
@@ -1107,8 +1111,9 @@ select.status-badge option { background: white; color: var(--text); }
             </div>
           </div>
 
+          <!-- 2. Cliente -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-section-title">Cliente</div>
+            <div class="card-title">Cliente</div>
             <div class="field-row">
               <label class="field-label">Empresa <span style="color:var(--pink)">*</span></label>
               <input class="field-input" id="base-empresa" placeholder="Ex: Acme Corporation" oninput="updateBase()" />
@@ -1133,8 +1138,9 @@ select.status-badge option { background: white; color: var(--text); }
             </div>
           </div>
 
+          <!-- 3. Consumo Atual -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-section-title">Consumo Atual</div>
+            <div class="card-title">Consumo Atual</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div>
                 <label class="field-label">Horas contratadas</label>
@@ -1151,8 +1157,9 @@ select.status-badge option { background: white; color: var(--text); }
             </div>
           </div>
 
+          <!-- 4. Diagnóstico -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-section-title">O que o cliente já usa</div>
+            <div class="card-title">Diagnóstico</div>
             <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansão</div>
             <div class="diag-row"><span class="diag-label">Integração CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Não</button></div></div>
             <div class="diag-sub" id="diag-crm-sub" style="display:none">
@@ -1169,73 +1176,10 @@ select.status-badge option { background: white; color: var(--text); }
             <div class="diag-row" style="margin-top:12px"><span class="diag-label">Customer Success?</span><div class="toggle-row"><button class="toggle-btn" id="diag-cs-sim" onclick="setDiag('cs',true)">Sim</button><button class="toggle-btn active" id="diag-cs-nao" onclick="setDiag('cs',false)">Não</button></div></div>
             <div class="diag-row" style="margin-top:12px"><span class="diag-label">Dev / customização?</span><div class="toggle-row"><button class="toggle-btn" id="diag-extras-sim" onclick="setDiag('extras',true)">Sim</button><button class="toggle-btn active" id="diag-extras-nao" onclick="setDiag('extras',false)">Não</button></div></div>
           </div>
-        </div><!-- /left-col -->
 
-        <div class="right-col">
-          <div class="card" id="base-diag-card" style="margin-bottom:16px;min-height:80px">
-            <div class="card-section-title" style="margin-bottom:10px">Diagnóstico de Expansão</div>
-            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span></div>
-            <div id="base-sugestao-hint" style="font-size:12px;color:var(--text3);line-height:1.5"></div>
-          </div>
-
-          <div class="card" id="base-comparativo" style="margin-bottom:16px;display:none">
-            <div class="card-section-title">Atual × Proposta</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:#F6F8FC;border-radius:var(--radius-sm);padding:14px">
-                <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">ATUAL</div>
-                <div style="font-size:18px;font-weight:800;color:var(--navy)" id="base-comp-atual-horas">—</div>
-                <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:2px" id="base-comp-atual-preco">—</div>
-              </div>
-              <div style="background:var(--navy);border-radius:var(--radius-sm);padding:14px">
-                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;margin-bottom:6px">PROPOSTA</div>
-                <div style="font-size:18px;font-weight:800;color:white" id="base-comp-novo-horas">—</div>
-                <div style="font-size:13px;font-weight:700;color:var(--pink);margin-top:2px" id="base-comp-novo-preco">—</div>
-              </div>
-            </div>
-            <div id="base-delta-card" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(251,36,145,.08);border:1.5px solid rgba(251,36,145,.15);font-size:13px;font-weight:700;color:var(--pink);text-align:center"></div>
-          </div>
-
+          <!-- 5. Adicionais -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-section-title">Calcular Horas da Proposta</div>
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
-              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuários</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-                <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-                <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
-                <div>
-                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
-                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
-                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 × 2h × 22 dias</div>
-                </div>
-                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
-              </div>
-            </div>
-            <div style="margin-bottom:14px">
-              <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
-              <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
-            </div>
-            <div id="base-pacote-card" style="background:var(--navy);border-radius:var(--radius-sm);padding:16px 18px;display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
-                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;letter-spacing:-0.5px" id="base-horas-label">300h</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-pacote-idx">R$/h base do tier</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Nova Mensalidade</div>
-                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="base-preco-label">R$ 1.490</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-delta-label">—</div>
-                <div style="font-size:11px;margin-top:3px;display:none" id="base-desconto-info"></div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header" style="display:none">Total c/ WhatsApp</div>
-                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">—</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-section-title">Adicionais</div>
+            <div class="card-title">Adicionais</div>
             <div class="field-row">
               <label class="field-label">Adicionar WhatsApp?</label>
               <div class="toggle-row"><button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button><button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button></div>
@@ -1267,11 +1211,85 @@ select.status-badge option { background: white; color: var(--text); }
             </div>
           </div>
 
+        </div><!-- /left-col -->
+
+        <!-- ══ COLUNA DIREITA ══ -->
+        <div class="right-col" style="position:sticky;top:24px;align-self:start">
+
+          <!-- 1. Diagnóstico de Expansão -->
+          <div class="card" id="base-diag-card" style="margin-bottom:16px;min-height:80px">
+            <div class="card-title" style="margin-bottom:10px">Diagnóstico de Expansão</div>
+            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span></div>
+            <div id="base-sugestao-hint" style="font-size:12px;color:var(--text3);line-height:1.5"></div>
+          </div>
+
+          <!-- 2. Atual × Proposta -->
+          <div class="card" id="base-comparativo" style="margin-bottom:16px;display:none">
+            <div class="card-title">Atual × Proposta</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:#F6F8FC;border-radius:var(--radius-sm);padding:14px">
+                <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">ATUAL</div>
+                <div style="font-size:18px;font-weight:800;color:var(--navy)" id="base-comp-atual-horas">—</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:2px" id="base-comp-atual-preco">—</div>
+              </div>
+              <div style="background:var(--navy);border-radius:var(--radius-sm);padding:14px">
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;margin-bottom:6px">PROPOSTA</div>
+                <div style="font-size:18px;font-weight:800;color:white" id="base-comp-novo-horas">—</div>
+                <div style="font-size:13px;font-weight:700;color:var(--pink);margin-top:2px" id="base-comp-novo-preco">—</div>
+              </div>
+            </div>
+            <div id="base-delta-card" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(251,36,145,.08);border:1.5px solid rgba(251,36,145,.15);font-size:13px;font-weight:700;color:var(--pink);text-align:center"></div>
+          </div>
+
+          <!-- 3. Calcular Horas -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Calcular Horas</div>
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuários</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
+                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 × 2h × 22 dias</div>
+                </div>
+                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
+              </div>
+            </div>
+            <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
+            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
+          </div>
+
+          <!-- 4. Pacote Proposto -->
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+            <div id="base-pacote-card" style="background:var(--navy);padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px" id="base-horas-label">300h</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-pacote-idx">R$/h base do tier</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Nova Mensalidade</div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="base-preco-label">R$ 1.490</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-delta-label">—</div>
+                <div style="font-size:11px;margin-top:3px;display:none" id="base-desconto-info"></div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header">Total c/ WhatsApp</div>
+                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- premium alert -->
           <div class="premium-alert" id="base-premium-alert" style="display:none">
             <div style="font-weight:700;color:var(--navy);margin-bottom:4px">Integração Premium</div>
             <div style="font-size:13px;color:var(--text2)">Orçamento personalizado — valor definido após levantamento técnico.</div>
           </div>
 
+          <!-- payload -->
           <div class="card" style="margin-bottom:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px">PAYLOAD → n8n</div>
@@ -1280,6 +1298,7 @@ select.status-badge option { background: white; color: var(--text); }
             <div class="payload-code" id="base-payload" style="background:var(--navy);border-radius:var(--radius-sm);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.6"></div>
           </div>
 
+          <!-- 5. Botões -->
           <div class="btn-gerar-wrap">
             <span class="btn-tooltip" id="base-btn-gen-tooltip">Preencha o nome da empresa para continuar</span>
             <button class="btn-gerar" id="base-btn-gen" onclick="gerarPropostaBase()" disabled>Gerar Proposta de Upsell</button>
@@ -1288,6 +1307,7 @@ select.status-badge option { background: white; color: var(--text); }
             <button onclick="salvarProposta('base')" style="flex:1;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar proposta</button>
             <button onclick="baixarPDF('base')" style="flex:1;padding:10px;background:white;color:var(--pink);border:2px solid var(--pink);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">⬇ Baixar PDF</button>
           </div>
+
         </div><!-- /right-col -->
       </div>
     </div>
@@ -1732,7 +1752,7 @@ async function renderHistorico() {
   const ki=document.getElementById('hist-kpis');
   if(ki){const tot=filtered.length,n=filtered.filter(d=>!d.tipo_proposta||d.tipo_proposta==='novo').length,u=filtered.filter(d=>d.tipo_proposta==='upsell_base').length,tv=filtered.reduce((s,d)=>s+extractValorNum(d.preco_mensalidade),0);ki.innerHTML=[{label:'Total de Propostas',val:tot},{label:'Novos Clientes',val:n},{label:'Upsell Base',val:u},{label:'Volume Total/mês',val:tv>0?fmt(tv):'—'}].map(k=>`<div><div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase">${k.label}</div><div style="font-size:22px;font-weight:800;color:var(--navy);font-family:'Syne',sans-serif;letter-spacing:-0.5px">${k.val}</div></div>`).join('');}
   if(!filtered.length){if(emptyEl)emptyEl.style.display='block';return;} if(emptyEl)emptyEl.style.display='none';
-  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td></td></tr>`}).join('');}
+  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`}).join('');}
 }
 function exportHistorico() {
   (async()=>{
@@ -1793,12 +1813,12 @@ document.addEventListener('DOMContentLoaded',()=>{loadUsersLocal();document.getE
 /* ═══ APP INIT ═══ */
 function toggleProfileMenu(){const menu=document.getElementById('profile-menu');if(!menu)return;menu.style.display=menu.style.display==='block'?'none':'block';}
 document.addEventListener('click',e=>{const avatar=document.getElementById('nav-avatar'),menu=document.getElementById('profile-menu');if(menu&&!avatar?.contains(e.target)&&!menu.contains(e.target))menu.style.display='none';});
-function iniciarApp(){document.getElementById('nav-username').textContent=currentUser.nome.split(' ')[0];document.getElementById('nav-userrole').textContent=currentUser.perfil==='admin'?'Administrador':'Vendedor';document.getElementById('nav-avatar').textContent=initials(currentUser.nome);document.getElementById('nav-admin-section').style.display=currentUser.perfil==='admin'?'block':'none';document.getElementById('chip-avatar').textContent=initials(currentUser.nome);document.getElementById('chip-name').textContent=currentUser.nome;document.getElementById('chip-sub').textContent=[currentUser.cargo,currentUser.telefone].filter(Boolean).join(' · ');const pmN=document.getElementById('pm-nome'),pmC=document.getElementById('pm-cargo');if(pmN)pmN.textContent=currentUser.nome;if(pmC)pmC.textContent=currentUser.cargo||'';mostrarScreen('app');initSupabase();checkTemplateBanner();navTo('proposta');update();setTimeout(checkHubSpotPrefill,100);}
+function iniciarApp(){document.getElementById('nav-username').textContent=currentUser.nome.split(' ')[0];document.getElementById('nav-userrole').textContent=currentUser.perfil==='admin'?'Administrador':'Vendedor';document.getElementById('nav-avatar').textContent=initials(currentUser.nome);document.getElementById('nav-admin-section').style.display=currentUser.perfil==='admin'?'block':'none';const isAdmin=currentUser.perfil==='admin';document.getElementById('nav-usuarios').style.display=isAdmin?'block':'none';document.getElementById('nav-config').style.display=isAdmin?'block':'none';document.getElementById('chip-avatar').textContent=initials(currentUser.nome);document.getElementById('chip-name').textContent=currentUser.nome;document.getElementById('chip-sub').textContent=[currentUser.cargo,currentUser.telefone].filter(Boolean).join(' · ');const pmN=document.getElementById('pm-nome'),pmC=document.getElementById('pm-cargo');if(pmN)pmN.textContent=currentUser.nome;if(pmC)pmC.textContent=currentUser.cargo||'';mostrarScreen('app');initSupabase();checkTemplateBanner();navTo('proposta');update();setTimeout(checkHubSpotPrefill,100);}
 function mostrarScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
 
 /* ═══ NAV ═══ */
 const PAGE_META={proposta:{title:'Nova Proposta — Novos Clientes',subtitle:'Para o time de vendas · Preencha os dados e configure o pacote'},base:{title:'Nova Proposta — Clientes de Base',subtitle:'Para gestores de conta · Diagnóstico e upsell de clientes ativos'},historico:{title:'Histórico de Propostas',subtitle:'Registro de todas as propostas geradas pela equipe'},usuarios:{title:'Usuários',subtitle:'Gerencie os membros da equipe de vendas'},config:{title:'Configurações',subtitle:'Supabase, webhook, template e tabela de preços'}};
-function navTo(page){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('nav-'+page)?.classList.add('active');document.getElementById('page-'+page)?.classList.add('active');const m=PAGE_META[page];if(m){document.getElementById('page-title').textContent=m.title;document.getElementById('page-subtitle').textContent=m.subtitle;}if(page==='usuarios')renderTabela();if(page==='config'){initConfig();initImportArea();}if(page==='base')initBase();if(page==='historico')renderHistorico();const nb=document.getElementById('btn-nova-proposta');if(nb)nb.style.display=(page==='proposta'||page==='base')?'block':'none';}
+function navTo(page){if((page==='usuarios'||page==='config')&&currentUser?.perfil!=='admin'){navTo('proposta');showToast('Acesso restrito a administradores.','info');return;}document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('nav-'+page)?.classList.add('active');document.getElementById('page-'+page)?.classList.add('active');const m=PAGE_META[page];if(m){document.getElementById('page-title').textContent=m.title;document.getElementById('page-subtitle').textContent=m.subtitle;}if(page==='usuarios')renderTabela();if(page==='config'){initConfig();initImportArea();}if(page==='base')initBase();if(page==='historico')renderHistorico();const nb=document.getElementById('btn-nova-proposta');if(nb)nb.style.display=(page==='proposta'||page==='base')?'block':'none';}
 
 /* ═══ USUÁRIOS ═══ */
 function renderTabela(){const q=(document.getElementById('user-search')?.value||'').toLowerCase(),filtered=DB.users.filter(u=>u.nome.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)),tbody=document.getElementById('users-tbody'),empty=document.getElementById('users-empty');if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=filtered.map(u=>`<tr><td><div class="td-name"><div class="td-avatar">${initials(u.nome)}</div>${esc(u.nome)}</div></td><td>${esc(u.cargo||'—')}</td><td>${esc(u.email)}</td><td>${esc(u.telefone||'—')}</td><td><span class="badge ${u.perfil==='admin'?'badge-admin':'badge-seller'}">${u.perfil==='admin'?'Admin':'Vendedor'}</span></td><td><span class="badge ${u.status==='ativo'?'badge-active':'badge-inactive'}">${u.status==='ativo'?'Ativo':'Inativo'}</span></td><td><div class="row-actions"><button class="btn-icon" onclick="editarUsuario(${u.id})">Editar</button>${u.id!==currentUser.id?`<button class="btn-icon danger" onclick="toggleStatus(${u.id})">${u.status==='ativo'?'Desativar':'Ativar'}</button>`:''}</div></td></tr>`).join('');}
