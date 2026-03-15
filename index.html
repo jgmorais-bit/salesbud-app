@@ -549,19 +549,22 @@ input[type=range]::-webkit-slider-thumb {
 .price-original { font-size: 13px; color: rgba(255,255,255,0.35); text-decoration: line-through; margin-top: 3px; display: none; }
 
 .price-rows { display: flex; flex-direction: column; gap: 0; }
-.price-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.price-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .price-row:last-child { border-bottom: none; }
-.price-row.total { font-weight: 700; color: var(--navy); padding-top: 12px; }
-.price-row-label { color: var(--text2); }
-.price-row-val { font-weight: 600; }
+.price-row.total { padding-top: 14px; }
+.price-row-label { font-size: 12.5px; color: var(--text2); font-weight: 500; }
+.price-row-val { font-size: 14px; font-weight: 700; color: var(--navy); text-align: right; }
 .price-row-val.green { color: var(--green); }
 .price-row-val.pink { color: var(--pink); }
 .price-row-val.amber { color: var(--amber); }
-.price-row-val.red { color: var(--red); }
+.price-row-val.red { color: var(--red); font-size: 13px; }
 .price-row-val.dim { color: var(--text3); }
+.price-row-total-label { font-size: 13px; font-weight: 700; color: var(--navy); }
+.price-row-total-val { font-size: 18px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
 
-.scope-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); padding: 4px 0; }
-.scope-dot { width: 6px; height: 6px; background: var(--pink); border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.scope-item { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--text2); padding: 3px 0; }
+.scope-dot { width: 5px; height: 5px; background: var(--pink); border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.scope-item.highlight { color: var(--amber); font-weight: 600; }
 
 .whats-card { background: var(--green-bg); border: 1.5px solid rgba(0,196,140,0.2); border-radius: var(--radius-sm); padding: 14px 16px; display: none; }
 .whats-card-price { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--green); margin-bottom: 2px; }
@@ -1062,11 +1065,6 @@ select.status-badge option { background: white; color: var(--text); }
           </div>
 
           <div class="premium-alert" id="premium-alert">Pacote Premium requer avaliação manual. Não é possível gerar proposta automática.</div>
-
-          <div class="whats-card" id="whats-card" style="margin-bottom:16px">
-            <div class="whats-card-price" id="whats-price-display"></div>
-            <div class="whats-card-desc" id="whats-desc"></div>
-          </div>
 
           <div class="card" style="margin-bottom:16px">
             <div class="payload-wrap">
@@ -1730,7 +1728,7 @@ async function renderHistorico() {
   const ki=document.getElementById('hist-kpis');
   if(ki){const tot=filtered.length,n=filtered.filter(d=>!d.tipo_proposta||d.tipo_proposta==='novo').length,u=filtered.filter(d=>d.tipo_proposta==='upsell_base').length,tv=filtered.reduce((s,d)=>s+extractValorNum(d.preco_mensalidade),0);ki.innerHTML=[{label:'Total de Propostas',val:tot},{label:'Novos Clientes',val:n},{label:'Upsell Base',val:u},{label:'Volume Total/mês',val:tv>0?fmt(tv):'—'}].map(k=>`<div><div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase">${k.label}</div><div style="font-size:22px;font-weight:800;color:var(--navy);font-family:'Syne',sans-serif;letter-spacing:-0.5px">${k.val}</div></div>`).join('');}
   if(!filtered.length){if(emptyEl)emptyEl.style.display='block';return;} if(emptyEl)emptyEl.style.display='none';
-  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style='display:flex;gap:4px'><button onclick='editarProposta(${d.id},"${pf}")' style='font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600'>✏️</button><button onclick='excluirProposta(${d.id},"${pf}")' style='font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600'>🗑</button></div></td></tr>`}).join('');}
+  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td></td></tr>`}).join('');}
 }
 function exportHistorico() {
   (async()=>{
@@ -1866,27 +1864,24 @@ function update(){
   if(pmSub){if(whatsTotal>0&&mensalSB!=null){pmSub.style.display='block';pmSub.textContent=`s/ WhatsApp: ${fmt(mensalSB)}/mês`;}else pmSub.style.display='none';}
   /* BREAKDOWN */
   let html='';
-  if(precoBase)html+=`<div class="price-row"><span class="price-row-label">Mensalidade SalesBud</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`;
-  if(descVal>0)html+=`<div class="price-row" style="flex-direction:column;align-items:stretch;gap:2px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="price-row-label">Desconto aplicado (${state.desconto}%)</span><span class="price-row-val red">− ${fmt(descVal)}/mês</span></div><div style="display:flex;justify-content:flex-end"><span style="font-size:11px;font-weight:600;color:#F87171;opacity:.85">↳ economia de ${fmt(descVal*12)}/ano</span></div></div>`;
-  if(feeMensal>0)html+=`<div class="price-row"><span class="price-row-label">Manutenção integração</span><span class="price-row-val amber">${fmt(feeMensal)}/mês</span></div>`;
-  if(mensalSB!=null&&(descVal>0||feeMensal>0||whatsTotal>0))html+=`<div class="price-row"><span class="price-row-label" style="color:var(--text3);font-size:12px">Subtotal s/ WhatsApp</span><span class="price-row-val" style="color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`;
+  if(precoBase)html+=`<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`;
+  if(descVal>0)html+=`<div class="price-row"><span class="price-row-label">Desconto (${state.desconto}%) <span style="font-size:11px;color:var(--text3)">↳ economia ${fmt(descVal*12)}/ano</span></span><span class="price-row-val red">− ${fmt(descVal)}/mês</span></div>`;
+  if(feeMensal>0)html+=`<div class="price-row"><span class="price-row-label">Manutenção CRM</span><span class="price-row-val amber">${fmt(feeMensal)}/mês</span></div>`;
+  if(mensalSB!=null&&(descVal>0||feeMensal>0||whatsTotal>0))html+=`<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`;
   if(whatsTotal>0)html+=`<div class="price-row"><span class="price-row-label">WhatsApp (${state.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`;
-  /* linha total geral em destaque */
   if(totalGeral!=null){
+    const sepStyle='border-top:2px solid var(--navy);margin-top:4px';
     if(whatsTotal>0){
-      html+=`<div class="price-row total" style="border-top:2px solid var(--navy);margin-top:6px;padding-top:12px"><span class="price-row-label" style="font-size:13px;font-weight:700;color:var(--text2)">Total s/ WhatsApp</span><span class="price-row-val" style="font-size:15px;font-weight:700;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`;
-      html+=`<div class="price-row total" style="margin-top:2px;padding-top:6px"><span class="price-row-label" style="font-size:14px;font-weight:800;color:var(--navy)">Total c/ WhatsApp</span><span class="price-row-val" style="font-size:17px;font-weight:800;color:var(--navy)">${fmt(totalGeral)}/mês</span></div>`;
+      html+=`<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`;
+      html+=`<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalGeral)}/mês</span></div>`;
     } else {
-      html+=`<div class="price-row total" style="border-top:2px solid var(--navy);margin-top:6px;padding-top:12px"><span class="price-row-label" style="font-size:14px;font-weight:700;color:var(--navy)">Total geral / mês</span><span class="price-row-val" style="font-size:16px;font-weight:800;color:var(--navy)">${fmt(totalGeral)}/mês</span></div>`;
+      html+=`<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalGeral)}/mês</span></div>`;
     }
   }
-  if(integ.setup!=null&&integ.setup>0)html+=`<div class="price-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3);font-size:12px">+ Setup integração <span style="font-size:11px;font-weight:500">(pagamento pontual, parcelável em até 12x)</span></span><span class="price-row-val amber">${fmt(integ.setup)}</span></div>`;
-  if(isPremium)html+=`<div class="price-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3);font-size:12px">+ Setup Premium <span style="font-size:11px;font-weight:500">(pagamento pontual, parcelável em até 12x)</span></span><span class="price-row-val dim">Sob consulta</span></div>`;
+  if(integ.setup!=null&&integ.setup>0)html+=`<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(pontual · até 12×)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(integ.setup)}</span></div>`;
   document.getElementById('price-rows').innerHTML=html;
   document.getElementById('scope-section').style.display='block';
-  document.getElementById('scope-items').innerHTML=integ.scope.map(s=>`<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('');
-  const wc=document.getElementById('whats-card');
-  if(state.whatsAtivo&&state.whatsUsers>0){wc.style.display='block';document.getElementById('whats-price-display').textContent=fmt(whatsTotal)+'/mês';document.getElementById('whats-desc').textContent=`${state.whatsUsers} user(s) × ${fmt(whatsPreco)}/user = ${fmt(whatsTotal)}/mês · Cobrado separadamente`;}else wc.style.display='none';
+  document.getElementById('scope-items').innerHTML=integ.scope.map(s=>{const h=s.toLowerCase().includes('sob consulta');return`<div class="scope-item${h?' highlight':''}"><div class="scope-dot" style="${h?'background:var(--amber)':''}"></div><span>${esc(s)}</span></div>`;}).join('');
   document.getElementById('premium-alert').style.display=isPremium?'flex':'none';
   renderPayload(r.horasEfetivas,integ,precoFinal,mensalSB,totalGeral,descVal,whatsTotal,whatsPreco);
   const horasOk=hd>0,emailOk=!state.contatoEmail||validarEmail(state.contatoEmail),canGen=state.empresa&&!isPremium&&precoFinal!=null&&horasOk&&emailOk;
