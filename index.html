@@ -750,6 +750,11 @@ select.status-badge option { background: white; color: var(--text); }
 
 /* KPI cards */
 #hist-kpis > div { background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; }
+
+/* Bulk action bar */
+#bulk-action-bar{position:fixed;bottom:0;left:var(--nav-w);right:0;background:var(--navy);padding:14px 36px;display:none;align-items:center;gap:14px;z-index:90;border-top:2px solid rgba(255,255,255,.1);box-shadow:0 -4px 20px rgba(0,21,80,.22);}
+#bulk-action-bar.show{display:flex;}
+.bulk-count{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:white;flex:1;letter-spacing:-.3px;}
 </style>
 </head>
 <body>
@@ -1325,6 +1330,14 @@ select.status-badge option { background: white; color: var(--text); }
           <select id="hist-vendedor" onchange="renderHistorico()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:white;color:var(--text);cursor:pointer">
             <option value="">Todos os vendedores</option>
           </select>
+          <select id="hist-periodo" onchange="renderHistorico()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:white;color:var(--text);cursor:pointer">
+            <option value="">Todos os períodos</option>
+            <option value="3">Últimos 3 dias</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="15">Últimos 15 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="90">Últimos 90 dias</option>
+          </select>
         </div>
         <div id="hist-capacity-warn" style="display:none;margin-bottom:12px;padding:10px 14px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:#D97706"></div>
         <div style="display:flex;gap:8px">
@@ -1336,6 +1349,7 @@ select.status-badge option { background: white; color: var(--text); }
         <table style="width:100%">
           <thead>
             <tr>
+              <th style="width:40px;text-align:center"><input type="checkbox" id="hist-check-all" onclick="toggleAllHist(this.checked)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></th>
               <th style="width:110px">Data</th>
               <th>Empresa</th>
               <th style="width:80px">Tipo</th>
@@ -1556,6 +1570,15 @@ CREATE POLICY "Acesso total para autenticados"
     </div>
 
   </div><!-- /app-content -->
+
+  <!-- BULK ACTION BAR -->
+  <div id="bulk-action-bar">
+    <div class="bulk-count"><span id="bulk-count-num">0</span> selecionadas</div>
+    <button onclick="exportarSelecionadas()" style="padding:9px 18px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:var(--radius-sm);color:white;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Exportar selecionadas</button>
+    <button onclick="excluirSelecionadas()" style="padding:9px 18px;background:var(--red);border:none;border-radius:var(--radius-sm);color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Excluir selecionadas</button>
+    <button onclick="limparSelecao()" style="padding:9px 18px;background:none;border:1.5px solid rgba(255,255,255,.2);border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+  </div>
+
 </div><!-- /screen-app -->
 
 <!-- MODAL: USUÁRIO -->
@@ -1696,6 +1719,7 @@ async function testarSupabase() {
 function copySql() { navigator.clipboard.writeText(document.getElementById('supabase-sql')?.textContent||'').then(()=>showToast('SQL copiado!','success')); }
 
 /* ═══ HISTÓRICO ═══ */
+let _histSelected=new Set(),_histAllData=[];
 const HIST_KEY = 'salesbud_historico';
 function histLoadLocal() { try { return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch { return []; } }
 function histSaveLocal(d) { try { localStorage.setItem(HIST_KEY, JSON.stringify(d.slice(0,500))); } catch { showToast('Armazenamento local cheio.','info'); } }
@@ -1748,11 +1772,13 @@ async function renderHistorico() {
   const search=(document.getElementById('hist-search')?.value||'').toLowerCase(), tipo=document.getElementById('hist-tipo')?.value||'', vend=document.getElementById('hist-vendedor')?.value||'';
   const vs=document.getElementById('hist-vendedor');
   if(vs){const vl=[...new Set(data.map(d=>d.vendedor_nome).filter(Boolean))],cur=vs.value;vs.innerHTML='<option value="">Todos os vendedores</option>'+vl.map(v=>`<option value="${esc(v)}" ${cur===v?'selected':''}>${esc(v)}</option>`).join('');}
-  const filtered=data.filter(d=>{const ms=!search||(d.nome_empresa||'').toLowerCase().includes(search)||(d.vendedor_nome||'').toLowerCase().includes(search);const mt=!tipo||d.tipo_proposta===tipo||(tipo==='novo'&&!d.tipo_proposta);const mv=!vend||d.vendedor_nome===vend;return ms&&mt&&mv;});
+  const periodo=document.getElementById('hist-periodo')?.value||'';
+  const filtered=data.filter(d=>{const ms=!search||(d.nome_empresa||'').toLowerCase().includes(search)||(d.vendedor_nome||'').toLowerCase().includes(search);const mt=!tipo||d.tipo_proposta===tipo||(tipo==='novo'&&!d.tipo_proposta);const mv=!vend||d.vendedor_nome===vend;const mp=!periodo||(()=>{const ds=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'');if(!ds)return true;const[dd,mm,yy]=ds.split('/');const dt=new Date(`${yy}-${mm}-${dd}T00:00:00`);if(isNaN(dt))return true;const cutoff=new Date();cutoff.setDate(cutoff.getDate()-parseInt(periodo));cutoff.setHours(0,0,0,0);return dt>=cutoff;})();return ms&&mt&&mv&&mp;});
+  _histAllData=filtered;
   const ki=document.getElementById('hist-kpis');
   if(ki){const tot=filtered.length,n=filtered.filter(d=>!d.tipo_proposta||d.tipo_proposta==='novo').length,u=filtered.filter(d=>d.tipo_proposta==='upsell_base').length,tv=filtered.reduce((s,d)=>s+extractValorNum(d.preco_mensalidade),0);ki.innerHTML=[{label:'Total de Propostas',val:tot},{label:'Novos Clientes',val:n},{label:'Upsell Base',val:u},{label:'Volume Total/mês',val:tv>0?fmt(tv):'—'}].map(k=>`<div><div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase">${k.label}</div><div style="font-size:22px;font-weight:800;color:var(--navy);font-family:'Syne',sans-serif;letter-spacing:-0.5px">${k.val}</div></div>`).join('');}
   if(!filtered.length){if(emptyEl)emptyEl.style.display='block';return;} if(emptyEl)emptyEl.style.display='none';
-  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';return`<tr><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`}).join('');}
+  if(tbodyEl){tbodyEl.innerHTML=filtered.map(d=>{const df=d.data_proposta||(d.ts?new Date(d.ts).toLocaleDateString('pt-BR'):'—'),tl=d.tipo_proposta==='upsell_base'?'Base':'Novo',ts=d.tipo_proposta==='upsell_base'?'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)':'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',dc=d.desconto_pct?d.desconto_pct+'%':'—',st=d._status_proposta||'enviada',pf=d._fonte||'local';const _chk=_histSelected.has(d.id);return`<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk?'checked':''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa||'—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome||'—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas||'—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade||'—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st==='enviada'?'selected':''}>Enviada</option><option value="negociacao" ${st==='negociacao'?'selected':''}>Negociação</option><option value="aprovada" ${st==='aprovada'?'selected':''}>Aprovada</option><option value="perdida" ${st==='perdida'?'selected':''}>Perdida</option></select>${d._motivo_perda?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>`:''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`}).join('');}
 }
 function exportHistorico() {
   (async()=>{
@@ -1766,6 +1792,14 @@ function exportHistorico() {
     showToast(`${data.length} proposta(s) exportada(s).`,'success');
   })();
 }
+
+/* ═══ SELEÇÃO EM MASSA ═══ */
+function onHistCheck(cb){const id=Number(cb.dataset.id);if(cb.checked)_histSelected.add(id);else _histSelected.delete(id);updateBulkBar();}
+function toggleAllHist(checked){document.querySelectorAll('.hist-check').forEach(cb=>{cb.checked=checked;const id=Number(cb.dataset.id);if(checked)_histSelected.add(id);else _histSelected.delete(id);});updateBulkBar();}
+function updateBulkBar(){const bar=document.getElementById('bulk-action-bar'),n=_histSelected.size,countEl=document.getElementById('bulk-count-num');if(countEl)countEl.textContent=n;if(bar)bar.classList.toggle('show',n>0);const allCbs=document.querySelectorAll('.hist-check'),masterCb=document.getElementById('hist-check-all');if(masterCb&&allCbs.length>0){const allChecked=[...allCbs].every(c=>c.checked),someChecked=[...allCbs].some(c=>c.checked);masterCb.checked=allChecked;masterCb.indeterminate=!allChecked&&someChecked;}}
+function limparSelecao(){_histSelected.clear();document.querySelectorAll('.hist-check').forEach(cb=>cb.checked=false);const m=document.getElementById('hist-check-all');if(m){m.checked=false;m.indeterminate=false;}updateBulkBar();}
+async function excluirSelecionadas(){if(!_histSelected.size)return;if(!confirm(`Excluir ${_histSelected.size} proposta(s)? Esta ação não pode ser desfeita.`))return;const ids=[..._histSelected];for(const id of ids){const d=_histAllData.find(d=>d.id===id),fonte=d?._fonte||'local';if(supabaseClient&&fonte==='supabase'){try{await supabaseClient.from('propostas').delete().eq('id',id);}catch{}}else{const local=histLoadLocal().filter(d=>d.id!==id);histSaveLocal(local);}}_histSelected.clear();showToast(`${ids.length} proposta(s) excluída(s).`,'success');renderHistorico();}
+function exportarSelecionadas(){const selected=_histAllData.filter(d=>_histSelected.has(d.id));if(!selected.length){showToast('Nenhuma proposta selecionada.','info');return;}const headers=['data','tipo','empresa','vendedor','horas','valor_mes','setup','desconto_pct','crm','whatsapp','status','motivo_perda'];const rows=selected.map(d=>[d.data_proposta||(d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):''),d.tipo_proposta==='upsell_base'?'Base':'Novo',d.nome_empresa||'',d.vendedor_nome||'',d.pacote_horas||'',d.preco_mensalidade||'',d.preco_setup||'',d.desconto_pct!=null?d.desconto_pct+'%':'',d.crm_cliente||'',d.whatsapp_info||d.preco_whatsapp||'',d.status_proposta||d._status_proposta||'enviada',d.motivo_perda||d._motivo_perda||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));const csv='﻿'+[headers.map(h=>`"${h}"`).join(','),...rows].join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`salesbud_selecionadas_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);showToast(`${selected.length} proposta(s) exportada(s).`,'success');}
 
 /* ═══ MOTIVO PERDA ═══ */
 let _perdaContext=null;
