@@ -1843,6 +1843,7 @@ function getWhatsPrice(u){return(WHATS_TIERS.find(t=>u>=t.min&&u<=t.max)||{preco
 function getTotalWhats(u){return getWhatsPrice(u)*u;}
 function initials(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function isCrmNativo(crm){return['HubSpot','Pipedrive','RD Station'].includes(crm);}
 
 /* ═══ STATE ═══ */
 let state={empresa:'',crm:'',contatoNome:'',contatoEmail:'',integKey:'basico',whatsAtivo:true,whatsUsers:5,desconto:0,_aprovacaoDesconto:null,pdfUrl:null};
@@ -1875,7 +1876,7 @@ function update(){
   document.getElementById('pacote-preco-label').textContent=fmt(r.precoEfetivo);
   const tLen=getTabelaAtiva().length;
   document.getElementById('pacote-idx-label').textContent=r.acimaDaTabela?`R$ ${r.precoHora.toFixed(3)}/h (acima da tabela)`:r.interpolado?`interpolado · R$ ${r.precoHora.toFixed(3)}/h`:`pacote ${r.tierIdx+1} de ${tLen}`;
-  const integ=INTEG[state.integKey]||INTEG.basico,isPremium=false;
+  let integ={...(INTEG[state.integKey]||INTEG.basico)},isPremium=false;if(state.integKey==='basico'&&state.crm&&!isCrmNativo(state.crm)){integ.setup=1200;}const _bs=document.querySelector('.integ-card:first-child .integ-card-sub');if(_bs)_bs.textContent=(state.crm&&!isCrmNativo(state.crm))?'R$ 1.200 setup · Somente notas':'Gratuito · Somente notas';
   const precoBase=r.precoEfetivo, descVal=precoBase&&state.desconto>0?Math.round(precoBase*state.desconto/100):0;
   const precoFinal=precoBase?precoBase-descVal:null, feeMensal=integ.fee||0;
   const mensalSB=precoFinal!=null?precoFinal+feeMensal:null;                      /* mensalidade SalesBud (sem whats) */
@@ -1964,7 +1965,7 @@ function updateBase(){
   document.getElementById('base-desc-label').textContent=stateBase.desconto+'%';
   const hd=parseInt(document.getElementById('base-horas-input')?.value)||0, r=calcPrecoExato(hd);
   const precoBase=r.precoEfetivo, descVal=Math.round(precoBase*(stateBase.desconto/100)), precoFinal=precoBase-descVal;
-  const integ=INTEG[stateBase.integKey]||INTEG.basico, feeInteg=integ.fee||0;
+  let integ={...(INTEG[stateBase.integKey]||INTEG.basico)}, feeInteg=integ.fee||0;if(stateBase.integKey==='basico'&&stateBase.crm&&!isCrmNativo(stateBase.crm)){integ.setup=1200;}const _bbs=document.querySelector('#base-integ-btns .integ-btn:first-child span');if(_bbs)_bbs.textContent=(stateBase.crm&&!isCrmNativo(stateBase.crm))?'R$ 1.200':'Grátis';
   const whatsTotal=stateBase.whatsAtivo?getTotalWhats(stateBase.whatsUsers):0, whatsPreco=stateBase.whatsAtivo?getWhatsPrice(stateBase.whatsUsers):0;
   const totalMensal=precoFinal+feeInteg+whatsTotal;
   document.getElementById('base-horas-label').textContent=r.horasEfetivas.toLocaleString('pt-BR')+'h';
