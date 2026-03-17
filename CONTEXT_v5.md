@@ -1,5 +1,5 @@
-# SalesBud Propostas — Context Document v4
-> Última atualização: 16/03/2026 23h · Usar como briefing no início de cada nova sessão
+# SalesBud Propostas — Context Document v5
+> Última atualização: 17/03/2026 15h · Usar como briefing no início de cada nova sessão
 
 ## Projeto
 
@@ -30,78 +30,102 @@ Gerador de propostas comerciais interno para o time de vendas SalesBud (~12 AEs 
 - Claude Code para todos os deploys
 - plano_integracao adicionado ao payload (commit 639415e)
 - Pasta "Propostas Salesbud" compartilhada como "Qualquer pessoa com o link = Editor"
+- Variáveis por plano no template: preco_setup_basico (dinâmico) + hardcode nos slides 13/14
+- CRM nativo vs API aberta: Básico gratuito para nativos, R$1.200 para não-nativos
+- Timeout webhook 60s com feedback progressivo
+- Botão "Baixar PDF" removido (redundante — PDF chega no email)
 
 ---
 
-## Estado atual
+## Estado atual — TUDO FUNCIONANDO
 
-### Pronto e funcionando
-- App no ar: https://jgmorais-bit.github.io/salesbud-app
+### App em produção
 - Login com admin/vendedor + sessão persistente (checkbox Manter conectado, TTL 8h/30 dias)
 - Aba Novos Clientes — cálculo, breakdown, WhatsApp, desconto, payload
 - Aba Clientes de Base — diagnóstico, comparativo, upsell
-- Histórico com filtros, KPIs, export CSV, editar e excluir
-- Configurações — webhook, Supabase, template, tabela de preços
+- Histórico com filtros por tipo/vendedor/período, KPIs, export CSV, editar, excluir, seleção em massa
+- Configurações — webhook, Supabase, template, tabela de preços, lista de CRMs customizável
 - Fallback quando automação indisponível
-- Botões Salvar proposta e Baixar PDF (PDF ainda não funcional — gera HTML temporário)
 - Controle de acesso — vendedor não vê Usuários nem Configurações
-- Payload com campo plano_integracao (basico/intermediario/avancado)
-- Ajustes visuais implementados: "Sob consulta" negrito, botões texto no Histórico, redesign Clientes de Base, dropdown perfil avatar, grid CRM 3 colunas, badge plano sem redundância
+- Lógica CRM nativo vs API aberta: Básico setup R$0 (nativo) ou R$1.200 (não-nativo)
+- Toggle "Plano específico / Todos os planos" — envia 1 ou 3 slides ao cliente
+- CRM obrigatório + lista customizável por admin
+- Timeout 60s com feedback progressivo no botão (Enviando → Gerando → Exportando → Quase lá)
 
-### Make — fluxo 100% operacional (7 módulos)
+### Make — fluxo 100% operacional (8 módulos + error handler)
 Cenário: https://us2.make.com/2013800/scenarios/4420296/edit
 Scheduling: ativo ("Immediately as data arrives")
 
 ```
 Webhooks (1) → Google Drive Copy (3) → Google Slides Template (4) →
-Google Slides API Call [delete slides] (14) → Google Drive Download/PDF (11) →
+Google Slides API Call [delete slides] (14) → [Resume error handler] →
+Tools Set Variable (20) → Google Drive Download/PDF (11) →
 Gmail Send (16) → Webhooks Response (7)
 ```
 
 - Módulo 1: **Webhooks** — Custom webhook ✅
 - Módulo 3: **Google Drive** — Copy a File ✅
 - Módulo 4: **Google Slides** — Create a Presentation From a Template ✅
-- Módulo 14: **Google Slides** — Make an API Call (batchUpdate: deleta slides dos planos não selecionados) ✅
+  - 12 Tags mapeadas incluindo preco_setup_basico e total_avancado
+- Módulo 14: **Google Slides** — Make an API Call (batchUpdate) ✅
   - URL: `v1/presentations/{{4.Presentation ID}}:batchUpdate`
-  - Body com if/else baseado em `1.plano_integracao` → deleta 2 dos 3 slides (p12/p13/p14)
+  - Body condicional: se "todos" → requests vazio (erro ignorado via Resume)
+  - Se basico/intermediario/avancado → deleta os 2 slides dos outros planos
+  - **Resume error handler**: quando plano_integracao="todos", erro é ignorado e fluxo continua
+- Módulo 20: **Tools** — Set Variable ✅
+  - slides_edit_url = `https://docs.google.com/presentation/d/` + `4.Presentation ID` + `/edit`
 - Módulo 11: **Google Drive** — Download a File (Advanced Settings: Convert Google Slides to PDF) ✅
 - Módulo 16: **Gmail** — Send an Email ✅
   - Body type: Raw HTML
   - To: `1.vendedor_email`
   - Subject: `Proposta Salesbud - {{1.nome_empresa}}`
-  - Link editável: `https://docs.google.com/presentation/d/{{4.Presentation ID}}/edit`
+  - Link editável: `{{20.slides_edit_url}}`
   - Attachment: `{{1.nome_empresa}}.pdf` com data de `11.Data`
+  - Modelo de email para envio ao cliente incluído (copie e personalize)
 - Módulo 7: **Webhooks** — Webhook Response ✅
   - Body JSON: `{ slides_url, pdf_url }` com `4.presentationId` e `11.Web Content Link`
 
 ### IDs dos slides de proposta no template
 ```
-Slide 12 (Básico):        ID = p12
+Slide 12 (Básico):         ID = p12
 Slide 13 (Intermediário):  ID = p13
 Slide 14 (Avançado):       ID = p14
+```
+
+### Template Google Slides — variáveis por slide
+```
+Slides 1-11: institucionais (fixos)
+Slide 12 (Básico):
+  - {{preco_setup_basico}} (dinâmico: Gratuito ou R$ 1.200)
+  - {{pacote_horas}}, {{preco_mensalidade}}, {{total_geral_mes}}
+  - {{preco_whatsapp}}, {{crm_cliente}}
+Slide 13 (Intermediário):
+  - Setup: R$ 1.200 (hardcode)
+  - Fee: Não incluso (hardcode)
+  - {{pacote_horas}}, {{preco_mensalidade}}, {{total_geral_mes}}
+  - {{preco_whatsapp}}, {{crm_cliente}}
+Slide 14 (Avançado):
+  - Setup: R$ 3.000 (hardcode)
+  - Fee: R$ 499/mês (hardcode)
+  - {{pacote_horas}}, {{preco_mensalidade}}, {{total_avancado}}
+  - {{preco_whatsapp}}, {{crm_cliente}}
+Slide 15: Capa personalizada
+  - {{nome_empresa}}, {{vendedor_nome}}, {{vendedor_email}}
 ```
 
 ---
 
 ## Pendências (ordem de prioridade)
 
-### 1. [App] Botão "Baixar PDF" funcional
-**Status**: O botão existe na UI mas gera HTML temporário. O webhook response do Make já retorna `pdf_url`.
-**O que falta**: Quando gerarProposta() recebe response com sucesso, parsear o JSON e salvar `pdf_url` no state. O botão "Baixar PDF" deve abrir essa URL em nova aba. Aplicar nos dois módulos (Novos Clientes e Clientes de Base).
+### 1. [App] Configurar Supabase em produção
+**Status**: Schema SQL pronto, UI de configuração no app pronta. Falta criar projeto no Supabase, rodar SQL, e configurar URL + anon key no app.
+**Benefício**: Histórico compartilhado entre vendedores, visibilidade do gestor.
 
-### 2. [App] Lógica CRM nativo vs API aberta
-**Status**: Dropdown de CRM já tem opção "CRM com API aberta" + aviso. Mas o preço não muda.
-**Regra**:
-- CRMs nativos (HubSpot, Pipedrive, RD Station): Básico setup R$0 (grátis)
-- Todos os outros CRMs: Básico setup R$1.200 (mesmo escopo de notas)
-- Intermediário e Avançado: mantêm valores iguais independente do CRM
-**O que falta**: Implementar lógica condicional em update()/updateBase() que altera setup do Básico quando CRM não-nativo, e atualiza visualmente o card + breakdown + payload.
+### 2. [HubSpot] Pinar URL nos deals
 
-### 3. [App] Configurar Supabase em produção
+### 3. [App] Remover botão "Baixar PDF" (redundante)
 
-### 4. [HubSpot] Pinar URL nos deals
-
-### 5. [Futuro] Migrar contas pessoais para conta SalesBud
+### 4. [Futuro] Migrar contas pessoais para conta SalesBud
 
 ---
 
@@ -122,17 +146,18 @@ const INTEG = {
   intermediario: { setup: 1200, fee: 0,   label: 'Até 5 campos personalizados' },
   avancado:      { setup: 3000, fee: 499, label: '10 campos + tarefas + 2 pipelines' }
 };
-// NOTA: quando CRM não-nativo, basico.setup deve ser 1200 (pendente implementação)
+// CRM nativo (HubSpot, Pipedrive, RD Station): basico.setup = 0
+// CRM não-nativo: basico.setup = 1200 (via isCrmNativo() no runtime)
 ```
 
-### Lógica CRM nativo vs API aberta (pendente implementação)
+### Lógica CRM nativo vs API aberta (IMPLEMENTADO)
 ```
 CRM nativo (HubSpot, Pipedrive, RD Station):
   → Básico: setup R$0, fee R$0, somente notas
 
-CRM com API aberta / outros (Salesforce, Moskit, Ploomes, Notion, Zoho, Outro, Sem CRM):
-  → Básico: setup R$1.200, fee R$0, somente notas (ou até 5 campos)
-  → Intermediário: setup R$1.200, fee R$0, até 5 campos (sem mudança)
+CRM não-nativo (todos os outros):
+  → Básico: setup R$1.200, fee R$0, somente notas
+  → Intermediário: setup R$1.200, fee R$0 (sem mudança)
   → Avançado: setup R$3.000, fee R$499/mês (sem mudança)
 ```
 
@@ -152,11 +177,13 @@ CRM com API aberta / outros (Salesforce, Moskit, Ploomes, Notion, Zoho, Outro, S
   "titulo_proposta": "",
   "pacote_horas": "",
   "preco_mensalidade": "R$ X.XXX/mês",
-  "fee_manutencao": "R$ 499/mês | Não incluso",
+  "fee_manutencao": "R$ 499/mês | Não incluso | Ver proposta",
   "preco_whatsapp": "R$ XXX/mês para X usuários | Não incluso",
   "total_geral_mes": "R$ X.XXX/mês",
   "detalhe_desconto": "Desconto de X% aplicado | Preço padrão",
-  "preco_setup": "R$ X.XXX | Gratuito | Sob consulta",
+  "preco_setup": "R$ X.XXX | Gratuito | Ver proposta",
+  "preco_setup_basico": "Gratuito | R$ 1.200",
+  "total_avancado": "R$ X.XXX/mês",
   "descricao_setup": "",
   "vendedor_nome": "",
   "vendedor_email": "",
@@ -169,31 +196,8 @@ CRM com API aberta / outros (Salesforce, Moskit, Ploomes, Notion, Zoho, Outro, S
   "data_proposta": "DD/MM/AAAA",
   "validade_proposta": "DD/MM/AAAA",
   "tipo_proposta": "novo | upsell_base",
-  "plano_integracao": "basico | intermediario | avancado"
+  "plano_integracao": "basico | intermediario | avancado | todos"
 }
-```
-
-### Variáveis do template Google Slides
-```
-{{pacote_horas}}        → pacote_horas
-{{preco_mensalidade}}   → preco_mensalidade
-{{preco_setup}}         → preco_setup
-{{fee_manutencao}}      → fee_manutencao
-{{preco_whatsapp_user}} → calculado no Make
-{{total_geral_mes}}     → total_geral_mes
-{{nome_empresa}}        → nome_empresa (slide 15 capa)
-{{vendedor_nome}}       → vendedor_nome (slide 15)
-{{vendedor_email}}      → vendedor_email (slide 15)
-```
-
-### Estrutura do template Google Slides
-```
-Slides 1-11:  institucionais (fixos, não editar)
-Slide 12:     Proposta Básico     (ID interno: p12)
-Slide 13:     Proposta Intermediário (ID interno: p13)
-Slide 14:     Proposta Avançado   (ID interno: p14)
-Slide 15:     Capa personalizada (nome_empresa, vendedor_nome, vendedor_email)
-              — deve ser o slide 1 para o cliente (reordenar no Drive)
 ```
 
 ---
@@ -219,8 +223,8 @@ Scheduling: Immediately as data arrives (ativo)
 ```
 Project Number: 992477413767
 OAuth Client: Make - Salesbud
-Client ID: <GOOGLE_CLIENT_ID>
-Client Secret: <GOOGLE_CLIENT_SECRET>
+Client ID: (ver Google Cloud Console)
+Client Secret: (ver Google Cloud Console)
 APIs ativas: Google Drive API, Google Slides API, Gmail API
 Redirect URIs:
   https://www.integromat.com/oauth/cb/google
@@ -238,7 +242,7 @@ Pasta Propostas SalesBud ID: 1AZCtwIErvLvMZgHwie3xU9XtoFk0HrwC
 Permissão pasta: Qualquer pessoa com o link = Editor
 ```
 
-### Supabase SQL
+### Supabase SQL (pendente configuração)
 ```sql
 CREATE TABLE propostas (
   id BIGSERIAL PRIMARY KEY,
@@ -276,23 +280,33 @@ matheus.weigand@salesbud.com.br  — vendedor
 
 ---
 
-## Changelog (sessão 16/03/2026)
+## Changelog completo
 
-### Make — 3 fixes críticos resolvidos
-1. **PDF corrompido** → Google Drive Download: ativado Advanced Settings, "Convert Google Slides Files to Format: PDF"
-2. **Slides errados** → Novo módulo Google Slides "Make an API Call" (14) com batchUpdate que deleta slides dos planos não selecionados baseado em `plano_integracao`
-3. **Email rascunho → envio real** → Trocou "Create a Draft" por "Send an Email" (16) com Raw HTML, link editável do Slides, PDF como attachment
+### Sessão 16-17/03/2026
 
-### Make — ajustes complementares
-4. Webhook Response (7) atualizado com `4.presentationId` e `11.Web Content Link`
-5. Scheduling ativado: "Immediately as data arrives"
-6. Pasta compartilhada: "Qualquer pessoa com o link = Editor"
-7. Template de email pro cliente configurado pelo vendedor diretamente
+#### Make — automação completa
+1. PDF corrompido → Advanced Settings: Convert Google Slides to PDF
+2. Slides errados → API Call batchUpdate com deleção condicional por plano
+3. Email rascunho → Send Email com Raw HTML + template para cliente
+4. Link editável → módulo Tools Set Variable com URL pré-montada
+5. Variáveis por plano → preco_setup_basico (dinâmico) + hardcode nos slides 13/14
+6. Toggle "Todos os planos" → Resume error handler pula deleção
+7. Webhook Response atualizado com slides_url e pdf_url
+8. Scheduling ativado: Immediately as data arrives
+9. Pasta compartilhada: Qualquer pessoa com o link = Editor
 
-### Ajustes visuais (Claude Code — já implementados)
-- "Sob consulta de viabilidade técnica" — último item do scope, cor preta negrito
-- Botões Editar/Excluir no Histórico — texto simples em vez de emoji
-- Redesign Clientes de Base — homogeneizar com Novos Clientes
-- Dropdown de perfil no avatar — nome, cargo, Sair da conta
-- Grid CRM 3 colunas iguais
-- Badge do plano sem redundância
+#### App (Claude Code)
+1. Botão Baixar PDF funcional via webhook response (depois removido — redundante)
+2. Lógica CRM nativo vs API aberta no pricing (isCrmNativo())
+3. Histórico: seleção em massa + filtro por período
+4. Timeout 60s + feedback progressivo no botão
+5. Toggle "Plano específico / Todos os planos"
+6. Payload com preco_setup_basico e total_avancado
+7. CRM obrigatório + lista customizável por admin
+8. Ajustes visuais: "Sob consulta" negrito, botões texto, redesign Base, dropdown perfil, grid 3 colunas, badge sem redundância
+
+#### Template Google Slides
+1. {{preco_setup}} → {{preco_setup_basico}} no slide 12
+2. Hardcode R$1.200/R$3.000 e fees nos slides 13/14
+3. {{total_avancado}} no slide 14
+4. {{crm_cliente}} adicionado em todos os slides de proposta
