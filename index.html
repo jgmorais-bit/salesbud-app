@@ -796,21 +796,48 @@ select.status-badge option { background: white; color: var(--text); }
   </div>
 
   <div class="login-right">
-    <div class="login-title">Bem-vindo de volta</div>
-    <div class="login-subtitle">Entre com seu email e senha para continuar</div>
-    <div id="login-error" class="login-error">Email ou senha inválidos.</div>
-    <div class="form-field">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="seu@salesbud.com.br" autocomplete="email" />
+    <div id="login-normal-content">
+      <div class="login-title">Bem-vindo de volta</div>
+      <div class="login-subtitle">Entre com seu email e senha para continuar</div>
+      <div id="login-error" class="login-error">Email ou senha inválidos.</div>
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="seu@salesbud.com.br" autocomplete="email" />
+      </div>
+      <div class="form-field">
+        <label>Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);cursor:pointer;margin-bottom:16px"><input type="checkbox" id="keep-logged"> Manter conectado</label>
+      <button class="btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="toggleEsqueciSenha()" style="background:none;border:none;color:var(--pink);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0">Esqueci minha senha</button>
+      </div>
+      <div id="forgot-form" style="display:none;margin-top:14px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px solid var(--border)">
+        <div class="form-field" style="margin-bottom:10px">
+          <label>Digite seu email</label>
+          <input type="email" id="forgot-email" placeholder="seu@salesbud.com.br" />
+        </div>
+        <button class="btn-primary" id="btn-forgot-send" onclick="enviarResetSenha()" style="margin-top:0">Enviar link de recuperação</button>
+        <div id="forgot-msg" style="display:none;margin-top:10px;font-size:13px;text-align:center;padding:8px 12px;border-radius:var(--radius-xs)"></div>
+      </div>
+      <div style="margin-top:24px;font-size:12px;color:var(--text4);text-align:center;line-height:1.6;">
+        Conta gerenciada pelo administrador SalesBud.<br>Em caso de problemas, contate o admin.
+      </div>
     </div>
-    <div class="form-field">
-      <label>Senha</label>
-      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);cursor:pointer;margin-bottom:16px"><input type="checkbox" id="keep-logged"> Manter conectado</label>
-    <button class="btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
-    <div style="margin-top:24px;font-size:12px;color:var(--text4);text-align:center;line-height:1.6;">
-      Conta gerenciada pelo administrador SalesBud.<br>Em caso de problemas, contate o admin.
+    <div id="reset-password-wrapper" style="display:none">
+      <div class="login-title">Redefinir senha</div>
+      <div class="login-subtitle" style="margin-bottom:28px">Digite sua nova senha abaixo</div>
+      <div class="form-field">
+        <label>Nova senha</label>
+        <input type="password" id="reset-nova-senha" placeholder="Mínimo 6 caracteres" />
+      </div>
+      <div class="form-field">
+        <label>Confirmar nova senha</label>
+        <input type="password" id="reset-confirmar-senha" placeholder="Repita a senha" />
+      </div>
+      <div id="reset-msg" style="display:none;margin-bottom:14px;font-size:13px;padding:10px 14px;border-radius:var(--radius-xs)"></div>
+      <button class="btn-primary" id="btn-reset-confirm" onclick="confirmarNovaSenha()">Alterar senha</button>
     </div>
   </div>
 </div>
@@ -853,6 +880,7 @@ select.status-badge option { background: white; color: var(--text); }
             <div style="font-size:13px;font-weight:700;color:var(--navy)" id="pm-nome"></div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px" id="pm-cargo"></div>
           </div>
+          <button onclick="abrirModalAlterarSenha()" style="width:100%;padding:11px 14px;background:none;border:none;text-align:left;font-family:inherit;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;border-bottom:1px solid var(--border)">Alterar senha</button>
           <button onclick="fazerLogout()" style="width:100%;padding:11px 14px;background:none;border:none;text-align:left;font-family:inherit;font-size:13px;font-weight:600;color:#DC2626;cursor:pointer">Sair da conta</button>
         </div>
       </div>
@@ -1621,6 +1649,29 @@ CREATE POLICY "Acesso total para autenticados"
   </div>
 </div>
 
+<!-- MODAL: ALTERAR SENHA -->
+<div class="modal-overlay" id="modal-senha-overlay" onclick="fecharModalSenhaSeClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Alterar senha</div>
+      <button class="btn-close" onclick="fecharModalAlterarSenha()">×</button>
+    </div>
+    <div class="form-field">
+      <label>Nova senha</label>
+      <input type="password" id="senha-nova" placeholder="Mínimo 6 caracteres" />
+    </div>
+    <div class="form-field">
+      <label>Confirmar nova senha</label>
+      <input type="password" id="senha-confirmar" placeholder="Repita a senha" />
+    </div>
+    <div id="modal-senha-error" style="font-size:13px;color:var(--red);margin-top:12px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalAlterarSenha()">Cancelar</button>
+      <button class="btn-save" onclick="salvarNovaSenha()">Alterar senha</button>
+    </div>
+  </div>
+</div>
+
 <!-- FALLBACK MODAL (FEATURE: fallback n8n) -->
 <div id="fallback-overlay">
   <div class="fallback-modal">
@@ -1864,11 +1915,22 @@ function clearSession(){try{localStorage.removeItem(SESSION_KEY);}catch{}}
 async function restoreSession(){if(isSupabaseAuthReady()){try{const{data:{session}}=await supabaseClient.auth.getSession();if(session?.user){const perfil=await fetchPerfil(session.user.id);if(perfil&&perfil.status==='ativo'){currentUser={...perfil,_supabaseUid:session.user.id};return true;}}}catch(e){console.warn('restoreSession Supabase:',e.message);}}try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const s=JSON.parse(raw);if(Date.now()-s.ts>s.ttl){if(s.email)localStorage.setItem(LAST_EMAIL_KEY,s.email);clearSession();return false;}const user=DB.users.find(u=>u.id===s.userId&&u.status==='ativo');if(!user)return false;currentUser=user;return true;}catch{return false;}}
 async function fazerLogin(){const email=document.getElementById('login-email').value.trim().toLowerCase(),senha=document.getElementById('login-senha').value,errEl=document.getElementById('login-error'),btnEl=document.getElementById('btn-login');if(btnEl){btnEl.disabled=true;btnEl.textContent='Entrando...';}if(isSupabaseAuthReady()){try{const{data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});if(!error&&data.user){const perfil=await fetchPerfil(data.user.id);if(perfil&&perfil.status==='ativo'){currentUser={...perfil,_supabaseUid:data.user.id};errEl.style.display='none';localStorage.removeItem(LAST_EMAIL_KEY);iniciarApp();if(btnEl){btnEl.disabled=false;btnEl.textContent='Entrar';}return;}}}catch(e){console.warn('fazerLogin Supabase:',e.message);}}let user=null;for(const u of DB.users){if(u.email.toLowerCase()===email&&u.status==='ativo'&&await _c(senha,u.senha)){user=u;break;}}if(!user){errEl.style.display='block';document.getElementById('login-senha').value='';if(btnEl){btnEl.disabled=false;btnEl.textContent='Entrar';}return;}errEl.style.display='none';currentUser=user;const ttl=document.getElementById('keep-logged')?.checked?SESSION_TTL_LONG:SESSION_TTL_SHORT;saveSession(user,ttl);localStorage.removeItem(LAST_EMAIL_KEY);iniciarApp();if(btnEl){btnEl.disabled=false;btnEl.textContent='Entrar';}}
 async function fazerLogout(){if(isSupabaseAuthReady()){try{await supabaseClient.auth.signOut();}catch(e){console.warn('signOut:',e.message);}}currentUser=null;clearSession();mostrarScreen('login');document.getElementById('login-email').value='';document.getElementById('login-senha').value='';}
-document.addEventListener('DOMContentLoaded',async()=>{loadUsersLocal();initSupabase();document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});document.getElementById('login-email').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});if(await restoreSession()){iniciarApp();return;}const hasAdminPwd=DB.users.some(u=>u.perfil==='admin'&&u.senha);if(!hasAdminPwd&&!isSupabaseAuthReady()){mostrarSetup();return;}const lastEmail=localStorage.getItem(LAST_EMAIL_KEY);if(lastEmail){const el=document.getElementById('login-email');if(el)el.value=lastEmail;}});
+document.addEventListener('DOMContentLoaded',async()=>{loadUsersLocal();initSupabase();const _hp=new URLSearchParams(window.location.hash.substring(1));if(_hp.get('type')==='recovery'&&_hp.get('access_token')){document.getElementById('login-normal-content').style.display='none';document.getElementById('reset-password-wrapper').style.display='block';return;}document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});document.getElementById('login-email').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});if(await restoreSession()){iniciarApp();return;}const hasAdminPwd=DB.users.some(u=>u.perfil==='admin'&&u.senha);if(!hasAdminPwd&&!isSupabaseAuthReady()){mostrarSetup();return;}const lastEmail=localStorage.getItem(LAST_EMAIL_KEY);if(lastEmail){const el=document.getElementById('login-email');if(el)el.value=lastEmail;}});
 
 /* ═══ APP INIT ═══ */
 function toggleProfileMenu(){const menu=document.getElementById('profile-menu');if(!menu)return;menu.style.display=menu.style.display==='block'?'none':'block';}
 document.addEventListener('click',e=>{const avatar=document.getElementById('nav-avatar'),menu=document.getElementById('profile-menu');if(menu&&!avatar?.contains(e.target)&&!menu.contains(e.target))menu.style.display='none';});
+
+/* ═══ ESQUECI SENHA ═══ */
+function toggleEsqueciSenha(){const f=document.getElementById('forgot-form');if(!f)return;const show=f.style.display==='none';f.style.display=show?'block':'none';if(show){const le=document.getElementById('login-email')?.value,fe=document.getElementById('forgot-email');if(fe&&le)fe.value=le;fe?.focus();}document.getElementById('forgot-msg').style.display='none';}
+async function enviarResetSenha(){const msg=document.getElementById('forgot-msg');if(!isSupabaseAuthReady()){msg.textContent='Supabase Auth não configurado. Contate o admin para redefinir sua senha.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';return;}const email=document.getElementById('forgot-email').value.trim();if(!email){msg.textContent='Digite seu email.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';return;}const btn=document.getElementById('btn-forgot-send');btn.disabled=true;btn.textContent='Enviando...';try{const{error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});if(error){msg.textContent='Email não encontrado ou erro ao enviar.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';}else{msg.textContent='Link de recuperação enviado! Verifique seu email.';msg.style.cssText='display:block;color:var(--green);background:var(--green-bg)';}}catch(e){msg.textContent='Email não encontrado ou erro ao enviar.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';}finally{btn.disabled=false;btn.textContent='Enviar link de recuperação';}}
+async function confirmarNovaSenha(){const nova=document.getElementById('reset-nova-senha').value,conf=document.getElementById('reset-confirmar-senha').value,msg=document.getElementById('reset-msg');if(nova.length<6){msg.textContent='Senha deve ter no mínimo 6 caracteres.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';return;}if(nova!==conf){msg.textContent='As senhas não coincidem.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';return;}if(!isSupabaseAuthReady()){msg.textContent='Supabase Auth não disponível.';msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';return;}const btn=document.getElementById('btn-reset-confirm');btn.disabled=true;btn.textContent='Alterando...';try{const{error}=await supabaseClient.auth.updateUser({password:nova});if(error)throw error;msg.textContent='Senha alterada! Faça login.';msg.style.cssText='display:block;color:var(--green);background:var(--green-bg)';setTimeout(()=>{window.location.hash='';document.getElementById('reset-password-wrapper').style.display='none';document.getElementById('login-normal-content').style.display='block';},2000);}catch(e){msg.textContent='Erro ao alterar senha: '+(e.message||'tente novamente.');msg.style.cssText='display:block;color:var(--red);background:var(--red-bg)';}finally{btn.disabled=false;btn.textContent='Alterar senha';}}
+
+/* ═══ ALTERAR SENHA (PERFIL) ═══ */
+function abrirModalAlterarSenha(){document.getElementById('senha-nova').value='';document.getElementById('senha-confirmar').value='';document.getElementById('modal-senha-error').style.display='none';document.getElementById('modal-senha-overlay').classList.add('open');document.getElementById('profile-menu').style.display='none';setTimeout(()=>document.getElementById('senha-nova').focus(),100);}
+function fecharModalAlterarSenha(){document.getElementById('modal-senha-overlay').classList.remove('open');}
+function fecharModalSenhaSeClick(e){if(e.target===document.getElementById('modal-senha-overlay'))fecharModalAlterarSenha();}
+async function salvarNovaSenha(){const nova=document.getElementById('senha-nova').value,conf=document.getElementById('senha-confirmar').value,errEl=document.getElementById('modal-senha-error');if(nova.length<6){errEl.textContent='Senha deve ter no mínimo 6 caracteres.';errEl.style.display='block';return;}if(nova!==conf){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}errEl.style.display='none';const btn=document.querySelector('#modal-senha-overlay .btn-save');if(btn){btn.disabled=true;btn.textContent='Alterando...';}try{if(isSupabaseAuthReady()){const{error}=await supabaseClient.auth.updateUser({password:nova});if(error)throw error;}else{if(!currentUser)throw new Error('Usuário não identificado.');const user=DB.users.find(u=>String(u.id)===String(currentUser.id));if(!user)throw new Error('Usuário não encontrado.');user.senha=await _h(nova);saveUsersLocal();}fecharModalAlterarSenha();showToast('Senha alterada com sucesso!','success');}catch(e){errEl.textContent='Erro: '+(e.message||'tente novamente.');errEl.style.display='block';}finally{if(btn){btn.disabled=false;btn.textContent='Alterar senha';}}}
 function iniciarApp(){document.getElementById('nav-username').textContent=currentUser.nome.split(' ')[0];document.getElementById('nav-userrole').textContent=currentUser.perfil==='admin'?'Administrador':'Vendedor';document.getElementById('nav-avatar').textContent=initials(currentUser.nome);document.getElementById('nav-admin-section').style.display=currentUser.perfil==='admin'?'block':'none';const isAdmin=currentUser.perfil==='admin';document.getElementById('nav-usuarios').style.display=isAdmin?'block':'none';document.getElementById('nav-config').style.display=isAdmin?'block':'none';document.getElementById('chip-avatar').textContent=initials(currentUser.nome);document.getElementById('chip-name').textContent=currentUser.nome;document.getElementById('chip-sub').textContent=[currentUser.cargo,currentUser.telefone].filter(Boolean).join(' · ');const pmN=document.getElementById('pm-nome'),pmC=document.getElementById('pm-cargo');if(pmN)pmN.textContent=currentUser.nome;if(pmC)pmC.textContent=currentUser.cargo||'';mostrarScreen('app');initSupabase();syncConfigFromSupabase().catch(()=>{});checkTemplateBanner();populateCrmDropdowns();navTo('proposta');update();setTimeout(checkHubSpotPrefill,100);}
 function mostrarScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
 
