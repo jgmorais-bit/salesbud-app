@@ -1817,7 +1817,7 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, d
     crm_cliente: state.crm || '',
     contato_nome: state.contatoNome || '',
     contato_email: state.contatoEmail || '',
-    titulo_proposta: `Proposta ${integ.nome} — ${state.empresa || '(empresa)'}`,
+    titulo_proposta: `Salesbud - Apresentacao e Proposta - ${state.empresa || '(empresa)'}`,
     pacote_horas: String(horasEfetivas),
     preco_mensalidade: precoFinal ? fmt(precoFinal) + '/mês' : 'Sob consulta',
     fee_manutencao:
@@ -1826,7 +1826,7 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, d
       state.whatsAtivo && state.whatsUsers > 0
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
         : 'Não incluso',
-    total_geral_mes: totalGeral ? fmt(totalGeral) + '/mês' : 'Sob consulta',
+    total_geral_mes: precoFinal != null ? fmt(precoFinal + whatsTotal + (integ.fee || 0)) + '/mês' : 'Sob consulta',
     detalhe_desconto: descVal > 0 ? `Desconto de ${state.desconto}% aplicado` : 'Preço padrão',
     preco_setup:
       state.integKey === 'todos'
@@ -2316,7 +2316,7 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, descFrac, whatsTot
     diag_voip: stateBase.diag.voip ? 'Sim' : 'Não',
     diag_whatsapp: stateBase.diag.whats ? 'Sim' : 'Não',
     diag_cs: stateBase.diag.cs ? 'Sim' : 'Não',
-    titulo_proposta: `Proposta Upsell — ${stateBase.empresa || 'Cliente'}`,
+    titulo_proposta: `Salesbud - Apresentacao e Proposta - ${stateBase.empresa || 'Cliente'}`,
     pacote_horas: String(r.horasEfetivas),
     preco_mensalidade: `${fmt(precoFinal)}/mês`,
     fee_manutencao:
@@ -2324,7 +2324,7 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, descFrac, whatsTot
     preco_whatsapp: stateBase.whatsAtivo
       ? `${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`
       : 'Não incluso',
-    total_geral_mes: `${fmt(totalMensal)}/mês`,
+    total_geral_mes: `${fmt(precoFinal + whatsTotal + (integ.fee || 0))}/mês`,
     detalhe_desconto: stateBase.desconto > 0 ? `Desconto ${stateBase.desconto}% aplicado` : 'Preço padrão',
     preco_setup: stateBase.integKey === 'todos' ? 'Ver proposta' : integ.setup > 0 ? fmt(integ.setup) : 'Gratuito',
     descricao_setup: integ.descricao,
