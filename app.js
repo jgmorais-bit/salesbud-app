@@ -1469,6 +1469,9 @@ function isCrmNativo(crm) {
 /* ════════════════════════════════════════
    STATE (Novos Clientes)
 ════════════════════════════════════════ */
+function getState(mod) { return mod === 'novo' ? state : stateBase; }
+function getPrefix(mod) { return mod === 'novo' ? '' : 'base-'; }
+
 let state = {
   empresa: '',
   crm: '',
@@ -1480,19 +1483,26 @@ let state = {
   desconto: 0,
   _aprovacaoDesconto: null
 }
-function selectInteg(key, el) {
-  state.integKey = key
-  document.querySelectorAll('.integ-card').forEach((c) => c.classList.remove('active'))
+function _selectInteg(key, el, mod) {
+  const s = getState(mod)
+  s.integKey = key
+  const selector = mod === 'novo' ? '.integ-card' : '#base-integ-btns .integ-btn'
+  document.querySelectorAll(selector).forEach((c) => c.classList.remove('active'))
   el.classList.add('active')
-  update()
+  mod === 'novo' ? update() : updateBase()
 }
-function toggleWhats(val) {
-  state.whatsAtivo = val
-  document.getElementById('whats-sim').classList.toggle('active', val)
-  document.getElementById('whats-nao').classList.toggle('active', !val)
-  document.getElementById('whats-users-wrap').style.display = val ? 'flex' : 'none'
-  update()
+function selectInteg(key, el) { _selectInteg(key, el, 'novo'); }
+function selectBaseInteg(key, el) { _selectInteg(key, el, 'base'); }
+function toggleWhats(val, mod = 'novo') {
+  const p = getPrefix(mod)
+  const s = getState(mod)
+  s.whatsAtivo = val
+  document.getElementById(p + 'whats-sim').classList.toggle('active', val)
+  document.getElementById(p + 'whats-nao').classList.toggle('active', !val)
+  document.getElementById(p + 'whats-' + (mod === 'novo' ? 'users-wrap' : 'wrap')).style.display = val ? 'flex' : 'none'
+  mod === 'novo' ? update() : updateBase()
 }
+function toggleBaseWhats(val) { toggleWhats(val, 'base'); }
 function onDescontoSlider(sliderId, modulo) {
   const val = parseInt(document.getElementById(sliderId).value),
     lim = loadConfig().descontoMax ?? 10
@@ -1856,72 +1866,61 @@ function copyPayload() {
 /* ════════════════════════════════════════
    GERAR PROPOSTA
 ════════════════════════════════════════ */
-async function gerarProposta() {
-  if (!validarCampos()) {
-    showToast('Corrija os campos em destaque.', 'info')
+async function enviarWebhook(payloadText, btnEl, btnTextoOriginal, onSuccess) {
+  const wh = getWebhookUrl()
+  if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
+    showFallback(payloadText, null)
+    btnEl.innerHTML = btnTextoOriginal
+    btnEl.disabled = false
     return
   }
+  const makeReq = async () => {
+    const ctrl = new AbortController()
+    const to = setTimeout(() => ctrl.abort(), 60000)
+    const etapas = [
+      { t: 0,     txt: 'Enviando proposta...' },
+      { t: 5000,  txt: 'Gerando apresentação...' },
+      { t: 15000, txt: 'Exportando PDF...' },
+      { t: 25000, txt: 'Quase lá...' }
+    ]
+    const timers = etapas.map((e) => setTimeout(() => { btnEl.innerHTML = `<span class="spinner"></span> ${e.txt}`; }, e.t))
+    const clearEtapas = () => timers.forEach(clearTimeout)
+    try {
+      const r = await fetch(wh, { method: 'POST', headers: getWebhookHeaders(), body: payloadText, signal: ctrl.signal })
+      clearTimeout(to)
+      clearEtapas()
+      if (r.ok) {
+        await onSuccess()
+        btnEl.innerHTML = '✓ Proposta enviada!'
+        btnEl.style.background = 'var(--green)'
+        showToast('Proposta enviada! Verifique o Gmail.', 'success')
+        setTimeout(() => { btnEl.innerHTML = btnTextoOriginal; btnEl.style.background = ''; btnEl.disabled = false; }, 4000)
+      } else {
+        throw new Error('HTTP ' + r.status)
+      }
+    } catch (e) {
+      clearTimeout(to)
+      clearEtapas()
+      btnEl.innerHTML = btnTextoOriginal
+      btnEl.style.background = ''
+      btnEl.disabled = false
+      showFallback(payloadText, makeReq)
+    }
+  }
+  await makeReq()
+}
+async function gerarProposta() {
+  if (!validarCampos()) { showToast('Corrija os campos em destaque.', 'info'); return; }
   const btn = document.getElementById('btn-gen')
   btn.disabled = true
   btn.innerHTML = '<span class="spinner"></span> Enviando...'
   const pr = document.getElementById('payload').textContent
   let po = {}
-  try {
-    po = JSON.parse(pr)
-  } catch {
-    showToast('Erro interno: payload inválido.', 'info')
-    btn.disabled = false
-    btn.innerHTML = 'Gerar Proposta'
-    return
-  }
+  try { po = JSON.parse(pr) } catch { showToast('Erro interno: payload inválido.', 'info'); btn.disabled = false; btn.innerHTML = 'Gerar Proposta'; return; }
   const reg = await histAdd({ ...po, tipo_proposta: po.tipo_proposta || 'novo', status_proposta: 'rascunho' })
-  const wh = getWebhookUrl()
-  if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
-    showFallback(pr, null)
-    btn.innerHTML = 'Gerar Proposta'
-    btn.disabled = false
-    return
-  }
-  const makeReq = async () => {
-    const ctrl = new AbortController(),
-      to = setTimeout(() => ctrl.abort(), 60000)
-    const etapas = [
-      { t: 0, txt: 'Enviando proposta...' },
-      { t: 5000, txt: 'Gerando apresentação...' },
-      { t: 15000, txt: 'Exportando PDF...' },
-      { t: 25000, txt: 'Quase lá...' }
-    ]
-    const timers = etapas.map((e) =>
-      setTimeout(() => {
-        btn.innerHTML = `<span class="spinner"></span> ${e.txt}`
-      }, e.t)
-    )
-    const clearEtapas = () => timers.forEach(clearTimeout)
-    try {
-      const r = await fetch(wh, { method: 'POST', headers: getWebhookHeaders(), body: pr, signal: ctrl.signal })
-      clearTimeout(to)
-      clearEtapas()
-      if (r.ok) {
-        if (reg) await _salvarStatusProposta(reg.id, 'enviada', null, reg.fonte)
-        btn.innerHTML = '✓ Proposta enviada!'
-        btn.style.background = 'var(--green)'
-        showToast('Proposta enviada! Verifique o Gmail.', 'success')
-        setTimeout(() => {
-          btn.innerHTML = 'Gerar Proposta'
-          btn.style.background = ''
-          btn.disabled = false
-        }, 4000)
-      } else throw new Error('HTTP ' + r.status)
-    } catch (e) {
-      clearTimeout(to)
-      clearEtapas()
-      btn.innerHTML = 'Gerar Proposta'
-      btn.style.background = ''
-      btn.disabled = false
-      showFallback(pr, makeReq)
-    }
-  }
-  await makeReq()
+  await enviarWebhook(pr, btn, 'Gerar Proposta', async () => {
+    if (reg) await _salvarStatusProposta(reg.id, 'enviada', null, reg.fonte)
+  })
 }
 
 /* ════════════════════════════════════════
@@ -2069,53 +2068,31 @@ function setDiag(key, val) {
   document.getElementById('diag-campos-sub')?.style.setProperty('display', stateBase.diag.campos ? 'block' : 'none')
   updateBase()
 }
-function toggleBaseWhats(val) {
-  stateBase.whatsAtivo = val
-  document.getElementById('base-whats-sim').classList.toggle('active', val)
-  document.getElementById('base-whats-nao').classList.toggle('active', !val)
-  document.getElementById('base-whats-wrap').style.display = val ? 'flex' : 'none'
-  updateBase()
-}
-function selectBaseInteg(key, el) {
-  stateBase.integKey = key
-  document.querySelectorAll('#base-integ-btns .integ-btn').forEach((b) => b.classList.remove('active'))
-  el.classList.add('active')
-  updateBase()
-}
-function setIntegModo(modo) {
+function setIntegModo(modo, mod = 'novo') {
   const isTodos = modo === 'todos'
-  document.getElementById('integ-modo-esp').classList.toggle('active', !isTodos)
-  document.getElementById('integ-modo-todos').classList.toggle('active', isTodos)
-  document.getElementById('integ-cards-wrap').style.display = isTodos ? 'none' : ''
+  const p = getPrefix(mod)
+  const s = getState(mod)
+  const espId = p + 'integ-modo-esp'
+  const todosId = p + 'integ-modo-todos'
+  const wrapId = mod === 'novo' ? 'integ-cards-wrap' : 'base-integ-btns'
+  document.getElementById(espId).classList.toggle('active', !isTodos)
+  document.getElementById(todosId).classList.toggle('active', isTodos)
+  const wrapEl = document.getElementById(wrapId)
+  if (wrapEl) wrapEl.style.display = isTodos ? 'none' : ''
   if (isTodos) {
-    if (state.integKey !== 'todos') state._prevIntegKey = state.integKey
-    state.integKey = 'todos'
+    if (s.integKey !== 'todos') s._prevIntegKey = s.integKey
+    s.integKey = 'todos'
   } else {
-    state.integKey = state._prevIntegKey || 'basico'
-    document.querySelectorAll('.integ-card').forEach((c) => {
+    s.integKey = s._prevIntegKey || 'basico'
+    const selector = mod === 'novo' ? '.integ-card' : '#base-integ-btns .integ-btn'
+    document.querySelectorAll(selector).forEach((c) => {
       const k = c.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
-      c.classList.toggle('active', k === state.integKey)
+      c.classList.toggle('active', k === s.integKey)
     })
   }
-  update()
+  mod === 'novo' ? update() : updateBase()
 }
-function setBaseIntegModo(modo) {
-  const isTodos = modo === 'todos'
-  document.getElementById('base-integ-modo-esp').classList.toggle('active', !isTodos)
-  document.getElementById('base-integ-modo-todos').classList.toggle('active', isTodos)
-  document.getElementById('base-integ-btns').style.display = isTodos ? 'none' : ''
-  if (isTodos) {
-    if (stateBase.integKey !== 'todos') stateBase._prevIntegKey = stateBase.integKey
-    stateBase.integKey = 'todos'
-  } else {
-    stateBase.integKey = stateBase._prevIntegKey || 'basico'
-    document.querySelectorAll('#base-integ-btns .integ-btn').forEach((b) => {
-      const k = b.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
-      b.classList.toggle('active', k === stateBase.integKey)
-    })
-  }
-  updateBase()
-}
+function setBaseIntegModo(modo) { setIntegModo(modo, 'base'); }
 
 function updateBase() {
   stateBase.empresa = document.getElementById('base-empresa')?.value.trim() || ''
@@ -2379,54 +2356,12 @@ async function gerarPropostaBase() {
   btn.innerHTML = '<span class="spinner"></span> Enviando...'
   const raw = document.getElementById('base-payload').textContent
   let po = {}
-  try {
-    po = JSON.parse(raw)
-  } catch {
-    showToast('Erro interno: payload inválido.', 'info')
-    btn.disabled = false
-    btn.innerHTML = 'Gerar Proposta de Upsell'
-    return
-  }
+  try { po = JSON.parse(raw) } catch { showToast('Erro interno: payload inválido.', 'info'); btn.disabled = false; btn.innerHTML = 'Gerar Proposta de Upsell'; return; }
   const reg = await histAdd({ ...po, status_proposta: 'rascunho' })
-  const wh = getWebhookUrl()
-  if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
-    showFallback(raw, null)
-    btn.disabled = false
-    btn.innerHTML = 'Gerar Proposta de Upsell'
-    return
-  }
-  const mkR = async () => {
-    const ctrl = new AbortController(),
-      to = setTimeout(() => ctrl.abort(), 60000)
-    const etapas = [
-      { t: 0, txt: 'Enviando proposta...' },
-      { t: 5000, txt: 'Gerando apresentação...' },
-      { t: 15000, txt: 'Exportando PDF...' },
-      { t: 25000, txt: 'Quase lá...' }
-    ]
-    const timers = etapas.map((e) =>
-      setTimeout(() => {
-        btn.innerHTML = `<span class="spinner"></span> ${e.txt}`
-      }, e.t)
-    )
-    const clearEtapas = () => timers.forEach(clearTimeout)
-    try {
-      const res = await fetch(wh, { method: 'POST', headers: getWebhookHeaders(), body: raw, signal: ctrl.signal })
-      clearTimeout(to)
-      clearEtapas()
-      if (!res.ok) throw new Error('HTTP ' + res.status)
-      if (reg) await _salvarStatusProposta(reg.id, 'enviada', null, reg.fonte)
-      showToast('Proposta gerada! Verifique o Gmail.', 'success')
-    } catch (e) {
-      clearTimeout(to)
-      clearEtapas()
-      showFallback(raw, mkR)
-    } finally {
-      btn.disabled = false
-      btn.innerHTML = 'Gerar Proposta de Upsell'
-    }
-  }
-  await mkR()
+  await enviarWebhook(raw, btn, 'Gerar Proposta de Upsell', async () => {
+    if (reg) await _salvarStatusProposta(reg.id, 'enviada', null, reg.fonte)
+    showToast('Proposta gerada! Verifique o Gmail.', 'success')
+  })
 }
 function resetStateBase() {
   Object.assign(stateBase, {
