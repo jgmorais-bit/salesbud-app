@@ -1850,7 +1850,7 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, d
     tipo_proposta: 'novo',
     plano_integracao: state.integKey,
     preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : 'R$ 1.200',
-    total_avancado: precoFinal != null ? fmt(precoFinal + 499) + '/mês' : 'Sob consulta'
+    total_avancado: precoFinal != null ? fmt(precoFinal + 499 + whatsTotal) + '/mês' : 'Sob consulta'
   }
   const colored = JSON.stringify(data, null, 2)
     .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
@@ -2338,7 +2338,7 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, descFrac, whatsTot
     data_proposta: fmtD(hoje),
     validade_proposta: fmtD(val),
     preco_setup_basico: isCrmNativo(stateBase.crm) || stateBase.crm === '' ? 'Gratuito' : 'R$ 1.200',
-    total_avancado: fmt(precoFinal + 499) + '/mês'
+    total_avancado: fmt(precoFinal + 499 + whatsTotal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
     .replace(/"([^"]+)":/g, `<span style="color:#93C5FD">"$1"</span>:`)
