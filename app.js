@@ -306,11 +306,10 @@ async function renderHistorico() {
             d.tipo_proposta === 'upsell_base'
               ? 'background:rgba(251,36,145,.08);color:var(--pink);border:1.5px solid rgba(251,36,145,.2)'
               : 'background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE',
-          dc = d.desconto_pct ? d.desconto_pct + '%' : '—',
           st = d._status_proposta || 'enviada',
           pf = d._fonte || 'local'
         const _chk = _histSelected.has(d.id)
-        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td style="font-size:12px;color:var(--text3)">${dc}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
+        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
       })
       .join('')
   }
@@ -343,7 +342,6 @@ function exportHistorico() {
       'horas',
       'valor_mes',
       'setup',
-      'desconto_pct',
       'crm',
       'whatsapp',
       'status',
@@ -358,7 +356,6 @@ function exportHistorico() {
         d.pacote_horas || '',
         d.preco_mensalidade || '',
         d.preco_setup || '',
-        d.desconto_pct != null ? d.desconto_pct + '%' : '',
         d.crm_cliente || '',
         d.whatsapp_info || d.preco_whatsapp || '',
         d.status_proposta || d._status_proposta || 'enviada',
@@ -456,7 +453,6 @@ function exportarSelecionadas() {
     'horas',
     'valor_mes',
     'setup',
-    'desconto_pct',
     'crm',
     'whatsapp',
     'status',
@@ -471,7 +467,6 @@ function exportarSelecionadas() {
       d.pacote_horas || '',
       d.preco_mensalidade || '',
       d.preco_setup || '',
-      d.desconto_pct != null ? d.desconto_pct + '%' : '',
       d.crm_cliente || '',
       d.whatsapp_info || d.preco_whatsapp || '',
       d.status_proposta || d._status_proposta || 'enviada',
@@ -1495,9 +1490,7 @@ let state = {
   contatoEmail: '',
   integKey: 'basico',
   whatsAtivo: true,
-  whatsUsers: 5,
-  desconto: 0,
-  _aprovacaoDesconto: null
+  whatsUsers: 5
 }
 function _selectInteg(key, el, mod) {
   const s = getState(mod)
@@ -1519,54 +1512,7 @@ function toggleWhats(val, mod = 'novo') {
   mod === 'novo' ? update() : updateBase()
 }
 function toggleBaseWhats(val) { toggleWhats(val, 'base'); }
-function onDescontoSlider(sliderId, modulo) {
-  const val = parseInt(document.getElementById(sliderId).value),
-    lim = loadConfig().descontoMax ?? 10
-  if (val > lim && currentUser?.perfil !== 'admin') {
-    document.getElementById(sliderId).value = lim
-    const lid = sliderId === 'desconto' ? 'desc-label' : 'base-desc-label'
-    document.getElementById(lid).textContent = lim + '%'
-    if (modulo === 'proposta') {
-      state.desconto = lim
-      update()
-    } else {
-      stateBase.desconto = lim
-      updateBase()
-    }
-    showToast(`Máximo sem aprovação: ${lim}%`, 'info')
-    return
-  }
-  const lid = sliderId === 'desconto' ? 'desc-label' : 'base-desc-label'
-  document.getElementById(lid).textContent = val + '%'
-  if (modulo === 'proposta') {
-    state.desconto = val
-    update()
-  } else {
-    stateBase.desconto = val
-    updateBase()
-  }
-}
-function setDisc(val, el, modulo) {
-  const lim = loadConfig().descontoMax ?? 10
-  if (val > lim && currentUser?.perfil !== 'admin') {
-    pedirAprovacaoDesconto(val, modulo || 'proposta')
-    return
-  }
-  if (!modulo || modulo === 'proposta') {
-    state.desconto = val
-    document.getElementById('desconto').value = Math.min(val, 30)
-    document.getElementById('desc-label').textContent = val + '%'
-    document.querySelectorAll('#disc-presets-novos .disc-preset').forEach((b) => b.classList.remove('active'))
-  } else {
-    stateBase.desconto = val
-    document.getElementById('base-desconto').value = Math.min(val, 40)
-    document.getElementById('base-desc-label').textContent = val + '%'
-    document.querySelectorAll('#disc-presets-base .disc-preset').forEach((b) => b.classList.remove('active'))
-  }
-  el.classList.add('active')
-  if (!modulo || modulo === 'proposta') update()
-  else updateBase()
-}
+
 function validarEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
 }
@@ -1647,11 +1593,7 @@ function update() {
     document.getElementById('crm')?.classList.remove('error')
   }
   state.whatsUsers = parseInt(document.getElementById('whats-users')?.value) || 0
-  state.desconto = parseInt(document.getElementById('desconto').value) || 0
-  document.getElementById('desc-label').textContent = state.desconto + '%'
-  document
-    .querySelectorAll('#disc-presets-novos .disc-preset')
-    .forEach((b) => b.classList.toggle('active', parseInt(b.textContent) === state.desconto))
+
   const hd = parseInt(document.getElementById('horas-input').value) || 0,
     r = calcPrecoExato(hd)
   const aA = document.getElementById('horas-acima-aviso'),
@@ -1719,8 +1661,7 @@ function update() {
         state.crm && !isCrmNativo(state.crm) ? 'R$ 1.200 setup · Somente notas' : 'Gratuito · Somente notas'
   }
   const precoBase = r.precoEfetivo,
-    descVal = precoBase && state.desconto > 0 ? Math.round((precoBase * state.desconto) / 100) : 0
-  const precoFinal = precoBase ? precoBase - descVal : null,
+    precoFinal = precoBase || null,
     feeMensal = integ.fee || 0
   const mensalSB = precoFinal != null ? precoFinal + feeMensal : null /* mensalidade SalesBud (sem whats) */
   const whatsTotal = state.whatsAtivo && state.whatsUsers > 0 ? getTotalWhats(state.whatsUsers) : 0
@@ -1742,14 +1683,7 @@ function update() {
     pills.innerHTML += `<div class="meta-pill">WhatsApp <span>${state.whatsUsers} users</span></div>`
   document.getElementById('integ-badge-wrap').innerHTML =
     `<div class="integ-badge"><span class="tag ${integ.tag}">${integ.nome}</span>${esc(integ.label)}</div>`
-  const badgeEl = document.getElementById('price-desconto-badge')
-  if (state.desconto > 0 && precoBase && descVal > 0 && badgeEl) {
-    badgeEl.style.display = 'flex'
-    document.getElementById('price-desconto-pct').textContent = `−${state.desconto}% de desconto`
-    document.getElementById('price-desconto-reais').textContent = `− ${fmt(descVal)}/mês`
-    document.getElementById('price-desconto-original').textContent = `tabela: ${fmt(precoBase)}/mês`
-    document.getElementById('price-desconto-anual').textContent = `economia de ${fmt(descVal * 12)}/ano`
-  } else if (badgeEl) badgeEl.style.display = 'none'
+
   /* topo do card: total geral */
   document.getElementById('price-main').textContent = totalGeral != null ? fmt(totalGeral) : '—'
   const pmSub = document.getElementById('price-main-sub')
@@ -1763,11 +1697,10 @@ function update() {
   let html = ''
   if (precoBase)
     html += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`
-  if (descVal > 0)
-    html += `<div class="price-row"><span class="price-row-label">Desconto (${state.desconto}%) <span style="font-size:11px;color:var(--text3)">↳ economia ${fmt(descVal * 12)}/ano</span></span><span class="price-row-val red">− ${fmt(descVal)}/mês</span></div>`
+
   if (feeMensal > 0)
     html += `<div class="price-row"><span class="price-row-label">Manutenção CRM</span><span class="price-row-val amber">${fmt(feeMensal)}/mês</span></div>`
-  if (mensalSB != null && (descVal > 0 || feeMensal > 0 || whatsTotal > 0))
+  if (mensalSB != null && (feeMensal > 0 || whatsTotal > 0))
     html += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`
   if (whatsTotal > 0)
     html += `<div class="price-row"><span class="price-row-label">WhatsApp (${state.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`
@@ -1793,22 +1726,12 @@ function update() {
         })
         .join('')
   document.getElementById('premium-alert').style.display = isPremium ? 'flex' : 'none'
-  renderPayload(r.horasEfetivas, integ, precoFinal, mensalSB, totalGeral, descVal, whatsTotal, whatsPreco)
+  renderPayload(r.horasEfetivas, integ, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco)
   const horasOk = hd > 0,
     emailOk = !state.contatoEmail || validarEmail(state.contatoEmail),
     canGen = state.empresa && !isPremium && precoFinal != null && horasOk && emailOk
   document.getElementById('btn-gen').disabled = !canGen
-  const lim = loadConfig().descontoMax ?? 10,
-    bEl = document.getElementById('btn-gen')
-  if (bEl) {
-    if (state.desconto > lim && state._aprovacaoDesconto?.status_aprovacao === 'pendente') {
-      bEl.textContent = 'Gerar (aprovação pendente)'
-      bEl.style.background = '#D97706'
-    } else {
-      bEl.textContent = 'Gerar Proposta'
-      bEl.style.background = ''
-    }
-  }
+
   const tip = document.getElementById('btn-gen-tooltip')
   if (tip) {
     if (!state.empresa) tip.textContent = 'Preencha o nome da empresa'
@@ -1822,11 +1745,11 @@ function update() {
 /* ════════════════════════════════════════
    PAYLOAD (Novos Clientes)
 ════════════════════════════════════════ */
-function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, descVal, whatsTotal, whatsPreco) {
+function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco) {
   if (!currentUser) return
   const cfg = loadConfig(),
     hoje = new Date(),
-    val = new Date(hoje.getTime() + (cfg.validadeProposta || 15) * 86400000),
+    val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
   const data = {
     nome_empresa: state.empresa || '',
@@ -1843,7 +1766,7 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, d
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
         : 'Não incluso',
     total_geral_mes: precoFinal != null ? fmt(precoFinal + whatsTotal + (integ.fee || 0)) + '/mês' : 'Sob consulta',
-    detalhe_desconto: descVal > 0 ? `Desconto de ${state.desconto}% aplicado` : 'Preço padrão',
+    detalhe_desconto: 'Preço padrão', // Valores fixos — desconto removido da UI
     preco_setup:
       state.integKey === 'todos'
         ? 'Ver proposta'
@@ -1857,8 +1780,7 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, d
     vendedor_email: currentUser.email,
     vendedor_telefone: currentUser.telefone || '',
     vendedor_cidade: currentUser.cidade || '',
-    desconto_pct: state.desconto,
-    aprovacao_desconto: state.desconto > 10 ? state._aprovacaoDesconto || null : null,
+    desconto_pct: 0, // Valor fixo — desconto removido da UI
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
@@ -1970,9 +1892,7 @@ function resetState() {
     contatoEmail: '',
     integKey: 'basico',
     whatsAtivo: true,
-    whatsUsers: 5,
-    desconto: 0,
-    _aprovacaoDesconto: null
+    whatsUsers: 5
   }
   ;['empresa', 'contato-nome', 'contato-email'].forEach((id) => {
     const el = document.getElementById(id)
@@ -1981,8 +1901,6 @@ function resetState() {
   document.getElementById('crm').value = ''
   document.getElementById('horas-input').value = '300'
   document.getElementById('whats-users').value = '5'
-  document.getElementById('desconto').value = '0'
-  document.getElementById('desc-label').textContent = '0%'
   document.querySelectorAll('.integ-card').forEach((c, i) => c.classList.toggle('active', i === 0))
   document.getElementById('integ-modo-esp')?.classList.add('active')
   document.getElementById('integ-modo-todos')?.classList.remove('active')
@@ -2018,8 +1936,6 @@ const stateBase = {
   integKey: 'basico',
   whatsAtivo: true,
   whatsUsers: 5,
-  desconto: 0,
-  _aprovacaoDesconto: null,
   diag: {
     crm: false,
     crmNativo: false,
@@ -2119,14 +2035,11 @@ function updateBase() {
   stateBase.valorAtual = parseFloat(document.getElementById('base-valor-atual')?.value) || 0
   stateBase.usuariosAtual = parseInt(document.getElementById('base-usuarios-atual')?.value) || 0
   stateBase.whatsUsers = parseInt(document.getElementById('base-whats-users')?.value) || 1
-  stateBase.desconto = parseInt(document.getElementById('base-desconto')?.value) || 0
   stateBase.diag.nCampos = parseInt(document.getElementById('diag-ncampos')?.value) || 0
-  document.getElementById('base-desc-label').textContent = stateBase.desconto + '%'
   const hd = parseInt(document.getElementById('base-horas-input')?.value) || 0,
     r = calcPrecoExato(hd)
   const precoBase = r.precoEfetivo,
-    descVal = Math.round(precoBase * (stateBase.desconto / 100)),
-    precoFinal = precoBase - descVal
+    precoFinal = precoBase
   let integ,
     feeInteg = 0
   const isTodosBase = stateBase.integKey === 'todos'
@@ -2160,15 +2073,7 @@ function updateBase() {
       ? `interpolado · R$ ${r.precoHora.toFixed(3)}/h`
       : `pacote ${r.tierIdx + 1} de ${tLen}`
   document.getElementById('base-preco-label').textContent = fmt(precoFinal)
-  {
-    const dEl = document.getElementById('base-desconto-info')
-    if (dEl) {
-      if (descVal > 0) {
-        dEl.innerHTML = `<span style='color:#F87171;font-weight:700'>−${fmt(descVal)}/mês</span> &nbsp;<span style='color:rgba(255,255,255,.4);font-size:10px'>economia ${fmt(descVal * 12)}/ano</span>`
-        dEl.style.display = 'block'
-      } else dEl.style.display = 'none'
-    }
-  }
+
   const bTgh = document.getElementById('base-total-label-header'),
     bTgl = document.getElementById('base-total-geral-label')
   if (bTgh && bTgl) {
@@ -2212,7 +2117,7 @@ function updateBase() {
   } else if (cc) cc.style.display = 'none'
   renderDiagTags()
   document.getElementById('base-premium-alert').style.display = 'none'
-  renderBasePayload(r, integ, precoFinal, totalMensal, stateBase.desconto / 100, whatsTotal, whatsPreco)
+  renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsPreco)
   const horasOk = hd > 0,
     baseCanGen = !!stateBase.empresa && !!stateBase.crm && horasOk,
     bb = document.getElementById('base-btn-gen')
@@ -2221,16 +2126,7 @@ function updateBase() {
     document.getElementById('err-base-crm')?.classList.remove('show')
     document.getElementById('base-crm')?.classList.remove('error')
   }
-  const ld = loadConfig().descontoMax ?? 10
-  if (bb) {
-    if (stateBase.desconto > ld && stateBase._aprovacaoDesconto?.status_aprovacao === 'pendente') {
-      bb.textContent = 'Gerar (aprovação pendente)'
-      bb.style.background = '#D97706'
-    } else {
-      bb.textContent = 'Gerar Proposta de Upsell'
-      bb.style.background = ''
-    }
-  }
+
   const bt = document.getElementById('base-btn-gen-tooltip')
   if (bt) {
     if (!stateBase.empresa) bt.textContent = 'Preencha o nome da empresa'
@@ -2311,12 +2207,12 @@ function renderDiagTags() {
       .join('')
 }
 
-function renderBasePayload(r, integ, precoFinal, totalMensal, descFrac, whatsTotal, whatsPreco) {
+function renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsPreco) {
   const u = currentUser || {},
     cfg = loadConfig(),
     hoje = new Date(),
     val = new Date(hoje)
-  val.setDate(hoje.getDate() + (cfg.validadeProposta || 15))
+  val.setDate(hoje.getDate() + 15) // Validade fixa: 15 dias
   const fmtD = (d) => d.toLocaleDateString('pt-BR')
   const payload = {
     tipo_proposta: 'upsell_base',
@@ -2341,14 +2237,14 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, descFrac, whatsTot
       ? `${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`
       : 'Não incluso',
     total_geral_mes: `${fmt(precoFinal + whatsTotal + (integ.fee || 0))}/mês`,
-    detalhe_desconto: stateBase.desconto > 0 ? `Desconto ${stateBase.desconto}% aplicado` : 'Preço padrão',
+    detalhe_desconto: 'Preço padrão', // Valor fixo — desconto removido da UI
     preco_setup: stateBase.integKey === 'todos' ? 'Ver proposta' : integ.setup > 0 ? fmt(integ.setup) : 'Gratuito',
     descricao_setup: integ.descricao,
     vendedor_nome: u.nome || '',
     vendedor_email: u.email || '',
     vendedor_telefone: u.telefone || '',
     vendedor_cidade: u.cidade || '',
-    desconto_pct: stateBase.desconto,
+    desconto_pct: 0, // Valor fixo — desconto removido da UI
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
@@ -2391,8 +2287,6 @@ function resetStateBase() {
     integKey: 'basico',
     whatsAtivo: true,
     whatsUsers: 5,
-    desconto: 0,
-    _aprovacaoDesconto: null,
     diag: {
       crm: false,
       crmNativo: false,
@@ -2416,14 +2310,11 @@ function resetStateBase() {
     ['base-usuarios-atual', '5'],
     ['base-valor-atual', ''],
     ['base-horas-input', '300'],
-    ['base-whats-users', '5'],
-    ['base-desconto', '0']
+    ['base-whats-users', '5']
   ].forEach(([id, v]) => {
     const el = document.getElementById(id)
     if (el) el.value = v
   })
-  const _bdl = document.getElementById('base-desc-label')
-  if (_bdl) _bdl.textContent = '0%'
   document.getElementById('base-comparativo').style.display = 'none'
   document.getElementById('base-integ-modo-esp')?.classList.add('active')
   document.getElementById('base-integ-modo-todos')?.classList.remove('active')
@@ -2431,78 +2322,6 @@ function resetStateBase() {
   updateBase()
 }
 
-/* ════════════════════════════════════════
-   APROVAÇÃO DESCONTO
-════════════════════════════════════════ */
-let _aprovacaoModulo = 'proposta'
-function pedirAprovacaoDesconto(val, modulo) {
-  _aprovacaoModulo = modulo
-  const lim = loadConfig().descontoMax ?? 10
-  document.getElementById('aprv-limite-pct').textContent = lim + '%'
-  const empresa = modulo === 'proposta' ? state.empresa : stateBase.empresa
-  document.getElementById('aprv-context').textContent = empresa || '—'
-  document.getElementById('aprv-pct').textContent = val + '%'
-  document.getElementById('aprv-justificativa').value = ''
-  document.getElementById('approval-overlay').classList.add('show')
-}
-function cancelarAprovacao() {
-  document.getElementById('approval-overlay').classList.remove('show')
-  if (_aprovacaoModulo === 'proposta') {
-    state.desconto = 0
-    document.getElementById('desconto').value = 0
-    document.getElementById('desc-label').textContent = '0%'
-    document
-      .querySelectorAll('#disc-presets-novos .disc-preset')
-      .forEach((b) => b.classList.toggle('active', b.textContent === '0%'))
-    update()
-  } else {
-    stateBase.desconto = 0
-    document.getElementById('base-desconto').value = 0
-    document.getElementById('base-desc-label').textContent = '0%'
-    document
-      .querySelectorAll('#disc-presets-base .disc-preset')
-      .forEach((b) => b.classList.toggle('active', b.textContent === '0%'))
-    updateBase()
-  }
-}
-function confirmarAprovacao() {
-  const just = document.getElementById('aprv-justificativa').value.trim()
-  if (!just) {
-    showToast('Preencha a justificativa.', 'info')
-    return
-  }
-  const pct = parseInt(document.getElementById('aprv-pct').textContent),
-    vl = document.getElementById('aprv-validade').value,
-    av = {
-      status_aprovacao: 'pendente',
-      justificativa: just,
-      desconto_solicitado: pct,
-      solicitante: currentUser?.nome,
-      validade: vl,
-      ts: new Date().toISOString()
-    }
-  document.getElementById('approval-overlay').classList.remove('show')
-  if (_aprovacaoModulo === 'proposta') {
-    state.desconto = pct
-    state._aprovacaoDesconto = av
-    document.getElementById('desconto').value = Math.min(pct, 30)
-    document.getElementById('desc-label').textContent = pct + '%'
-    document
-      .querySelectorAll('#disc-presets-novos .disc-preset')
-      .forEach((b) => b.classList.toggle('active', parseInt(b.textContent) === pct))
-    update()
-  } else {
-    stateBase.desconto = pct
-    stateBase._aprovacaoDesconto = av
-    document.getElementById('base-desconto').value = Math.min(pct, 40)
-    document.getElementById('base-desc-label').textContent = pct + '%'
-    document
-      .querySelectorAll('#disc-presets-base .disc-preset')
-      .forEach((b) => b.classList.toggle('active', parseInt(b.textContent) === pct))
-    updateBase()
-  }
-  showToast(`Desconto ${pct}% registrado como pendente.`, 'info')
-}
 
 /* ════════════════════════════════════════
    CONFIG
@@ -2512,8 +2331,6 @@ const CONFIG_DEFAULT = {
   webhookToken: '',
   templateUrl: '',
   templateVersao: '',
-  validadeProposta: 15,
-  descontoMax: 10,
   supabaseUrl: 'https://nrmfjyjxppbbdpsfhcft.supabase.co',
   supabaseKey:
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybWZqeWp4cHBiYmRwc2ZoY2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3Njk4NDksImV4cCI6MjA4OTM0NTg0OX0.v6i1MpJZbAnCEkQaAcildXeverlXZC5GaF-7tQK4CUY'
@@ -2557,8 +2374,7 @@ function initConfig() {
   document.getElementById('cfg-webhook-token').value = cfg.webhookToken || ''
   document.getElementById('cfg-template-url').value = cfg.templateUrl || ''
   document.getElementById('cfg-template-versao').value = cfg.templateVersao || ''
-  document.getElementById('cfg-validade').value = cfg.validadeProposta || 15
-  document.getElementById('cfg-desconto-max').value = cfg.descontoMax || 10
+
   const wh = document.getElementById('cfg-webhook-status')
   if (wh) {
     if (!cfg.webhookUrl || cfg.webhookUrl === CONFIG_DEFAULT.webhookUrl) {
@@ -2588,9 +2404,7 @@ function initConfig() {
 function salvarConfig() {
   saveConfig({
     webhookUrl: document.getElementById('cfg-webhook-url').value.trim(),
-    webhookToken: document.getElementById('cfg-webhook-token').value.trim(),
-    validadeProposta: parseInt(document.getElementById('cfg-validade').value) || 15,
-    descontoMax: parseInt(document.getElementById('cfg-desconto-max').value) || 10
+    webhookToken: document.getElementById('cfg-webhook-token').value.trim()
   })
   showToast('Configurações salvas.', 'success')
   initConfig()
@@ -2964,7 +2778,7 @@ function baixarPDF(modulo) {
   const totalGeral = esc(obj.total_geral_mes || obj.preco_mensalidade || '—')
   const setup = obj.preco_setup && obj.preco_setup !== 'Gratuito' ? esc(obj.preco_setup) : null
   const whats = obj.preco_whatsapp && obj.preco_whatsapp !== 'Não incluso' ? esc(obj.preco_whatsapp) : null
-  const desconto = obj.detalhe_desconto && obj.detalhe_desconto !== 'Preço padrão' ? esc(obj.detalhe_desconto) : null
+
   const integ = esc(obj.descricao_setup || '')
   const scope = obj.descricao_setup || ''
   const crm = esc(obj.crm_cliente || '')
@@ -3012,7 +2826,7 @@ function baixarPDF(modulo) {
     <div class="section-title">Pacote</div>
     <div class="row"><span class="label">Volume de horas</span><span class="val">${horas}h/mês</span></div>
     <div class="row"><span class="label">Mensalidade SalesBud</span><span class="val">${mensalidade}</span></div>
-    ${desconto ? `<div class="row"><span class="label">Desconto</span><span class="val pink">${desconto}</span></div>` : ''}
+
     ${obj.fee_manutencao && obj.fee_manutencao !== 'Não incluso' ? `<div class="row"><span class="label">Manutenção integração</span><span class="val">${obj.fee_manutencao}</span></div>` : ''}
     ${whats ? `<div class="row"><span class="label">WhatsApp</span><span class="val">${whats}</span></div>` : ''}
   </div>
@@ -3030,7 +2844,7 @@ function baixarPDF(modulo) {
 
   <div class="footer">
     SalesBud · Proposta gerada em ${data} por ${vendedor}<br>
-    Desconto válido somente para primeiras assinaturas contratuais realizadas dentro do mês de validade.
+    Proposta válida dentro do mês de emissão.
   </div>
 </body></html>`
 

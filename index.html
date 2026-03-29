@@ -304,21 +304,6 @@
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-title">Desconto</div>
-            <div class="field-row">
-              <label class="field-label">Desconto na mensalidade &nbsp;<span id="desc-label" style="font-size:14px;font-weight:700;color:var(--pink)">0%</span></label>
-              <input type="hidden" id="desconto" value="0">
-              <div class="disc-presets" id="disc-presets-novos" style="margin-top:8px">
-                <button class="disc-preset active" onclick="setDisc(0,this,'proposta')">0%</button>
-                <button class="disc-preset" onclick="setDisc(5,this,'proposta')">5%</button>
-                <button class="disc-preset" onclick="setDisc(10,this,'proposta')">10%</button>
-              </div>
-              <div style="margin-top:10px;padding:9px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:12px;color:#92400E;line-height:1.5">
-                ⚠️ <strong>Descontos válidos somente para primeiras assinaturas contratuais</strong> realizadas dentro do mês de validade da proposta.
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- RIGHT PANEL -->
@@ -329,17 +314,6 @@
             <div class="meta-pills" id="meta-pills"></div>
             <div class="price-display">
               <div class="price-label">Mensalidade total</div>
-              <div id="price-desconto-badge" style="display:none;margin-bottom:10px;padding:9px 13px;background:rgba(251,36,145,.10);border:1.5px solid rgba(251,36,145,.35);border-radius:10px;flex-direction:column;gap:4px">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span style="font-size:13px;font-weight:800;color:var(--pink)" id="price-desconto-pct"></span>
-                  <span style="font-size:12px;font-weight:700;color:var(--pink)" id="price-desconto-reais"></span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span style="font-size:11px;color:rgba(255,255,255,.45);text-decoration:line-through" id="price-desconto-original"></span>
-                  <span style="font-size:11px;color:rgba(255,255,255,.3)">·</span>
-                  <span style="font-size:11px;font-weight:600;color:#86EFAC" id="price-desconto-anual"></span>
-                </div>
-              </div>
               <div class="price-main" id="price-main">R$ 1.490</div>
               <div id="price-main-sub" style="display:none;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-top:4px"></div>
             </div>
@@ -486,19 +460,6 @@
                 <button class="integ-btn" onclick="selectBaseInteg('avancado',this)">Avançado<span>R$ 3.000 + R$ 499/mês</span></button>
               </div>
             </div>
-            <div class="field-row" style="margin-top:14px">
-              <label class="field-label">Desconto &nbsp;<span class="slider-val" id="base-desc-label" style="font-size:16px">0%</span></label>
-              <input type="hidden" id="base-desconto" value="0">
-              <div class="disc-presets" id="disc-presets-base" style="margin-top:8px">
-                <button class="disc-preset active" onclick="setDisc(0,this,'base')">0%</button>
-                <button class="disc-preset" onclick="setDisc(5,this,'base')">5%</button>
-                <button class="disc-preset" onclick="setDisc(10,this,'base')">10%</button>
-              </div>
-              <div style="margin-top:10px;padding:9px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:12px;color:#92400E;line-height:1.5">
-                ⚠️ <strong>Descontos válidos somente para primeiras assinaturas contratuais</strong> realizadas dentro do mês de validade da proposta.
-              </div>
-              <div style="margin-top:6px;font-size:11px;color:#D97706;font-weight:600">Acima de 10% requer aprovação do responsável comercial</div>
-            </div>
           </div>
 
         </div><!-- /left-col -->
@@ -641,7 +602,6 @@
               <th style="width:70px">Horas</th>
               <th style="width:130px">Valor/mês</th>
               <th style="width:130px">Status</th>
-              <th style="width:80px">Desconto</th>
               <th style="width:60px"></th>
             </tr>
           </thead>
@@ -843,21 +803,6 @@ CREATE POLICY "Acesso total para autenticados"
           <button onclick="adicionarLinhaTabela()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
         </div>
 
-        <!-- Dados gerais -->
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-title">Dados para a Proposta</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <label class="field-label">Validade padrão da proposta (dias)</label>
-              <input type="number" class="field-input" id="cfg-validade" value="15" min="1" max="90" style="margin-top:4px" />
-            </div>
-            <div>
-              <label class="field-label">Desconto máximo sem aprovação (%)</label>
-              <input type="number" class="field-input" id="cfg-desconto-max" value="10" min="0" max="60" style="margin-top:4px" />
-            </div>
-          </div>
-          <button onclick="salvarConfig()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar</button>
-        </div>
 
         <div class="card" style="margin-bottom:16px">
           <div class="card-title">CRMs disponíveis</div>
@@ -984,33 +929,6 @@ CREATE POLICY "Acesso total para autenticados"
   </div>
 </div>
 
-<!-- APPROVAL MODAL -->
-<div class="approval-overlay" id="approval-overlay">
-  <div class="approval-modal">
-    <h3>Solicitar desconto extra</h3>
-    <p>Descontos acima de <strong id="aprv-limite-pct">10%</strong> precisam de aprovação do responsável comercial. Preencha os campos abaixo — a solicitação será enviada junto com o payload.</p>
-    <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#166534">
-      <strong>Proposta:</strong> <span id="aprv-context">—</span><br>
-      <strong>Desconto solicitado:</strong> <span id="aprv-pct" style="font-weight:800;color:#D97706">—</span>
-    </div>
-    <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px">
-      <span style="font-size:16px">💬</span>
-      <span>Após registrar, comunique o responsável comercial pelo canal interno antes de gerar a proposta.</span>
-    </div>
-    <div class="approval-field">
-      <label>Justificativa <span style="color:var(--pink)">*</span></label>
-      <textarea id="aprv-justificativa" placeholder="Ex: cliente estratégico, renovação, concorrente com preço menor..."></textarea>
-    </div>
-    <div class="approval-field">
-      <label>Validade da solicitação</label>
-      <select id="aprv-validade"><option value="24h">24 horas</option><option value="48h" selected>48 horas</option><option value="72h">72 horas</option><option value="7d">7 dias</option></select>
-    </div>
-    <div class="approval-actions">
-      <button class="btn-cancel" onclick="cancelarAprovacao()">Cancelar</button>
-      <button class="btn-solicitar" onclick="confirmarAprovacao()">Registrar solicitação</button>
-    </div>
-  </div>
-</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
