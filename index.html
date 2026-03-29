@@ -661,7 +661,15 @@
     <div class="page" id="page-usuarios">
       <div class="section-toolbar">
         <input class="search-input" id="user-search" placeholder="Buscar por nome ou email..." oninput="renderTabela()" />
-        <button class="btn-add" onclick="abrirModal()">+ Novo usuário</button>
+      </div>
+      <div style="background:#F0F9FF;border:1.5px solid #BFDBFE;border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:18px;flex-shrink:0;margin-top:1px">+</span>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7">
+          <strong style="color:var(--navy)">Para adicionar novos usuários</strong>, acesse o
+          <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--pink);font-weight:600">Supabase Dashboard</a>
+          &rarr; Authentication &rarr; Add User &rarr; marque "Auto Confirm User".<br>
+          O perfil será criado automaticamente.
+        </div>
       </div>
       <div class="table-card">
         <table>
@@ -883,7 +891,7 @@ CREATE POLICY "Acesso total para autenticados"
 <div class="modal-overlay" id="modal-overlay" onclick="fecharModalSeSide(event)">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="modal-title">Novo usuário</div>
+      <div class="modal-title" id="modal-title">Editar usuário</div>
       <button class="btn-close" onclick="fecharModal()">×</button>
     </div>
     <div class="modal-grid">

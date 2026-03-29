@@ -1221,17 +1221,18 @@ async function toggleStatus(id) {
   renderTabela()
   showToast(novoStatus === 'ativo' ? 'Reativado' : 'Desativado', novoStatus === 'ativo' ? 'success' : 'info')
 }
-function abrirModal(user = null) {
-  editingUserId = user ? user.id : null
-  document.getElementById('modal-title').textContent = user ? 'Editar usuário' : 'Novo usuário'
+function abrirModal(user) {
+  if (!user) return
+  editingUserId = user.id
+  document.getElementById('modal-title').textContent = 'Editar usuário'
   ;['nome', 'cargo', 'email', 'telefone', 'cidade'].forEach((f) => {
-    document.getElementById('m-' + f).value = user?.[f] || ''
+    document.getElementById('m-' + f).value = user[f] || ''
   })
   document.getElementById('m-senha').value = ''
-  document.getElementById('m-perfil').value = user?.perfil || 'vendedor'
-  document.getElementById('m-status').value = user?.status || 'ativo'
+  document.getElementById('m-perfil').value = user.perfil || 'vendedor'
+  document.getElementById('m-status').value = user.status || 'ativo'
   document.getElementById('modal-error').style.display = 'none'
-  document.getElementById('m-senha').placeholder = user ? 'Deixe vazio para manter' : 'Mín. 6 caracteres'
+  document.getElementById('m-senha').placeholder = 'Deixe vazio para manter'
   document.getElementById('modal-overlay').classList.add('open')
   setTimeout(() => document.getElementById('m-nome').focus(), 100)
 }
@@ -1247,6 +1248,7 @@ function fecharModalSeSide(e) {
   if (e.target === document.getElementById('modal-overlay')) fecharModal()
 }
 async function salvarUsuario() {
+  if (!editingUserId) return
   const nome = document.getElementById('m-nome').value.trim(),
     cargo = document.getElementById('m-cargo').value.trim(),
     email = document.getElementById('m-email').value.trim().toLowerCase(),
@@ -1261,12 +1263,6 @@ async function salvarUsuario() {
     errEl.style.display = 'block'
     return
   }
-  const isSupaUser = editingUserId && DB.users.find((u) => String(u.id) === String(editingUserId))?._supabase
-  if (!editingUserId && !isSupaUser && !senha) {
-    errEl.textContent = 'Defina uma senha.'
-    errEl.style.display = 'block'
-    return
-  }
   if (senha && senha.length < 6) {
     errEl.textContent = 'Senha: mín. 6 caracteres.'
     errEl.style.display = 'block'
@@ -1278,31 +1274,26 @@ async function salvarUsuario() {
     return
   }
   errEl.style.display = 'none'
-  if (editingUserId) {
-    const u = DB.users.find((u) => String(u.id) === String(editingUserId))
-    Object.assign(u, { nome, cargo, email, telefone, cidade, perfil, status })
-    if (senha && !u._supabase) u.senha = await _h(senha)
-    if (u._supabase && supabaseClient) {
-      try {
-        await supabaseClient
-          .from('perfis')
-          .update({ nome, cargo, email, telefone, cidade, perfil, status })
-          .eq('id', u.id)
-      } catch (e) {
-        console.warn('salvarUsuario Supabase:', e.message)
-        showToast('Aviso: perfil salvo localmente, falha no Supabase.', 'info')
-      }
+  const u = DB.users.find((u) => String(u.id) === String(editingUserId))
+  Object.assign(u, { nome, cargo, email, telefone, cidade, perfil, status })
+  if (senha && !u._supabase) u.senha = await _h(senha)
+  if (u._supabase && supabaseClient) {
+    try {
+      await supabaseClient
+        .from('perfis')
+        .update({ nome, cargo, email, telefone, cidade, perfil, status })
+        .eq('id', u.id)
+    } catch (e) {
+      console.warn('salvarUsuario Supabase:', e.message)
+      showToast('Aviso: perfil salvo localmente, falha no Supabase.', 'info')
     }
-    if (String(currentUser.id) === String(editingUserId)) {
-      currentUser = { ...currentUser, ...u }
-      document.getElementById('nav-username').textContent = u.nome.split(' ')[0]
-      document.getElementById('nav-avatar').textContent = initials(u.nome)
-    }
-    showToast('Usuário atualizado.', 'success')
-  } else {
-    DB.users.push({ id: DB.nextId++, nome, cargo, email, senha: await _h(senha), telefone, cidade, perfil, status })
-    showToast('Usuário criado.', 'success')
   }
+  if (String(currentUser.id) === String(editingUserId)) {
+    currentUser = { ...currentUser, ...u }
+    document.getElementById('nav-username').textContent = u.nome.split(' ')[0]
+    document.getElementById('nav-avatar').textContent = initials(u.nome)
+  }
+  showToast('Usuário atualizado.', 'success')
   saveUsersLocal()
   fecharModal()
   renderTabela()
