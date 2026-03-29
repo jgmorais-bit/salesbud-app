@@ -1113,6 +1113,8 @@ function iniciarApp() {
   mostrarScreen('app')
   initSupabase()
   syncConfigFromSupabase().catch(() => {})
+  syncTabelaFromSupabase().catch(() => {})
+  syncCrmFromSupabase().catch(() => {})
   checkTemplateBanner()
   populateCrmDropdowns()
   navTo('proposta')
@@ -1303,38 +1305,61 @@ async function salvarUsuario() {
    TABELA DE PREÇOS
 ════════════════════════════════════════ */
 const TABELA_HORAS_DEFAULT = [
-  { horas: 50, preco: 399 },
+  { horas: 50, preco: 449 },
+  { horas: 70, preco: 499 },
   { horas: 100, preco: 599 },
   { horas: 150, preco: 799 },
   { horas: 200, preco: 990 },
+  { horas: 250, preco: 1240 },
   { horas: 300, preco: 1490 },
+  { horas: 350, preco: 1740 },
   { horas: 400, preco: 1990 },
+  { horas: 450, preco: 2240 },
   { horas: 500, preco: 2490 },
+  { horas: 550, preco: 2590 },
+  { horas: 600, preco: 2690 },
+  { horas: 650, preco: 2790 },
+  { horas: 700, preco: 2890 },
   { horas: 750, preco: 2990 },
-  { horas: 1000, preco: 3590 },
-  { horas: 1250, preco: 5390 },
-  { horas: 1500, preco: 6290 },
-  { horas: 2000, preco: 7990 },
-  { horas: 3000, preco: 12347 },
-  { horas: 4000, preco: 13558 },
-  { horas: 5000, preco: 16140 },
-  { horas: 7500, preco: 24210 },
-  { horas: 10000, preco: 32280 }
+  { horas: 800, preco: 3190 },
+  { horas: 850, preco: 3390 },
+  { horas: 900, preco: 3590 },
+  { horas: 950, preco: 3590 },
+  { horas: 1000, preco: 3590 }
 ]
-const TABELA_VERSION = 4
 let tabelaEditavel = null
+let _tabelaSynced = false
 function getTabelaAtiva() {
   if (tabelaEditavel) return tabelaEditavel
   try {
-    const s = JSON.parse(localStorage.getItem('salesbud_tabela') || 'null'),
-      v = parseInt(localStorage.getItem('salesbud_tabela_ver') || '0')
-    if (s && s.length > 0 && v >= TABELA_VERSION) {
+    const s = JSON.parse(localStorage.getItem('salesbud_tabela') || 'null')
+    if (s && s.length > 0) {
       tabelaEditavel = s
       return s
     }
   } catch {}
   tabelaEditavel = TABELA_HORAS_DEFAULT.map((t) => ({ ...t }))
   return tabelaEditavel
+}
+async function syncTabelaFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'tabela_precos')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && Array.isArray(data.valor) && data.valor.length > 0) {
+      tabelaEditavel = data.valor
+      try { localStorage.setItem('salesbud_tabela', JSON.stringify(data.valor)) } catch {}
+      _tabelaSynced = true
+      return
+    }
+  } catch (e) {
+    console.warn('syncTabelaFromSupabase:', e.message)
+  }
+  _tabelaSynced = true
 }
 function calcPrecoExato(horas) {
   const tab = getTabelaAtiva().map((t) => ({ ...t, precoHora: t.preco / t.horas }))
@@ -2640,18 +2665,41 @@ function adicionarLinhaTabela() {
   tabelaEditavel = tab
   renderTabelaConfig()
 }
-function salvarTabelaPrecos() {
+async function salvarTabelaPrecos() {
+  if (currentUser?.perfil !== 'admin') {
+    showToast('Apenas administradores podem salvar a tabela.', 'info')
+    return
+  }
   const tab = getTabelaAtiva()
-  localStorage.setItem('salesbud_tabela', JSON.stringify(tab))
-  localStorage.setItem('salesbud_tabela_ver', String(TABELA_VERSION))
   tabelaEditavel = tab
-  showToast('Tabela salva.', 'success')
+  try { localStorage.setItem('salesbud_tabela', JSON.stringify(tab)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'tabela_precos', valor: tab }, { onConflict: 'chave' })
+      showToast('Tabela salva no Supabase.', 'success')
+    } catch (e) {
+      console.warn('salvarTabelaPrecos Supabase:', e.message)
+      showToast('Tabela salva localmente. Falha ao sincronizar.', 'info')
+    }
+  } else {
+    showToast('Tabela salva localmente (Supabase indisponível).', 'info')
+  }
 }
-function resetarTabela() {
+async function resetarTabela() {
   if (!confirm('Restaurar tabela original?')) return
   tabelaEditavel = TABELA_HORAS_DEFAULT.map((t) => ({ ...t }))
-  localStorage.removeItem('salesbud_tabela')
-  localStorage.removeItem('salesbud_tabela_ver')
+  try { localStorage.setItem('salesbud_tabela', JSON.stringify(tabelaEditavel)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'tabela_precos', valor: tabelaEditavel }, { onConflict: 'chave' })
+    } catch (e) {
+      console.warn('resetarTabela Supabase:', e.message)
+    }
+  }
   renderTabelaConfig()
   showToast('Tabela restaurada.', 'success')
 }
@@ -2682,7 +2730,31 @@ function getCrmList() {
   }
 }
 function saveCrmList(list) {
-  localStorage.setItem(CRM_LIST_KEY, JSON.stringify(list))
+  try { localStorage.setItem(CRM_LIST_KEY, JSON.stringify(list)) } catch {}
+  if (supabaseClient) {
+    supabaseClient
+      .from('configuracoes')
+      .upsert({ chave: 'crm_list', valor: list }, { onConflict: 'chave' })
+      .then(({ error }) => { if (error) console.warn('saveCrmList Supabase:', error.message) })
+      .catch((e) => console.warn('saveCrmList Supabase:', e.message))
+  }
+}
+async function syncCrmFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'crm_list')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && Array.isArray(data.valor) && data.valor.length > 0) {
+      try { localStorage.setItem(CRM_LIST_KEY, JSON.stringify(data.valor)) } catch {}
+      populateCrmDropdowns()
+    }
+  } catch (e) {
+    console.warn('syncCrmFromSupabase:', e.message)
+  }
 }
 function populateCrmDropdowns() {
   const list = getCrmList()
