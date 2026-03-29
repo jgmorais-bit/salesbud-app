@@ -289,18 +289,7 @@
             <div id="whats-users-wrap" class="field-row">
               <label class="field-label">Número de usuários WhatsApp</label>
               <input type="number" class="field-input" id="whats-users" value="5" min="1" max="200" oninput="update()" />
-              <div style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px">
-                <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-bottom:1px solid var(--border)">
-                  <div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Usuários</div>
-                  <div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:right">Preço/user</div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">1 – 5 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 100/user</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">6 – 10 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 90/user</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">11 – 20 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 80/user</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">21 – 30 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 70/user</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)"><div style="padding:6px 10px;color:var(--text2)">31 – 50 users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 60/user</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr"><div style="padding:6px 10px;color:var(--text2)">51+ users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ 50/user</div></div>
-              </div>
+              <div id="whats-faixas-display" style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px"></div>
             </div>
           </div>
 
@@ -803,6 +792,31 @@ CREATE POLICY "Acesso total para autenticados"
           <button onclick="adicionarLinhaTabela()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
         </div>
 
+        <!-- WHATSAPP FAIXAS -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Faixas de Preço — WhatsApp</span>
+            <div style="display:flex;gap:6px">
+              <button onclick="resetarWhatsFaixas()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrão</button>
+              <button onclick="salvarWhatsFaixas()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar faixas</button>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 10px">Preço por usuário de WhatsApp, por faixa de quantidade. Faixa com "Até" vazio = sem limite.</p>
+          <div style="border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="border-bottom:2px solid var(--border)">
+                  <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">De (users)</th>
+                  <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Até (users)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">R$/user</th>
+                  <th style="padding:8px 10px"></th>
+                </tr>
+              </thead>
+              <tbody id="cfg-whats-tbody"></tbody>
+            </table>
+          </div>
+          <button onclick="adicionarWhatsFaixa()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
+        </div>
 
         <div class="card" style="margin-bottom:16px">
           <div class="card-title">CRMs disponíveis</div>

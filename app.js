@@ -1110,8 +1110,10 @@ function iniciarApp() {
   syncConfigFromSupabase().catch(() => {})
   syncTabelaFromSupabase().catch(() => {})
   syncCrmFromSupabase().catch(() => {})
+  syncWhatsappFromSupabase().catch(() => {})
   checkTemplateBanner()
   populateCrmDropdowns()
+  renderWhatsFaixasDisplay()
   navTo('proposta')
   update()
   setTimeout(checkHubSpotPrefill, 100)
@@ -1441,20 +1443,125 @@ const INTEG = {
     ]
   }
 }
-const WHATS_TIERS = [
-  { min: 1, max: 5, preco: 100 },
-  { min: 6, max: 10, preco: 90 },
-  { min: 11, max: 20, preco: 80 },
-  { min: 21, max: 30, preco: 70 },
-  { min: 31, max: 50, preco: 60 },
-  { min: 51, max: 999, preco: 50 }
+const WHATSAPP_FAIXAS_DEFAULT = [
+  { min: 1, max: 10, preco: 100 },
+  { min: 11, max: 25, preco: 90 },
+  { min: 26, max: 40, preco: 85 },
+  { min: 41, max: 60, preco: 80 },
+  { min: 61, max: null, preco: 75 }
 ]
+let _whatsFaixas = null
+const WA_CACHE_KEY = 'salesbud_whatsapp_faixas'
+function getWhatsFaixas() {
+  if (_whatsFaixas) return _whatsFaixas
+  try {
+    const s = JSON.parse(localStorage.getItem(WA_CACHE_KEY) || 'null')
+    if (s && s.length > 0) { _whatsFaixas = s; return s }
+  } catch {}
+  _whatsFaixas = WHATSAPP_FAIXAS_DEFAULT.map((f) => ({ ...f }))
+  return _whatsFaixas
+}
+async function syncWhatsappFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'whatsapp_faixas')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && Array.isArray(data.valor) && data.valor.length > 0) {
+      _whatsFaixas = data.valor
+      try { localStorage.setItem(WA_CACHE_KEY, JSON.stringify(data.valor)) } catch {}
+    }
+  } catch (e) {
+    console.warn('syncWhatsappFromSupabase:', e.message)
+  }
+}
+async function salvarWhatsFaixas() {
+  if (currentUser?.perfil !== 'admin') {
+    showToast('Apenas administradores podem salvar.', 'info')
+    return
+  }
+  const faixas = getWhatsFaixas()
+  _whatsFaixas = faixas
+  try { localStorage.setItem(WA_CACHE_KEY, JSON.stringify(faixas)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'whatsapp_faixas', valor: faixas }, { onConflict: 'chave' })
+      showToast('Faixas WhatsApp salvas no Supabase.', 'success')
+    } catch (e) {
+      console.warn('salvarWhatsFaixas Supabase:', e.message)
+      showToast('Faixas salvas localmente. Falha ao sincronizar.', 'info')
+    }
+  } else {
+    showToast('Faixas salvas localmente (Supabase indisponível).', 'info')
+  }
+  renderWhatsConfigTable()
+}
+async function resetarWhatsFaixas() {
+  if (!confirm('Restaurar faixas padrão do WhatsApp?')) return
+  _whatsFaixas = WHATSAPP_FAIXAS_DEFAULT.map((f) => ({ ...f }))
+  try { localStorage.setItem(WA_CACHE_KEY, JSON.stringify(_whatsFaixas)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'whatsapp_faixas', valor: _whatsFaixas }, { onConflict: 'chave' })
+    } catch (e) { console.warn('resetarWhatsFaixas Supabase:', e.message) }
+  }
+  renderWhatsConfigTable()
+  showToast('Faixas restauradas.', 'success')
+}
+function atualizarWhatsLinha(idx, field, val) {
+  const faixas = getWhatsFaixas()
+  faixas[idx][field] = field === 'max' && val === '' ? null : parseInt(val) || 0
+  _whatsFaixas = faixas
+  renderWhatsConfigTable()
+}
+function removerWhatsFaixa(idx) {
+  const faixas = getWhatsFaixas()
+  if (faixas.length <= 1) { showToast('Mínimo 1 faixa.', 'info'); return }
+  faixas.splice(idx, 1)
+  _whatsFaixas = faixas
+  renderWhatsConfigTable()
+}
+function adicionarWhatsFaixa() {
+  const faixas = getWhatsFaixas()
+  const last = faixas[faixas.length - 1]
+  faixas.push({ min: (last.max || last.min) + 1, max: null, preco: last.preco })
+  _whatsFaixas = faixas
+  renderWhatsConfigTable()
+}
+function renderWhatsConfigTable() {
+  const tb = document.getElementById('cfg-whats-tbody')
+  if (!tb) return
+  const faixas = getWhatsFaixas()
+  tb.innerHTML = faixas.map((f, i) =>
+    `<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px"><input type="number" value="${f.min}" min="1" onchange="atualizarWhatsLinha(${i},'min',this.value)" style="width:70px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px"><input type="number" value="${f.max ?? ''}" min="0" placeholder="∞" onchange="atualizarWhatsLinha(${i},'max',this.value)" style="width:70px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px;text-align:right"><input type="number" value="${f.preco}" min="1" onchange="atualizarWhatsLinha(${i},'preco',this.value)" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy);text-align:right" /></td><td style="padding:6px 10px;text-align:right"><button onclick="removerWhatsFaixa(${i})" style="font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer">rem</button></td></tr>`
+  ).join('')
+}
 const fmt = (v) => (v == null ? 'Sob consulta' : 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0 }))
 function getWhatsPrice(u) {
-  return (WHATS_TIERS.find((t) => u >= t.min && u <= t.max) || { preco: 50 }).preco
+  const faixas = getWhatsFaixas()
+  const tier = faixas.find((t) => u >= t.min && (t.max == null || u <= t.max))
+  return tier ? tier.preco : (faixas[faixas.length - 1]?.preco || 75)
 }
 function getTotalWhats(u) {
   return getWhatsPrice(u) * u
+}
+function renderWhatsFaixasDisplay() {
+  const el = document.getElementById('whats-faixas-display')
+  if (!el) return
+  const faixas = getWhatsFaixas()
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-bottom:1px solid var(--border)"><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Usuários</div><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:right">Preço/user</div></div>' +
+    faixas.map((f, i) => {
+      const label = f.max == null ? `${f.min}+` : `${f.min} – ${f.max}`
+      const border = i < faixas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''
+      return `<div style="display:grid;grid-template-columns:1fr 1fr;${border}"><div style="padding:6px 10px;color:var(--text2)">${label} users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ ${f.preco}/user</div></div>`
+    }).join('')
 }
 function initials(n) {
   return n
@@ -2400,6 +2507,7 @@ function initConfig() {
     }
   }
   renderTabelaConfig()
+  renderWhatsConfigTable()
 }
 function salvarConfig() {
   saveConfig({
