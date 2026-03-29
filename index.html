@@ -266,15 +266,45 @@
 
           <div class="card">
             <div class="card-title">Integração CRM</div>
-            <div style="display:flex;gap:6px;margin-bottom:10px">
-              <button class="toggle-btn active" id="integ-modo-esp" onclick="setIntegModo('especifico')" style="font-size:12px;padding:5px 10px">Plano específico</button>
-              <button class="toggle-btn" id="integ-modo-todos" onclick="setIntegModo('todos')" style="font-size:12px;padding:5px 10px">Todos os planos</button>
+
+            <div class="field-row" style="margin-bottom:10px">
+              <label class="field-label">Personalização de Regras de Negócio</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="integ-regras-nao" onclick="toggleIntegRegras(false)">Padrão (R$ 0)</button>
+                <button class="toggle-btn" id="integ-regras-sim" onclick="toggleIntegRegras(true)">Personalizada</button>
+              </div>
             </div>
-            <div id="integ-cards-wrap" class="integ-grid">
-              <div class="integ-card active" onclick="selectInteg('basico',this)"><div class="integ-card-name">Básico</div><div class="integ-card-sub">Gratuito · Somente notas</div></div>
-              <div class="integ-card" onclick="selectInteg('intermediario',this)"><div class="integ-card-name">Intermediário</div><div class="integ-card-sub">R$ 1.200 setup · 5 campos</div></div>
-              <div class="integ-card" onclick="selectInteg('avancado',this)"><div class="integ-card-name">Avançado</div><div class="integ-card-sub">R$ 3.000 setup · +R$ 499/mês</div></div>
+
+            <div class="field-row" style="margin-bottom:10px">
+              <label class="field-label">Pipelines adicionais</label>
+              <input type="number" class="field-input" id="integ-pipelines" value="0" min="0" max="10" oninput="update()" style="width:80px" />
             </div>
+
+            <div class="field-row" style="margin-bottom:10px">
+              <label class="field-label">Tarefas Automáticas</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="integ-tarefas-nao" onclick="toggleIntegTarefas(false)">Não</button>
+                <button class="toggle-btn" id="integ-tarefas-sim" onclick="toggleIntegTarefas(true)">Sim</button>
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-bottom:10px">
+              <label class="field-label">Campos Personalizados (quantidade)</label>
+              <input type="number" class="field-input" id="integ-campos" value="0" min="0" max="50" step="5" oninput="update()" style="width:80px" />
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">VOIP</label>
+              <select class="field-input" id="integ-voip" onchange="update()">
+                <option value="">Sem VOIP</option>
+              </select>
+              <div id="integ-voip-tag" style="display:none;margin-top:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;display:inline-block"></div>
+            </div>
+          </div>
+
+          <div class="card" id="card-adicionais" style="display:none">
+            <div class="card-title">Adicionais</div>
+            <div id="adicionais-toggles"></div>
           </div>
 
           <div class="card">
@@ -826,6 +856,42 @@ CREATE POLICY "Acesso total para autenticados"
             <input id="cfg-crm-input" class="field-input" type="text" placeholder="Nome do CRM..." style="flex:1;padding:8px 10px" onkeydown="if(event.key==='Enter')adicionarCrm()" />
             <button onclick="adicionarCrm()" style="padding:8px 14px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ Adicionar</button>
           </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">VOIPs Disponíveis</div>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 12px">VOIPs padrão não podem ser removidos. Adicione entradas customizadas conforme necessário.</p>
+          <div id="cfg-voip-list" style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;max-height:240px;overflow-y:auto"></div>
+          <div style="display:flex;gap:8px">
+            <input id="cfg-voip-input" class="field-input" type="text" placeholder="Nome do VOIP..." style="flex:1;padding:8px 10px" onkeydown="if(event.key==='Enter')adicionarVoip()" />
+            <button onclick="adicionarVoip()" style="padding:8px 14px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ Adicionar</button>
+          </div>
+        </div>
+
+        <!-- PRECOS INTEGRACAO -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Preços de Integração</span>
+            <div style="display:flex;gap:6px">
+              <button onclick="resetarIntegPrecos()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrão</button>
+              <button onclick="salvarIntegPrecos()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar</button>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 12px">Valores de setup (único) e MRR (mensal) para cada componente de integração.</p>
+          <div id="cfg-integ-precos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+        </div>
+
+        <!-- ADICIONAIS -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Adicionais Opcionais</span>
+            <div style="display:flex;gap:6px">
+              <button onclick="resetarAdicionais()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrão</button>
+              <button onclick="salvarAdicionais()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar</button>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 12px">Ative e defina o valor mensal de cada adicional. Quando ativo, aparece como opção para os AEs na proposta.</p>
+          <div id="cfg-adicionais-grid" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
 
         <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:var(--radius-sm);padding:14px 16px;font-size:12px;color:#166534;line-height:1.6">

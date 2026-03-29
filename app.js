@@ -1111,9 +1111,14 @@ function iniciarApp() {
   syncTabelaFromSupabase().catch(() => {})
   syncCrmFromSupabase().catch(() => {})
   syncWhatsappFromSupabase().catch(() => {})
+  syncVoipFromSupabase().catch(() => {})
+  syncIntegPrecosFromSupabase().catch(() => {})
+  syncAdicionaisFromSupabase().catch(() => {})
   checkTemplateBanner()
   populateCrmDropdowns()
+  populateVoipDropdown()
   renderWhatsFaixasDisplay()
+  renderAdicionaisProposal()
   navTo('proposta')
   update()
   setTimeout(checkHubSpotPrefill, 100)
@@ -1595,20 +1600,62 @@ let state = {
   crm: '',
   contatoNome: '',
   contatoEmail: '',
-  integKey: 'basico',
+  integRegras: false,
+  integPipelines: 0,
+  integTarefas: false,
+  integCampos: 0,
+  integVoip: '',
+  adicionais: {},
   whatsAtivo: true,
   whatsUsers: 5
 }
-function _selectInteg(key, el, mod) {
-  const s = getState(mod)
-  s.integKey = key
-  const selector = mod === 'novo' ? '.integ-card' : '#base-integ-btns .integ-btn'
-  document.querySelectorAll(selector).forEach((c) => c.classList.remove('active'))
+function selectBaseInteg(key, el) {
+  stateBase.integKey = key
+  document.querySelectorAll('#base-integ-btns .integ-btn').forEach((c) => c.classList.remove('active'))
   el.classList.add('active')
-  mod === 'novo' ? update() : updateBase()
+  updateBase()
 }
-function selectInteg(key, el) { _selectInteg(key, el, 'novo'); }
-function selectBaseInteg(key, el) { _selectInteg(key, el, 'base'); }
+function toggleIntegRegras(val) {
+  state.integRegras = val
+  document.getElementById('integ-regras-sim').classList.toggle('active', val)
+  document.getElementById('integ-regras-nao').classList.toggle('active', !val)
+  update()
+}
+function toggleIntegTarefas(val) {
+  state.integTarefas = val
+  document.getElementById('integ-tarefas-sim').classList.toggle('active', val)
+  document.getElementById('integ-tarefas-nao').classList.toggle('active', !val)
+  update()
+}
+function toggleAdicional(key, val) {
+  state.adicionais[key] = val
+  document.getElementById('adic-' + key + '-sim')?.classList.toggle('active', val)
+  document.getElementById('adic-' + key + '-nao')?.classList.toggle('active', !val)
+  update()
+}
+function renderAdicionaisProposal() {
+  const cfg = getAdicionaisConfig()
+  const ativos = Object.entries(cfg).filter(([k, v]) => v.ativo && v.mrr > 0)
+  const card = document.getElementById('card-adicionais')
+  const container = document.getElementById('adicionais-toggles')
+  if (!card || !container) return
+  if (!ativos.length) { card.style.display = 'none'; return }
+  card.style.display = 'block'
+  container.innerHTML = ativos.map(([k, v]) => {
+    const isOn = state.adicionais[k] || false
+    return `<div class="field-row" style="margin-bottom:8px"><label class="field-label">${esc(v.label)} <span style="font-size:12px;font-weight:600;color:var(--pink)">${fmt(v.mrr)}/mês</span></label><div class="toggle-row"><button class="toggle-btn ${isOn ? '' : 'active'}" id="adic-${k}-nao" onclick="toggleAdicional('${k}',false)">Não</button><button class="toggle-btn ${isOn ? 'active' : ''}" id="adic-${k}-sim" onclick="toggleAdicional('${k}',true)">Sim</button></div></div>`
+  }).join('')
+}
+function populateVoipDropdown() {
+  const list = getVoipList()
+  const sel = document.getElementById('integ-voip')
+  if (!sel) return
+  const prev = sel.value
+  sel.innerHTML = '<option value="">Sem VOIP</option>' +
+    list.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('') +
+    '<option value="_outro">VOIP não-listado</option>'
+  if (prev) sel.value = prev
+}
 function toggleWhats(val, mod = 'novo') {
   const p = getPrefix(mod)
   const s = getState(mod)
@@ -1744,33 +1791,51 @@ function update() {
     : r.interpolado
       ? `interpolado · R$ ${r.precoHora.toFixed(3)}/h`
       : `pacote ${r.tierIdx + 1} de ${tLen}`
-  let integ,
-    isPremium = false
-  const isTodos = state.integKey === 'todos'
-  if (isTodos) {
-    integ = {
-      nome: 'Todos os planos',
-      tag: 'tag-basico',
-      label: 'Cliente escolhe na proposta',
-      setup: null,
-      fee: 0,
-      scope: [],
-      descricao: ''
+  /* Integration — modular components */
+  state.integRegras = document.getElementById('integ-regras-sim')?.classList.contains('active') || false
+  state.integPipelines = parseInt(document.getElementById('integ-pipelines')?.value) || 0
+  state.integTarefas = document.getElementById('integ-tarefas-sim')?.classList.contains('active') || false
+  state.integCampos = parseInt(document.getElementById('integ-campos')?.value) || 0
+  state.integVoip = document.getElementById('integ-voip')?.value || ''
+  const ip = getIntegPrecos()
+  const setupCrm = state.crm && !isCrmNativo(state.crm) ? ip.crm_personalizado_setup : 0
+  const setupRegras = state.integRegras ? ip.personalizacao_regras_setup : 0
+  const setupPipelines = state.integPipelines * ip.pipeline_adicional_setup
+  const setupTarefas = state.integTarefas ? ip.tarefas_auto_setup : 0
+  const blocosC = ip.campos_custom_bloco > 0 ? Math.ceil(state.integCampos / ip.campos_custom_bloco) : 0
+  const setupCampos = blocosC * ip.campos_custom_setup_por_bloco
+  const setupTotal = setupCrm + setupRegras + setupPipelines + setupTarefas + setupCampos
+  const mrrTarefas = state.integTarefas ? ip.tarefas_auto_mrr : 0
+  const mrrCampos = blocosC * ip.campos_custom_mrr_por_bloco
+  const mrrInteg = mrrTarefas + mrrCampos
+  /* Adicionais */
+  const adicCfg = getAdicionaisConfig()
+  let mrrAdicionais = 0
+  for (const [k, v] of Object.entries(adicCfg)) {
+    if (v.ativo && v.mrr > 0 && state.adicionais[k]) mrrAdicionais += v.mrr
+  }
+  /* VOIP tag */
+  const voipTag = document.getElementById('integ-voip-tag')
+  if (voipTag) {
+    if (state.integVoip === '_outro') {
+      voipTag.style.display = 'inline-block'
+      voipTag.textContent = 'Consultar'
+      voipTag.style.background = '#FFF7ED'
+      voipTag.style.color = '#92400E'
+      voipTag.style.border = '1.5px solid #FED7AA'
+    } else if (state.integVoip) {
+      voipTag.style.display = 'inline-block'
+      voipTag.textContent = 'Incluso'
+      voipTag.style.background = '#F0FDF4'
+      voipTag.style.color = '#166534'
+      voipTag.style.border = '1.5px solid #BBF7D0'
+    } else {
+      voipTag.style.display = 'none'
     }
-  } else {
-    integ = { ...(INTEG[state.integKey] || INTEG.basico) }
-    if (state.integKey === 'basico' && state.crm && !isCrmNativo(state.crm)) {
-      integ.setup = 1200
-    }
-    const _bs = document.querySelector('.integ-card:first-child .integ-card-sub')
-    if (_bs)
-      _bs.textContent =
-        state.crm && !isCrmNativo(state.crm) ? 'R$ 1.200 setup · Somente notas' : 'Gratuito · Somente notas'
   }
   const precoBase = r.precoEfetivo,
-    precoFinal = precoBase || null,
-    feeMensal = integ.fee || 0
-  const mensalSB = precoFinal != null ? precoFinal + feeMensal : null /* mensalidade SalesBud (sem whats) */
+    precoFinal = precoBase || null
+  const mensalSB = precoFinal != null ? precoFinal + mrrInteg + mrrAdicionais : null
   const whatsTotal = state.whatsAtivo && state.whatsUsers > 0 ? getTotalWhats(state.whatsUsers) : 0
   const whatsPreco = state.whatsAtivo && state.whatsUsers > 0 ? getWhatsPrice(state.whatsUsers) : 0
   const totalGeral = mensalSB != null ? mensalSB + whatsTotal : null /* TOTAL GERAL */
@@ -1788,8 +1853,22 @@ function update() {
   pills.innerHTML += `<div class="meta-pill">Horas <span>${r.horasEfetivas.toLocaleString('pt-BR')}h/mês</span></div>`
   if (state.whatsAtivo && state.whatsUsers > 0)
     pills.innerHTML += `<div class="meta-pill">WhatsApp <span>${state.whatsUsers} users</span></div>`
-  document.getElementById('integ-badge-wrap').innerHTML =
-    `<div class="integ-badge"><span class="tag ${integ.tag}">${integ.nome}</span>${esc(integ.label)}</div>`
+  /* integ-badge-wrap: show modular summary */
+  const badgeWrap = document.getElementById('integ-badge-wrap')
+  if (badgeWrap) {
+    const parts = []
+    if (setupCrm > 0) parts.push('CRM personalizado')
+    if (state.integRegras) parts.push('Regras')
+    if (state.integPipelines > 0) parts.push(state.integPipelines + ' pipeline(s)')
+    if (state.integTarefas) parts.push('Tarefas auto')
+    if (state.integCampos > 0) parts.push(state.integCampos + ' campos')
+    if (state.integVoip) parts.push('VOIP')
+    if (parts.length) {
+      badgeWrap.innerHTML = `<div class="integ-badge"><span class="tag tag-intermediario">Modular</span>${esc(parts.join(' · '))}</div>`
+    } else {
+      badgeWrap.innerHTML = `<div class="integ-badge"><span class="tag tag-basico">Básico</span>Integração padrão</div>`
+    }
+  }
 
   /* topo do card: total geral */
   document.getElementById('price-main').textContent = totalGeral != null ? fmt(totalGeral) : '—'
@@ -1805,9 +1884,15 @@ function update() {
   if (precoBase)
     html += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`
 
-  if (feeMensal > 0)
-    html += `<div class="price-row"><span class="price-row-label">Manutenção CRM</span><span class="price-row-val amber">${fmt(feeMensal)}/mês</span></div>`
-  if (mensalSB != null && (feeMensal > 0 || whatsTotal > 0))
+  if (mrrInteg > 0)
+    html += `<div class="price-row"><span class="price-row-label">Integração</span><span class="price-row-val amber">${fmt(mrrInteg)}/mês</span></div>`
+  if (mrrAdicionais > 0) {
+    for (const [k, v] of Object.entries(adicCfg)) {
+      if (v.ativo && v.mrr > 0 && state.adicionais[k])
+        html += `<div class="price-row"><span class="price-row-label">${esc(v.label)}</span><span class="price-row-val green">${fmt(v.mrr)}/mês</span></div>`
+    }
+  }
+  if (mensalSB != null && (mrrInteg > 0 || mrrAdicionais > 0 || whatsTotal > 0))
     html += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`
   if (whatsTotal > 0)
     html += `<div class="price-row"><span class="price-row-label">WhatsApp (${state.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`
@@ -1820,23 +1905,34 @@ function update() {
       html += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalGeral)}/mês</span></div>`
     }
   }
-  if (integ.setup != null && integ.setup > 0)
-    html += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(pontual · até 12×)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(integ.setup)}</span></div>`
+  if (setupTotal > 0)
+    html += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantação · pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(setupTotal)}</span></div>`
   document.getElementById('price-rows').innerHTML = html
-  document.getElementById('scope-section').style.display = 'block'
-  document.getElementById('scope-items').innerHTML = isTodos
-    ? '<div class="scope-item"><div class="scope-dot"></div><span>Plano de integração a definir com o cliente</span></div>'
-    : integ.scope
-        .map((s) => {
-          const h = s.toLowerCase().includes('sob consulta')
-          return `<div class="scope-item"><div class="scope-dot"></div><span style="${h ? 'font-weight:700' : ''}">${esc(s)}</span></div>`
-        })
-        .join('')
-  document.getElementById('premium-alert').style.display = isPremium ? 'flex' : 'none'
-  renderPayload(r.horasEfetivas, integ, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco)
+  /* Scope section — show modular details */
+  const scopeEl = document.getElementById('scope-section')
+  const scopeItems = document.getElementById('scope-items')
+  if (scopeEl && scopeItems) {
+    const scopeParts = []
+    if (setupCrm > 0) scopeParts.push('Setup CRM personalizado: ' + fmt(setupCrm))
+    if (state.integRegras) scopeParts.push('Personalização de regras: ' + fmt(setupRegras) + ' setup')
+    if (state.integPipelines > 0) scopeParts.push(state.integPipelines + ' pipeline(s) adicional(is): ' + fmt(setupPipelines) + ' setup')
+    if (state.integTarefas) scopeParts.push('Tarefas automáticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mês')
+    if (state.integCampos > 0) scopeParts.push(state.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mês')
+    if (state.integVoip && state.integVoip !== '_outro') scopeParts.push('VOIP: ' + state.integVoip + ' (incluso)')
+    if (state.integVoip === '_outro') scopeParts.push('VOIP não-listado (sob consulta)')
+    if (scopeParts.length) {
+      scopeEl.style.display = 'block'
+      scopeItems.innerHTML = scopeParts.map((s) => `<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('')
+    } else {
+      scopeEl.style.display = 'none'
+      scopeItems.innerHTML = ''
+    }
+  }
+  document.getElementById('premium-alert').style.display = 'none'
+  renderPayload(r.horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais)
   const horasOk = hd > 0,
     emailOk = !state.contatoEmail || validarEmail(state.contatoEmail),
-    canGen = state.empresa && !isPremium && precoFinal != null && horasOk && emailOk
+    canGen = state.empresa && precoFinal != null && horasOk && emailOk
   document.getElementById('btn-gen').disabled = !canGen
 
   const tip = document.getElementById('btn-gen-tooltip')
@@ -1844,7 +1940,6 @@ function update() {
     if (!state.empresa) tip.textContent = 'Preencha o nome da empresa'
     else if (!horasOk) tip.textContent = 'Informe o volume de horas'
     else if (!emailOk) tip.textContent = 'E-mail inválido'
-    else if (isPremium) tip.textContent = 'Integração Premium é sob consulta'
     else tip.textContent = 'Pronto para gerar!'
   }
 }
@@ -1852,12 +1947,26 @@ function update() {
 /* ════════════════════════════════════════
    PAYLOAD (Novos Clientes)
 ════════════════════════════════════════ */
-function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco) {
+function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais) {
   if (!currentUser) return
   const cfg = loadConfig(),
     hoje = new Date(),
     val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
+  /* Build setup description from components */
+  const setupParts = []
+  if (state.crm && !isCrmNativo(state.crm)) setupParts.push('CRM personalizado')
+  if (state.integRegras) setupParts.push('Regras de negócio')
+  if (state.integPipelines > 0) setupParts.push(state.integPipelines + ' pipeline(s)')
+  if (state.integTarefas) setupParts.push('Tarefas automáticas')
+  if (state.integCampos > 0) setupParts.push(state.integCampos + ' campos personalizados')
+  const descSetup = setupParts.length ? setupParts.join(', ') : 'Integração padrão'
+  /* Build adicionais list */
+  const adicCfg = getAdicionaisConfig()
+  const adicAtivos = []
+  for (const [k, v] of Object.entries(adicCfg)) {
+    if (v.ativo && v.mrr > 0 && state.adicionais[k]) adicAtivos.push(v.label + ' (' + fmt(v.mrr) + '/mês)')
+  }
   const data = {
     nome_empresa: state.empresa || '',
     crm_cliente: state.crm || '',
@@ -1866,36 +1975,36 @@ function renderPayload(horasEfetivas, integ, precoFinal, mensalSB, totalGeral, w
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${state.empresa || '(empresa)'}`,
     pacote_horas: String(horasEfetivas),
     preco_mensalidade: precoFinal ? fmt(precoFinal) + '/mês' : 'Sob consulta',
-    fee_manutencao:
-      state.integKey === 'todos' ? 'Ver proposta' : integ.fee > 0 ? fmt(integ.fee) + '/mês' : 'Não incluso',
+    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
     preco_whatsapp:
       state.whatsAtivo && state.whatsUsers > 0
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
         : 'Não incluso',
-    total_geral_mes: precoFinal != null ? fmt(precoFinal + whatsTotal + (integ.fee || 0)) + '/mês' : 'Sob consulta',
-    detalhe_desconto: 'Preço padrão', // Valores fixos — desconto removido da UI
-    preco_setup:
-      state.integKey === 'todos'
-        ? 'Ver proposta'
-        : integ.setup != null
-          ? integ.setup === 0
-            ? 'Gratuito'
-            : fmt(integ.setup)
-          : 'Sob consulta',
-    descricao_setup: integ.descricao,
+    total_geral_mes: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta',
+    detalhe_desconto: 'Preço padrão',
+    preco_setup: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    descricao_setup: descSetup,
     vendedor_nome: currentUser.nome,
     vendedor_email: currentUser.email,
     vendedor_telefone: currentUser.telefone || '',
     vendedor_cidade: currentUser.cidade || '',
-    desconto_pct: 0, // Valor fixo — desconto removido da UI
+    desconto_pct: 0,
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
     validade_proposta: fmtD(val),
     tipo_proposta: 'novo',
-    plano_integracao: state.integKey,
-    preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : 'R$ 1.200',
-    total_avancado: precoFinal != null ? fmt(precoFinal + 499 + whatsTotal) + '/mês' : 'Sob consulta'
+    plano_integracao: 'modular',
+    integ_regras: state.integRegras,
+    integ_pipelines: state.integPipelines,
+    integ_tarefas: state.integTarefas,
+    integ_campos: state.integCampos,
+    integ_voip: state.integVoip || 'Sem VOIP',
+    mrr_integracao: mrrInteg,
+    mrr_adicionais: mrrAdicionais,
+    adicionais_ativos: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
+    preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : fmt(getIntegPrecos().crm_personalizado_setup),
+    total_avancado: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta'
   }
   const colored = JSON.stringify(data, null, 2)
     .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
@@ -1997,7 +2106,12 @@ function resetState() {
     crm: '',
     contatoNome: '',
     contatoEmail: '',
-    integKey: 'basico',
+    integRegras: false,
+    integPipelines: 0,
+    integTarefas: false,
+    integCampos: 0,
+    integVoip: '',
+    adicionais: {},
     whatsAtivo: true,
     whatsUsers: 5
   }
@@ -2008,10 +2122,18 @@ function resetState() {
   document.getElementById('crm').value = ''
   document.getElementById('horas-input').value = '300'
   document.getElementById('whats-users').value = '5'
-  document.querySelectorAll('.integ-card').forEach((c, i) => c.classList.toggle('active', i === 0))
-  document.getElementById('integ-modo-esp')?.classList.add('active')
-  document.getElementById('integ-modo-todos')?.classList.remove('active')
-  document.getElementById('integ-cards-wrap')?.style.setProperty('display', '')
+  /* Reset modular integration controls */
+  document.getElementById('integ-regras-nao')?.classList.add('active')
+  document.getElementById('integ-regras-sim')?.classList.remove('active')
+  document.getElementById('integ-tarefas-nao')?.classList.add('active')
+  document.getElementById('integ-tarefas-sim')?.classList.remove('active')
+  const pipEl = document.getElementById('integ-pipelines')
+  if (pipEl) pipEl.value = '0'
+  const camposEl = document.getElementById('integ-campos')
+  if (camposEl) camposEl.value = '0'
+  const voipEl = document.getElementById('integ-voip')
+  if (voipEl) voipEl.value = ''
+  renderAdicionaisProposal()
   document.getElementById('whats-sim').classList.add('active')
   document.getElementById('whats-nao').classList.remove('active')
   document.getElementById('whats-users-wrap').style.display = 'flex'
@@ -2107,31 +2229,24 @@ function setDiag(key, val) {
   document.getElementById('diag-campos-sub')?.style.setProperty('display', stateBase.diag.campos ? 'block' : 'none')
   updateBase()
 }
-function setIntegModo(modo, mod = 'novo') {
+function setBaseIntegModo(modo) {
   const isTodos = modo === 'todos'
-  const p = getPrefix(mod)
-  const s = getState(mod)
-  const espId = p + 'integ-modo-esp'
-  const todosId = p + 'integ-modo-todos'
-  const wrapId = mod === 'novo' ? 'integ-cards-wrap' : 'base-integ-btns'
-  document.getElementById(espId).classList.toggle('active', !isTodos)
-  document.getElementById(todosId).classList.toggle('active', isTodos)
-  const wrapEl = document.getElementById(wrapId)
+  document.getElementById('base-integ-modo-esp').classList.toggle('active', !isTodos)
+  document.getElementById('base-integ-modo-todos').classList.toggle('active', isTodos)
+  const wrapEl = document.getElementById('base-integ-btns')
   if (wrapEl) wrapEl.style.display = isTodos ? 'none' : ''
   if (isTodos) {
-    if (s.integKey !== 'todos') s._prevIntegKey = s.integKey
-    s.integKey = 'todos'
+    if (stateBase.integKey !== 'todos') stateBase._prevIntegKey = stateBase.integKey
+    stateBase.integKey = 'todos'
   } else {
-    s.integKey = s._prevIntegKey || 'basico'
-    const selector = mod === 'novo' ? '.integ-card' : '#base-integ-btns .integ-btn'
-    document.querySelectorAll(selector).forEach((c) => {
+    stateBase.integKey = stateBase._prevIntegKey || 'basico'
+    document.querySelectorAll('#base-integ-btns .integ-btn').forEach((c) => {
       const k = c.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
-      c.classList.toggle('active', k === s.integKey)
+      c.classList.toggle('active', k === stateBase.integKey)
     })
   }
-  mod === 'novo' ? update() : updateBase()
+  updateBase()
 }
-function setBaseIntegModo(modo) { setIntegModo(modo, 'base'); }
 
 function updateBase() {
   stateBase.empresa = document.getElementById('base-empresa')?.value.trim() || ''
@@ -2474,6 +2589,9 @@ function getWebhookHeaders() {
 }
 function initConfig() {
   renderCrmListConfig()
+  renderVoipListConfig()
+  renderIntegPrecosConfig()
+  renderAdicionaisConfig()
   const cfg = loadConfig()
   document.getElementById('cfg-supabase-url').value = cfg.supabaseUrl || ''
   document.getElementById('cfg-supabase-key').value = cfg.supabaseKey || ''
@@ -2738,6 +2856,280 @@ function removerCrm(idx) {
   renderCrmListConfig()
   populateCrmDropdowns()
   showToast('CRM removido.', 'success')
+}
+
+/* ════════════════════════════════════════
+   VOIP LIST
+════════════════════════════════════════ */
+const VOIP_DEFAULT = [
+  'Api4com',
+  'HubSpot (calls API)',
+  'Zenvia Voice',
+  'Meetime',
+  'Gravador VMC / Webex (Addiante)',
+  'GoTo Connect',
+  'Vono',
+  'Zadarma',
+  'UsCall',
+  'Nvoip',
+  'MBM PABX',
+  'Simples IP'
+]
+const VOIP_LIST_KEY = 'salesbud_voip_list'
+function getVoipList() {
+  try {
+    const raw = localStorage.getItem(VOIP_LIST_KEY)
+    return raw ? JSON.parse(raw) : [...VOIP_DEFAULT]
+  } catch {
+    return [...VOIP_DEFAULT]
+  }
+}
+function saveVoipList(list) {
+  try { localStorage.setItem(VOIP_LIST_KEY, JSON.stringify(list)) } catch {}
+  if (supabaseClient) {
+    supabaseClient
+      .from('configuracoes')
+      .upsert({ chave: 'voip_list', valor: list }, { onConflict: 'chave' })
+      .then(({ error }) => { if (error) console.warn('saveVoipList Supabase:', error.message) })
+      .catch((e) => console.warn('saveVoipList Supabase:', e.message))
+  }
+}
+async function syncVoipFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'voip_list')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && Array.isArray(data.valor) && data.valor.length > 0) {
+      try { localStorage.setItem(VOIP_LIST_KEY, JSON.stringify(data.valor)) } catch {}
+    }
+  } catch (e) {
+    console.warn('syncVoipFromSupabase:', e.message)
+  }
+}
+function renderVoipListConfig() {
+  const el = document.getElementById('cfg-voip-list')
+  if (!el) return
+  const list = getVoipList()
+  el.innerHTML = list
+    .map((v, i) => {
+      const isDef = VOIP_DEFAULT.includes(v)
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px;color:var(--navy)"><span>${esc(v)}</span>${isDef ? '<span style="font-size:11px;color:var(--text3);font-weight:500">padrão</span>' : `<button onclick="removerVoip(${i})" style="font-size:11px;padding:2px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer">rem</button>`}</div>`
+    })
+    .join('')
+}
+function adicionarVoip() {
+  const inp = document.getElementById('cfg-voip-input')
+  if (!inp) return
+  const nome = inp.value.trim()
+  if (!nome) {
+    showToast('Digite o nome do VOIP.', 'info')
+    return
+  }
+  const list = getVoipList()
+  if (list.some((v) => v.toLowerCase() === nome.toLowerCase())) {
+    showToast('VOIP já existe na lista.', 'info')
+    return
+  }
+  list.push(nome)
+  saveVoipList(list)
+  inp.value = ''
+  renderVoipListConfig()
+  showToast('VOIP adicionado.', 'success')
+}
+function removerVoip(idx) {
+  const list = getVoipList()
+  if (VOIP_DEFAULT.includes(list[idx])) {
+    showToast('VOIPs padrão não podem ser removidos.', 'info')
+    return
+  }
+  list.splice(idx, 1)
+  saveVoipList(list)
+  renderVoipListConfig()
+  showToast('VOIP removido.', 'success')
+}
+
+/* ════════════════════════════════════════
+   INTEGRACAO PRECOS
+════════════════════════════════════════ */
+const INTEG_PRECOS_DEFAULT = {
+  crm_personalizado_setup: 600,
+  personalizacao_regras_setup: 900,
+  pipeline_adicional_setup: 400,
+  tarefas_auto_setup: 100,
+  tarefas_auto_mrr: 50,
+  campos_custom_bloco: 5,
+  campos_custom_setup_por_bloco: 100,
+  campos_custom_mrr_por_bloco: 100
+}
+let _integPrecos = null
+const INTEG_PRECOS_KEY = 'salesbud_integ_precos'
+function getIntegPrecos() {
+  if (_integPrecos) return _integPrecos
+  try {
+    const s = JSON.parse(localStorage.getItem(INTEG_PRECOS_KEY) || 'null')
+    if (s && typeof s === 'object') { _integPrecos = { ...INTEG_PRECOS_DEFAULT, ...s }; return _integPrecos }
+  } catch {}
+  _integPrecos = { ...INTEG_PRECOS_DEFAULT }
+  return _integPrecos
+}
+async function syncIntegPrecosFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'integracao_precos')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && typeof data.valor === 'object') {
+      _integPrecos = { ...INTEG_PRECOS_DEFAULT, ...data.valor }
+      try { localStorage.setItem(INTEG_PRECOS_KEY, JSON.stringify(_integPrecos)) } catch {}
+    }
+  } catch (e) {
+    console.warn('syncIntegPrecosFromSupabase:', e.message)
+  }
+}
+async function salvarIntegPrecos() {
+  if (currentUser?.perfil !== 'admin') { showToast('Apenas administradores.', 'info'); return }
+  const p = getIntegPrecos()
+  const fields = ['crm_personalizado_setup', 'personalizacao_regras_setup', 'pipeline_adicional_setup', 'tarefas_auto_setup', 'tarefas_auto_mrr', 'campos_custom_bloco', 'campos_custom_setup_por_bloco', 'campos_custom_mrr_por_bloco']
+  fields.forEach((f) => {
+    const el = document.getElementById('cfg-ip-' + f)
+    if (el) p[f] = parseInt(el.value) || 0
+  })
+  _integPrecos = p
+  try { localStorage.setItem(INTEG_PRECOS_KEY, JSON.stringify(p)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('configuracoes').upsert({ chave: 'integracao_precos', valor: p }, { onConflict: 'chave' })
+      showToast('Preços de integração salvos.', 'success')
+    } catch (e) {
+      console.warn('salvarIntegPrecos:', e.message)
+      showToast('Salvos localmente. Falha ao sincronizar.', 'info')
+    }
+  } else { showToast('Salvos localmente.', 'info') }
+}
+async function resetarIntegPrecos() {
+  if (!confirm('Restaurar preços de integração padrão?')) return
+  _integPrecos = { ...INTEG_PRECOS_DEFAULT }
+  try { localStorage.setItem(INTEG_PRECOS_KEY, JSON.stringify(_integPrecos)) } catch {}
+  if (supabaseClient) {
+    try { await supabaseClient.from('configuracoes').upsert({ chave: 'integracao_precos', valor: _integPrecos }, { onConflict: 'chave' }) } catch (e) { console.warn('resetarIntegPrecos:', e.message) }
+  }
+  renderIntegPrecosConfig()
+  showToast('Preços restaurados.', 'success')
+}
+function renderIntegPrecosConfig() {
+  const p = getIntegPrecos()
+  const labels = {
+    crm_personalizado_setup: 'CRM Personalizado — Setup',
+    personalizacao_regras_setup: 'Personalização Regras — Setup',
+    pipeline_adicional_setup: 'Pipeline Adicional — Setup (cada)',
+    tarefas_auto_setup: 'Tarefas Automáticas — Setup',
+    tarefas_auto_mrr: 'Tarefas Automáticas — MRR/mês',
+    campos_custom_bloco: 'Campos Personalizados — Bloco (qtd)',
+    campos_custom_setup_por_bloco: 'Campos Personalizados — Setup/bloco',
+    campos_custom_mrr_por_bloco: 'Campos Personalizados — MRR/bloco'
+  }
+  const el = document.getElementById('cfg-integ-precos-grid')
+  if (!el) return
+  el.innerHTML = Object.keys(labels).map((k) =>
+    `<div><label class="field-label">${labels[k]}</label><input type="number" class="field-input" id="cfg-ip-${k}" value="${p[k]}" min="0" style="margin-top:4px" /></div>`
+  ).join('')
+}
+
+/* ════════════════════════════════════════
+   ADICIONAIS OPCIONAIS
+════════════════════════════════════════ */
+const ADICIONAIS_DEFAULT = {
+  contas_enriquecimento: { label: 'Contas - Enriquecimento', mrr: 0, ativo: false },
+  chat_com_bud: { label: 'Chat com Bud', mrr: 0, ativo: false }
+}
+let _adicionaisConfig = null
+const ADICIONAIS_KEY = 'salesbud_adicionais'
+function getAdicionaisConfig() {
+  if (_adicionaisConfig) return _adicionaisConfig
+  try {
+    const s = JSON.parse(localStorage.getItem(ADICIONAIS_KEY) || 'null')
+    if (s && typeof s === 'object') {
+      const merged = {}
+      for (const k of Object.keys(ADICIONAIS_DEFAULT)) {
+        merged[k] = s[k] ? { ...ADICIONAIS_DEFAULT[k], ...s[k] } : { ...ADICIONAIS_DEFAULT[k] }
+      }
+      for (const k of Object.keys(s)) {
+        if (!merged[k]) merged[k] = s[k]
+      }
+      _adicionaisConfig = merged
+      return merged
+    }
+  } catch {}
+  _adicionaisConfig = JSON.parse(JSON.stringify(ADICIONAIS_DEFAULT))
+  return _adicionaisConfig
+}
+async function syncAdicionaisFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'adicionais_config')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && typeof data.valor === 'object') {
+      _adicionaisConfig = null
+      try { localStorage.setItem(ADICIONAIS_KEY, JSON.stringify(data.valor)) } catch {}
+      _adicionaisConfig = null
+      getAdicionaisConfig()
+    }
+  } catch (e) {
+    console.warn('syncAdicionaisFromSupabase:', e.message)
+  }
+}
+async function salvarAdicionais() {
+  if (currentUser?.perfil !== 'admin') { showToast('Apenas administradores.', 'info'); return }
+  const cfg = getAdicionaisConfig()
+  for (const k of Object.keys(cfg)) {
+    const mrrEl = document.getElementById('cfg-adic-mrr-' + k)
+    const ativoEl = document.getElementById('cfg-adic-ativo-' + k)
+    if (mrrEl) cfg[k].mrr = parseInt(mrrEl.value) || 0
+    if (ativoEl) cfg[k].ativo = ativoEl.checked
+  }
+  _adicionaisConfig = cfg
+  try { localStorage.setItem(ADICIONAIS_KEY, JSON.stringify(cfg)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('configuracoes').upsert({ chave: 'adicionais_config', valor: cfg }, { onConflict: 'chave' })
+      showToast('Adicionais salvos.', 'success')
+    } catch (e) {
+      console.warn('salvarAdicionais:', e.message)
+      showToast('Salvos localmente. Falha ao sincronizar.', 'info')
+    }
+  } else { showToast('Salvos localmente.', 'info') }
+}
+async function resetarAdicionais() {
+  if (!confirm('Restaurar adicionais padrão?')) return
+  _adicionaisConfig = JSON.parse(JSON.stringify(ADICIONAIS_DEFAULT))
+  try { localStorage.setItem(ADICIONAIS_KEY, JSON.stringify(_adicionaisConfig)) } catch {}
+  if (supabaseClient) {
+    try { await supabaseClient.from('configuracoes').upsert({ chave: 'adicionais_config', valor: _adicionaisConfig }, { onConflict: 'chave' }) } catch (e) { console.warn('resetarAdicionais:', e.message) }
+  }
+  renderAdicionaisConfig()
+  showToast('Adicionais restaurados.', 'success')
+}
+function renderAdicionaisConfig() {
+  const el = document.getElementById('cfg-adicionais-grid')
+  if (!el) return
+  const cfg = getAdicionaisConfig()
+  el.innerHTML = Object.entries(cfg).map(([k, v]) =>
+    `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)">` +
+    `<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="cfg-adic-ativo-${k}" ${v.ativo ? 'checked' : ''} style="accent-color:var(--pink);width:16px;height:16px" /><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(v.label)}</span></label>` +
+    `<div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:var(--text3)">MRR</span><input type="number" id="cfg-adic-mrr-${k}" value="${v.mrr}" min="0" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy);text-align:right" /><span style="font-size:11px;color:var(--text3)">/mês</span></div>` +
+    `</div>`
+  ).join('')
 }
 
 /* ════════════════════════════════════════
