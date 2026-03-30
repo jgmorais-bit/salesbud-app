@@ -444,6 +444,29 @@
             </div>
           </div>
 
+          <!-- Calcular Horas para Upsell/Crossell -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Calcular Horas para Upsell/Crossell</div>
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuarios</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label class="field-label" style="font-size:10.5px">Usuarios</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Dias uteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
+                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 x 2h x 22 dias</div>
+                </div>
+                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
+              </div>
+            </div>
+            <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
+            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
+          </div>
+
           <!-- 4. Diagnóstico -->
           <div class="card" style="margin-bottom:16px">
             <div class="card-title">Diagnóstico</div>
@@ -562,30 +585,7 @@
             <div id="base-delta-card" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(251,36,145,.08);border:1.5px solid rgba(251,36,145,.15);font-size:13px;font-weight:700;color:var(--pink);text-align:center"></div>
           </div>
 
-          <!-- 3. Calcular Horas -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Calcular Horas</div>
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
-              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuários</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-                <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-                <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
-                <div>
-                  <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
-                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
-                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 × 2h × 22 dias</div>
-                </div>
-                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
-              </div>
-            </div>
-            <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
-            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
-          </div>
-
-          <!-- 4. Pacote Proposto -->
+          <!-- 3. Pacote Proposto -->
           <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
             <div id="base-pacote-card" style="background:var(--navy);padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
               <div>
@@ -601,6 +601,16 @@
                 <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header">Total c/ WhatsApp</div>
                 <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">—</div>
               </div>
+            </div>
+          </div>
+
+          <!-- Breakdown -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Breakdown</div>
+            <div id="base-price-rows"></div>
+            <div id="base-scope-section" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Escopo da integração</div>
+              <div id="base-scope-items"></div>
             </div>
           </div>
 

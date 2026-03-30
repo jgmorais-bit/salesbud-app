@@ -2378,14 +2378,15 @@ function updateBase() {
   const precoBase = r.precoEfetivo,
     precoFinal = precoBase
   const isTodosBase = stateBase.integKey === 'todos'
-  let setupTotal = 0, mrrInteg = 0, blocosC = 0
+  let setupTotal = 0, mrrInteg = 0, blocosC = 0, setupCrm = 0, setupRegras = 0, setupPipelines = 0, setupTarefas = 0, setupCampos = 0, mrrTarefas = 0, mrrCampos = 0
   if (isTodosBase) {
     // "Todos os planos" mode — no individual pricing
   } else {
     const calc = calcIntegModular(stateBase)
-    setupTotal = calc.setupTotal
-    mrrInteg = calc.mrrInteg
-    blocosC = calc.blocosC
+    setupTotal = calc.setupTotal; mrrInteg = calc.mrrInteg; blocosC = calc.blocosC
+    setupCrm = calc.setupCrm; setupRegras = calc.setupRegras; setupPipelines = calc.setupPipelines
+    setupTarefas = calc.setupTarefas; setupCampos = calc.setupCampos
+    mrrTarefas = calc.mrrTarefas; mrrCampos = calc.mrrCampos
     // RD Station nota
     const notaRd = document.getElementById('base-integ-nota-rd')
     if (notaRd) notaRd.style.display = calc.isRd && stateBase.integCampos > 0 ? 'block' : 'none'
@@ -2460,6 +2461,60 @@ function updateBase() {
       dc.innerHTML = `<span style="font-size:15px;font-weight:800">${s}${fmt(dv)}/mês</span><span style="font-size:11px;font-weight:600;opacity:.7;margin-left:8px">(${s}${p}% vs atual)</span>`
     }
   } else if (cc) cc.style.display = 'none'
+  /* BREAKDOWN */
+  {
+    let bhtml = ''
+    if (precoBase)
+      bhtml += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`
+    if (mrrInteg > 0)
+      bhtml += `<div class="price-row"><span class="price-row-label">Integração</span><span class="price-row-val amber">${fmt(mrrInteg)}/mês</span></div>`
+    if (mrrAdicionais > 0) {
+      for (const [k, v] of Object.entries(adicResult.cfg)) {
+        if (v.ativo && v.mrr > 0 && stateBase.adicionais[k])
+          bhtml += `<div class="price-row"><span class="price-row-label">${esc(v.label)}</span><span class="price-row-val green">${fmt(v.mrr)}/mês</span></div>`
+      }
+    }
+    const mensalSB = precoFinal + mrrInteg + mrrAdicionais
+    if (mensalSB && (mrrInteg > 0 || mrrAdicionais > 0 || whatsTotal > 0))
+      bhtml += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`
+    if (whatsTotal > 0)
+      bhtml += `<div class="price-row"><span class="price-row-label">WhatsApp (${stateBase.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`
+    if (totalMensal) {
+      const sepStyle = 'border-top:2px solid var(--navy);margin-top:4px'
+      if (whatsTotal > 0) {
+        bhtml += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`
+        bhtml += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalMensal)}/mês</span></div>`
+      } else {
+        bhtml += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalMensal)}/mês</span></div>`
+      }
+    }
+    if (!isTodosBase && setupTotal > 0)
+      bhtml += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantação · pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(setupTotal)}</span></div>`
+    const bRows = document.getElementById('base-price-rows')
+    if (bRows) bRows.innerHTML = bhtml
+    /* Scope */
+    const bScope = document.getElementById('base-scope-section')
+    const bItems = document.getElementById('base-scope-items')
+    if (bScope && bItems && !isTodosBase) {
+      const scopeParts = []
+      if (setupCrm > 0) scopeParts.push('Setup CRM personalizado: ' + fmt(setupCrm))
+      if (stateBase.integRegras) scopeParts.push('Personalização de regras: ' + fmt(setupRegras) + ' setup')
+      if (stateBase.integPipelines > 0) scopeParts.push(stateBase.integPipelines + ' pipeline(s) adicional(is): ' + fmt(setupPipelines) + ' setup')
+      if (stateBase.integTarefas) scopeParts.push('Tarefas automáticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mês')
+      if (stateBase.integCampos > 0) scopeParts.push(stateBase.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mês')
+      if (stateBase.integVoip && stateBase.integVoip !== '_outro') scopeParts.push('VOIP: ' + stateBase.integVoip + ' (incluso)')
+      else if (stateBase.integVoip === '_outro') scopeParts.push('VOIP: não-listado (consultar)')
+      if (scopeParts.length) {
+        bScope.style.display = 'block'
+        bItems.innerHTML = scopeParts.map((s) => `<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('')
+      } else { bScope.style.display = 'none' }
+    } else if (bScope) {
+      if (isTodosBase) {
+        bScope.style.display = 'block'
+        bItems.innerHTML = '<div class="scope-item"><div class="scope-dot"></div><span>Plano de integração a definir com o cliente</span></div>'
+      } else { bScope.style.display = 'none' }
+    }
+  }
   renderDiagTags()
   document.getElementById('base-premium-alert').style.display = 'none'
   renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC)
