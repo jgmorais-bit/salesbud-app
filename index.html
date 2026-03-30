@@ -205,7 +205,7 @@
               </div>
             </div>
             <div class="field-row" style="margin-top:14px">
-              <label class="field-label">CRM atual <span style="color:var(--pink)">*</span> <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">CRM Nativo (HubSpot, Pipedrive, RD Station): setup gratuito, 1 pipeline incluso. CRM Personalizado (qualquer outro CRM com API aberta): setup pago. Em caso de duvidas sobre possibilidade de integracao, valide com o time de Servicos antes de fechar proposta.</div></span></label>
+              <label class="field-label">CRM atual <span style="color:var(--pink)">*</span> <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">CRM Nativo: HubSpot, Pipedrive ou RD Station -- setup gratuito, 1 pipeline incluido. Qualquer outro CRM com API aberta e considerado personalizado -- setup R$ 600. Duvidas sobre integracao? Valide com o time de Servicos antes de fechar.</div></span></label>
               <select class="field-select" id="crm" onchange="update()">
                 <option value="">Selecione o CRM</option>
               </select>
@@ -275,20 +275,20 @@
             </details>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Personalizacao de Regras de Negocio <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box" id="tip-regras">Integracao default -- envio do resumo da reuniao para o campo de notas do negocio mais recente do contato ou empresa encontrado na reuniao.</div></span></label>
+              <label class="field-label">Personalizacao de Regras de Negocio</label>
               <div class="toggle-row">
-                <button class="toggle-btn active" id="integ-regras-nao" onclick="toggleIntegRegras(false)">Padrao</button>
-                <button class="toggle-btn" id="integ-regras-sim" onclick="toggleIntegRegras(true)">Personalizada</button>
+                <button class="toggle-btn active" id="integ-regras-nao" onclick="toggleIntegRegras(false)">Padrao <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Integracao default do CRM. Contempla o envio do resumo da reuniao para o campo de notas do negocio mais recente do contato ou empresa encontrado na reuniao. Para CRMs nao-nativos, esta mesma regra e considerada padrao. Sem custo adicional.</div></span></button>
+                <button class="toggle-btn" id="integ-regras-sim" onclick="toggleIntegRegras(true)">Personalizada <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Personalizacao de regras de negocio (setup R$ 900). Inclui: match de reunioes por titulo ou link; integracao com outros objetos alem de notas (ex: Atividades); envio de template de WhatsApp para outros objetos; escolha entre oportunidade aberta ou fechada. Personalizacoes fora deste escopo devem ser validadas com o time de Servicos.</div></span></button>
               </div>
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Pipelines adicionais <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Cada pipeline adicional alem do primeiro ja incluido. Exemplo: separar pipelines de SDR e Closer em fluxos distintos.</div></span></label>
+              <label class="field-label">Pipelines adicionais <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Cada pipeline adicional alem do primeiro incluido no plano. Exemplo: se o cliente precisa separar SDR e Closer em pipelines diferentes, sao pipelines adicionais. Setup R$ 400 cada.</div></span></label>
               <input type="number" class="field-input" id="integ-pipelines" value="0" min="0" max="10" oninput="update()" style="width:80px" />
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Tarefas Automaticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Criacao automatica de tarefa de proximos passos no negocio, a partir dos pontos discutidos na reuniao. Inclui setup unico + mensalidade mensal.</div></span></label>
+              <label class="field-label">Tarefas Automaticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Cria automaticamente uma tarefa de proximos passos no negocio do CRM, com base no que foi discutido na reuniao. Setup R$ 100 + R$ 50/mes.</div></span></label>
               <div class="toggle-row">
                 <button class="toggle-btn active" id="integ-tarefas-nao" onclick="toggleIntegTarefas(false)">Nao</button>
                 <button class="toggle-btn" id="integ-tarefas-sim" onclick="toggleIntegTarefas(true)">Sim</button>
@@ -296,13 +296,13 @@
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Campos Personalizados (quantidade) <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Campos preenchidos automaticamente por IA com base nas informacoes ditas durante a call. Cobrados em blocos de 5 campos. A descricao de cada campo e a expectativa de preenchimento deve ser definida pelo time de CS antes da integracao. Nota: clientes RD Station com integracao nativa nao pagam por campos personalizados (realizados via produto, em tela).</div></span></label>
+              <label class="field-label">Campos Personalizados (quantidade) <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Campos preenchidos automaticamente pela IA da Salesbud, a partir do que foi dito na call. Cobrados em blocos de 5 campos (setup R$ 100 + R$ 100/mes por bloco). Exemplo: 10 campos = 2 blocos = R$ 200 setup + R$ 200/mes. Nota: clientes RD Station com integracao nativa sao isentos deste custo.</div></span></label>
               <input type="number" class="field-input" id="integ-campos" value="0" min="0" max="50" step="5" oninput="update()" style="width:80px" />
               <div class="integ-nota-rd" id="integ-nota-rd">Campos personalizados isentos para RD Station (realizados via produto, em tela)</div>
             </div>
 
             <div class="field-row">
-              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIPs listados sao inclusos sem custo adicional de setup -- a cobranca vem na quantidade de horas adicionadas ao pacote. VOIPs nao-listados devem ser consultados com o time de Servicos e tem custo de setup.</div></span></label>
+              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIPs da lista sao inclusos -- sem custo adicional de setup. A cobranca vem nas horas do pacote. VOIPs fora da lista precisam ser consultados com o time de Servicos e podem ter custo de setup.</div></span></label>
               <select class="field-input" id="integ-voip" onchange="update()">
                 <option value="">Sem VOIP</option>
               </select>
