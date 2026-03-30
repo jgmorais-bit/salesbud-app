@@ -464,28 +464,71 @@
             <div class="diag-row" style="margin-top:12px"><span class="diag-label">Dev / customização?</span><div class="toggle-row"><button class="toggle-btn" id="diag-extras-sim" onclick="setDiag('extras',true)">Sim</button><button class="toggle-btn active" id="diag-extras-nao" onclick="setDiag('extras',false)">Não</button></div></div>
           </div>
 
-          <!-- 5. Adicionais -->
-          <div class="card" style="margin-bottom:16px">
+          <!-- Proposta de Upsell -->
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title">Integração CRM</div>
+
+            <div style="display:flex;gap:6px;margin-bottom:12px">
+              <button class="toggle-btn active" id="base-integ-modo-esp" onclick="setBaseIntegModo('especifico')" style="font-size:12px;padding:5px 10px">Plano específico</button>
+              <button class="toggle-btn" id="base-integ-modo-todos" onclick="setBaseIntegModo('todos')" style="font-size:12px;padding:5px 10px">Todos os planos</button>
+            </div>
+
+            <div id="base-integ-modular">
+              <div class="field-row" style="margin-bottom:10px">
+                <label class="field-label">Preenchimento Automático de CRM</label>
+                <div class="toggle-row">
+                  <button class="toggle-btn active" id="base-integ-regras-nao" onclick="toggleBaseIntegRegras(false)">Padrão <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Integração Padrão: Envio automático do resumo da reunião para o campo de notas do negócio mais recente no CRM, seguindo o template utilizado pelo cliente dentro do aplicativo Salesbud.<br><br>Essa é a regra padrão para todos os CRMs — nativos ou personalizados. Sem custo adicional.</div></span></button>
+                  <button class="toggle-btn" id="base-integ-regras-sim" onclick="toggleBaseIntegRegras(true)">Personalizada <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Personalização de Regras de Negócio (setup R$ 900) - Inclui personalizações como:<br><br>&#8226; Match de reuniões por título ou link;<br>&#8226; Integração com outros objetos além de notas (ex.: Atividades);<br>&#8226; Envio de template de WhatsApp para outros objetos;<br>&#8226; Escolha entre enviar para oportunidade aberta ou fechada.<br><br>Personalizações fora desse escopo devem ser validadas com o time de Serviços.</div></span></button>
+                </div>
+              </div>
+
+              <div class="field-row" style="margin-bottom:10px">
+                <label class="field-label">Pipelines adicionais <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Pipelines Adicionais (setup R$ 400 por pipeline): O primeiro pipeline já está incluído. Cada pipeline adicional serve para separar fluxos distintos — por exemplo, um pipeline para SDR e outro para Closer.</div></span></label>
+                <input type="number" class="field-input" id="base-integ-pipelines" value="0" min="0" max="10" oninput="updateBase()" style="width:80px" />
+              </div>
+
+              <div class="field-row" style="margin-bottom:10px">
+                <label class="field-label">Tarefas Automáticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Tarefas Automáticas (setup R$ 100 + R$ 50/mês): A Salesbud cria automaticamente uma tarefa de próximos passos no negócio do CRM, com base nos pontos discutidos na reunião.</div></span></label>
+                <div class="toggle-row">
+                  <button class="toggle-btn active" id="base-integ-tarefas-nao" onclick="toggleBaseIntegTarefas(false)">Não</button>
+                  <button class="toggle-btn" id="base-integ-tarefas-sim" onclick="toggleBaseIntegTarefas(true)">Sim</button>
+                </div>
+              </div>
+
+              <div class="field-row" style="margin-bottom:10px">
+                <label class="field-label">Campos Personalizados (quantidade) <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Campos Personalizados (R$ 100 de setup + R$ 100/mês a cada 5 campos):<br><br>Campos preenchidos automaticamente pela IA da Salesbud, com base no que foi dito na reunião. A cobrança é por blocos de 5 campos:<br><br>&#8226; 5 campos = R$ 100 de setup + R$ 100/mês<br>&#8226; 10 campos = R$ 200 de setup + R$ 200/mês<br>&#8226; 15 campos = R$ 300 de setup + R$ 300/mês<br><br>Clientes RD Station com integração nativa são isentos dessa cobrança — os campos devem ser configurados via produto, em tela.</div></span></label>
+                <input type="number" class="field-input" id="base-integ-campos" value="0" min="0" max="50" step="5" oninput="updateBase()" style="width:80px" />
+                <div class="integ-nota-rd" id="base-integ-nota-rd">Campos personalizados isentos para RD Station (realizados via produto, em tela)</div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a analise de viabilidade.</div></span></label>
+                <select class="field-input" id="base-integ-voip" onchange="updateBase()">
+                  <option value="">Sem VOIP</option>
+                </select>
+                <div id="base-integ-voip-tag" style="display:none;margin-top:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="base-card-adicionais" style="display:none;margin-bottom:14px">
             <div class="card-title">Adicionais</div>
+            <div id="base-adicionais-toggles"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title">WhatsApp</div>
             <div class="field-row">
-              <label class="field-label">Adicionar WhatsApp?</label>
-              <div class="toggle-row"><button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button><button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button></div>
+              <label class="field-label">Incluir WhatsApp?</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button>
+                <button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button>
+              </div>
             </div>
             <div id="base-whats-wrap" class="field-row">
-              <label class="field-label">Usuários WhatsApp</label>
+              <label class="field-label">Número de usuários WhatsApp</label>
               <input type="number" class="field-input" id="base-whats-users" value="5" min="1" max="200" oninput="updateBase()" />
-            </div>
-            <div class="field-row" style="margin-top:14px">
-              <label class="field-label">Integração CRM</label>
-              <div style="display:flex;gap:6px;margin-bottom:8px">
-                <button class="toggle-btn active" id="base-integ-modo-esp" onclick="setBaseIntegModo('especifico')" style="font-size:12px;padding:5px 10px">Plano específico</button>
-                <button class="toggle-btn" id="base-integ-modo-todos" onclick="setBaseIntegModo('todos')" style="font-size:12px;padding:5px 10px">Todos os planos</button>
-              </div>
-              <div class="integ-btns" id="base-integ-btns">
-                <button class="integ-btn active" onclick="selectBaseInteg('basico',this)">Básico<span>Grátis</span></button>
-                <button class="integ-btn" onclick="selectBaseInteg('intermediario',this)">Intermediário<span>R$ 1.200</span></button>
-                <button class="integ-btn" onclick="selectBaseInteg('avancado',this)">Avançado<span>R$ 3.000 + R$ 499/mês</span></button>
-              </div>
+              <div id="base-whats-faixas-display" style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px"></div>
             </div>
           </div>
 

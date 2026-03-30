@@ -1609,12 +1609,6 @@ let state = {
   whatsAtivo: true,
   whatsUsers: 5
 }
-function selectBaseInteg(key, el) {
-  stateBase.integKey = key
-  document.querySelectorAll('#base-integ-btns .integ-btn').forEach((c) => c.classList.remove('active'))
-  el.classList.add('active')
-  updateBase()
-}
 function toggleIntegRegras(val) {
   state.integRegras = val
   document.getElementById('integ-regras-sim').classList.toggle('active', val)
@@ -1666,6 +1660,58 @@ function toggleWhats(val, mod = 'novo') {
   mod === 'novo' ? update() : updateBase()
 }
 function toggleBaseWhats(val) { toggleWhats(val, 'base'); }
+function toggleBaseIntegRegras(val) {
+  stateBase.integRegras = val
+  document.getElementById('base-integ-regras-sim').classList.toggle('active', val)
+  document.getElementById('base-integ-regras-nao').classList.toggle('active', !val)
+  updateBase()
+}
+function toggleBaseIntegTarefas(val) {
+  stateBase.integTarefas = val
+  document.getElementById('base-integ-tarefas-sim').classList.toggle('active', val)
+  document.getElementById('base-integ-tarefas-nao').classList.toggle('active', !val)
+  updateBase()
+}
+function toggleBaseAdicional(key, val) {
+  stateBase.adicionais[key] = val
+  document.getElementById('base-adic-' + key + '-sim')?.classList.toggle('active', val)
+  document.getElementById('base-adic-' + key + '-nao')?.classList.toggle('active', !val)
+  updateBase()
+}
+function renderBaseAdicionaisProposal() {
+  const cfg = getAdicionaisConfig()
+  const ativos = Object.entries(cfg).filter(([k, v]) => v.ativo && v.mrr > 0)
+  const card = document.getElementById('base-card-adicionais')
+  const container = document.getElementById('base-adicionais-toggles')
+  if (!card || !container) return
+  if (!ativos.length) { card.style.display = 'none'; return }
+  card.style.display = 'block'
+  container.innerHTML = ativos.map(([k, v]) => {
+    const isOn = stateBase.adicionais[k] || false
+    return `<div class="field-row" style="margin-bottom:8px"><label class="field-label">${esc(v.label)} <span style="font-size:12px;font-weight:600;color:var(--pink)">${fmt(v.mrr)}/mês</span></label><div class="toggle-row"><button class="toggle-btn ${isOn ? '' : 'active'}" id="base-adic-${k}-nao" onclick="toggleBaseAdicional('${k}',false)">Não</button><button class="toggle-btn ${isOn ? 'active' : ''}" id="base-adic-${k}-sim" onclick="toggleBaseAdicional('${k}',true)">Sim</button></div></div>`
+  }).join('')
+}
+function populateBaseVoipDropdown() {
+  const list = getVoipList()
+  const sel = document.getElementById('base-integ-voip')
+  if (!sel) return
+  const prev = sel.value
+  sel.innerHTML = '<option value="">Sem VOIP</option>' +
+    list.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('') +
+    '<option value="_outro">VOIP não-listado</option>'
+  if (prev) sel.value = prev
+}
+function renderBaseWhatsFaixasDisplay() {
+  const el = document.getElementById('base-whats-faixas-display')
+  if (!el) return
+  const faixas = getWhatsFaixas()
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-bottom:1px solid var(--border)"><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Usuários</div><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:right">Preço/user</div></div>' +
+    faixas.map((f, i) => {
+      const label = f.max == null ? `${f.min}+` : `${f.min} – ${f.max}`
+      const border = i < faixas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''
+      return `<div style="display:grid;grid-template-columns:1fr 1fr;${border}"><div style="padding:6px 10px;color:var(--text2)">${label} users</div><div style="padding:6px 10px;text-align:right;font-weight:600;color:var(--navy)">R$ ${f.preco}/user</div></div>`
+    }).join('')
+}
 
 function validarEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
@@ -1706,6 +1752,39 @@ function validarCampos() {
     elC?.classList.remove('error')
   }
   return ok
+}
+
+/* ════════════════════════════════════════
+   CALCULO MODULAR DE INTEGRACAO (compartilhado)
+════════════════════════════════════════ */
+function calcIntegModular(s) {
+  const ip = getIntegPrecos()
+  const isRd = (s.crm || '').toLowerCase() === 'rd station'
+  const setupCrm = s.crm && !isCrmNativo(s.crm) ? ip.crm_personalizado_setup : 0
+  const setupRegras = s.integRegras ? ip.personalizacao_regras_setup : 0
+  const setupPipelines = (s.integPipelines || 0) * ip.pipeline_adicional_setup
+  const setupTarefas = s.integTarefas ? ip.tarefas_auto_setup : 0
+  const blocosC = ip.campos_custom_bloco > 0 ? Math.ceil((s.integCampos || 0) / ip.campos_custom_bloco) : 0
+  let setupCampos = blocosC * ip.campos_custom_setup_por_bloco
+  const mrrTarefas = s.integTarefas ? ip.tarefas_auto_mrr : 0
+  let mrrCampos = blocosC * ip.campos_custom_mrr_por_bloco
+  if (isRd && (s.integCampos || 0) > 0) { setupCampos = 0; mrrCampos = 0 }
+  const setupTotal = setupCrm + setupRegras + setupPipelines + setupTarefas + setupCampos
+  const mrrInteg = mrrTarefas + mrrCampos
+  return { ip, isRd, setupCrm, setupRegras, setupPipelines, setupTarefas, setupCampos, blocosC, mrrTarefas, mrrCampos, setupTotal, mrrInteg }
+}
+function calcAdicionaisMrr(s) {
+  const cfg = getAdicionaisConfig()
+  let mrr = 0
+  const ativos = []
+  let total = 0
+  for (const [k, v] of Object.entries(cfg)) {
+    if (v.ativo && v.mrr > 0 && s.adicionais && s.adicionais[k]) {
+      ativos.push(v.label + ' ' + fmt(v.mrr) + '/mês')
+      total += v.mrr
+    }
+  }
+  return { cfg, mrr: total, ativos, total }
 }
 
 /* ════════════════════════════════════════
@@ -1797,27 +1876,14 @@ function update() {
   state.integTarefas = document.getElementById('integ-tarefas-sim')?.classList.contains('active') || false
   state.integCampos = parseInt(document.getElementById('integ-campos')?.value) || 0
   state.integVoip = document.getElementById('integ-voip')?.value || ''
-  const ip = getIntegPrecos()
-  const setupCrm = state.crm && !isCrmNativo(state.crm) ? ip.crm_personalizado_setup : 0
-  const setupRegras = state.integRegras ? ip.personalizacao_regras_setup : 0
-  const setupPipelines = state.integPipelines * ip.pipeline_adicional_setup
-  const setupTarefas = state.integTarefas ? ip.tarefas_auto_setup : 0
-  const blocosC = ip.campos_custom_bloco > 0 ? Math.ceil(state.integCampos / ip.campos_custom_bloco) : 0
-  let setupCampos = blocosC * ip.campos_custom_setup_por_bloco
-  const mrrTarefas = state.integTarefas ? ip.tarefas_auto_mrr : 0
-  let mrrCampos = blocosC * ip.campos_custom_mrr_por_bloco
-  /* RD Station: campos personalizados isentos */
-  const isRdStation = (state.crm || '').toLowerCase() === 'rd station'
+  const { ip, isRd, setupCrm, setupRegras, setupPipelines, setupTarefas, setupCampos, blocosC, mrrTarefas, mrrCampos, setupTotal, mrrInteg } = calcIntegModular(state)
+  /* RD Station: nota visual */
   const notaRd = document.getElementById('integ-nota-rd')
-  if (isRdStation && state.integCampos > 0) {
-    setupCampos = 0
-    mrrCampos = 0
+  if (isRd && state.integCampos > 0) {
     if (notaRd) notaRd.style.display = 'block'
   } else {
     if (notaRd) notaRd.style.display = 'none'
   }
-  const setupTotal = setupCrm + setupRegras + setupPipelines + setupTarefas + setupCampos
-  const mrrInteg = mrrTarefas + mrrCampos
   /* Adicionais */
   const adicCfg = getAdicionaisConfig()
   let mrrAdicionais = 0
@@ -1964,16 +2030,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
   /* Build setup detalhamento */
-  const ip = getIntegPrecos()
-  const isRd = (state.crm || '').toLowerCase() === 'rd station'
-  const _sCrm = state.crm && !isCrmNativo(state.crm) ? ip.crm_personalizado_setup : 0
-  const _sRegras = state.integRegras ? ip.personalizacao_regras_setup : 0
-  const _sPipe = state.integPipelines * ip.pipeline_adicional_setup
-  const _sTar = state.integTarefas ? ip.tarefas_auto_setup : 0
-  const _bC = ip.campos_custom_bloco > 0 ? Math.ceil(state.integCampos / ip.campos_custom_bloco) : 0
-  const _sCamp = isRd ? 0 : _bC * ip.campos_custom_setup_por_bloco
-  const _mTar = state.integTarefas ? ip.tarefas_auto_mrr : 0
-  const _mCamp = isRd ? 0 : _bC * ip.campos_custom_mrr_por_bloco
+  const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(state)
   const setupDetailParts = []
   if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
   if (_sRegras > 0) setupDetailParts.push('Regras ' + fmt(_sRegras))
@@ -2210,6 +2267,12 @@ const stateBase = {
   valorAtual: 0,
   usuariosAtual: 5,
   integKey: 'basico',
+  integRegras: false,
+  integPipelines: 0,
+  integTarefas: false,
+  integCampos: 0,
+  integVoip: '',
+  adicionais: {},
   whatsAtivo: true,
   whatsUsers: 5,
   diag: {
@@ -2232,6 +2295,9 @@ function initBase() {
     document.getElementById('base-chip-name').textContent = u.nome
     document.getElementById('base-chip-sub').textContent = `${u.cargo} · ${u.cidade}`
   }
+  populateBaseVoipDropdown()
+  renderBaseWhatsFaixasDisplay()
+  renderBaseAdicionaisProposal()
   updateBase()
 }
 function baseCalcPreview() {
@@ -2280,17 +2346,13 @@ function setBaseIntegModo(modo) {
   const isTodos = modo === 'todos'
   document.getElementById('base-integ-modo-esp').classList.toggle('active', !isTodos)
   document.getElementById('base-integ-modo-todos').classList.toggle('active', isTodos)
-  const wrapEl = document.getElementById('base-integ-btns')
-  if (wrapEl) wrapEl.style.display = isTodos ? 'none' : ''
+  const modularWrap = document.getElementById('base-integ-modular')
+  if (modularWrap) modularWrap.style.display = isTodos ? 'none' : ''
   if (isTodos) {
     if (stateBase.integKey !== 'todos') stateBase._prevIntegKey = stateBase.integKey
     stateBase.integKey = 'todos'
   } else {
     stateBase.integKey = stateBase._prevIntegKey || 'basico'
-    document.querySelectorAll('#base-integ-btns .integ-btn').forEach((c) => {
-      const k = c.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
-      c.classList.toggle('active', k === stateBase.integKey)
-    })
   }
   updateBase()
 }
@@ -2305,35 +2367,49 @@ function updateBase() {
   stateBase.usuariosAtual = parseInt(document.getElementById('base-usuarios-atual')?.value) || 0
   stateBase.whatsUsers = parseInt(document.getElementById('base-whats-users')?.value) || 1
   stateBase.diag.nCampos = parseInt(document.getElementById('diag-ncampos')?.value) || 0
+  /* Read modular integration fields from DOM */
+  stateBase.integRegras = document.getElementById('base-integ-regras-sim')?.classList.contains('active') || false
+  stateBase.integPipelines = parseInt(document.getElementById('base-integ-pipelines')?.value) || 0
+  stateBase.integTarefas = document.getElementById('base-integ-tarefas-sim')?.classList.contains('active') || false
+  stateBase.integCampos = parseInt(document.getElementById('base-integ-campos')?.value) || 0
+  stateBase.integVoip = document.getElementById('base-integ-voip')?.value || ''
   const hd = parseInt(document.getElementById('base-horas-input')?.value) || 0,
     r = calcPrecoExato(hd)
   const precoBase = r.precoEfetivo,
     precoFinal = precoBase
-  let integ,
-    feeInteg = 0
   const isTodosBase = stateBase.integKey === 'todos'
+  let setupTotal = 0, mrrInteg = 0, blocosC = 0
   if (isTodosBase) {
-    integ = {
-      nome: 'Todos os planos',
-      tag: 'tag-basico',
-      label: 'Cliente escolhe na proposta',
-      setup: null,
-      fee: 0,
-      scope: [],
-      descricao: ''
-    }
+    // "Todos os planos" mode — no individual pricing
   } else {
-    integ = { ...(INTEG[stateBase.integKey] || INTEG.basico) }
-    feeInteg = integ.fee || 0
-    if (stateBase.integKey === 'basico' && stateBase.crm && !isCrmNativo(stateBase.crm)) {
-      integ.setup = 1200
-    }
-    const _bbs = document.querySelector('#base-integ-btns .integ-btn:first-child span')
-    if (_bbs) _bbs.textContent = stateBase.crm && !isCrmNativo(stateBase.crm) ? 'R$ 1.200' : 'Grátis'
+    const calc = calcIntegModular(stateBase)
+    setupTotal = calc.setupTotal
+    mrrInteg = calc.mrrInteg
+    blocosC = calc.blocosC
+    // RD Station nota
+    const notaRd = document.getElementById('base-integ-nota-rd')
+    if (notaRd) notaRd.style.display = calc.isRd && stateBase.integCampos > 0 ? 'block' : 'none'
   }
+  // VOIP tag
+  const voipTag = document.getElementById('base-integ-voip-tag')
+  if (voipTag) {
+    if (stateBase.integVoip === '_outro') {
+      voipTag.style.display = 'inline-block'; voipTag.textContent = 'Consultar'
+      voipTag.style.background = '#FFF7ED'; voipTag.style.color = '#92400E'; voipTag.style.border = '1.5px solid #FED7AA'
+    } else if (stateBase.integVoip) {
+      voipTag.style.display = 'inline-block'; voipTag.textContent = 'Incluso'
+      voipTag.style.background = '#F0FDF4'; voipTag.style.color = '#166534'; voipTag.style.border = '1.5px solid #BBF7D0'
+    } else { voipTag.style.display = 'none' }
+  }
+  // Adicionais
+  const adicResult = calcAdicionaisMrr(stateBase)
+  const mrrAdicionais = adicResult.total
+  // Show/hide modular wrap based on "Todos os planos"
+  const modularWrap = document.getElementById('base-integ-modular')
+  if (modularWrap) modularWrap.style.display = isTodosBase ? 'none' : ''
   const whatsTotal = stateBase.whatsAtivo ? getTotalWhats(stateBase.whatsUsers) : 0,
     whatsPreco = stateBase.whatsAtivo ? getWhatsPrice(stateBase.whatsUsers) : 0
-  const totalMensal = precoFinal + feeInteg + whatsTotal
+  const totalMensal = precoFinal + mrrInteg + mrrAdicionais + whatsTotal
   document.getElementById('base-horas-label').textContent = r.horasEfetivas.toLocaleString('pt-BR') + 'h'
   const tLen = getTabelaAtiva().length
   document.getElementById('base-pacote-idx').textContent = r.acimaDaTabela
@@ -2346,7 +2422,7 @@ function updateBase() {
   const bTgh = document.getElementById('base-total-label-header'),
     bTgl = document.getElementById('base-total-geral-label')
   if (bTgh && bTgl) {
-    if (whatsTotal > 0) {
+    if (whatsTotal > 0 || mrrInteg > 0 || mrrAdicionais > 0) {
       bTgh.style.display = 'block'
       bTgl.style.display = 'block'
       bTgl.textContent = fmt(totalMensal) + '/mês'
@@ -2386,7 +2462,7 @@ function updateBase() {
   } else if (cc) cc.style.display = 'none'
   renderDiagTags()
   document.getElementById('base-premium-alert').style.display = 'none'
-  renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsPreco)
+  renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC)
   const horasOk = hd > 0,
     baseCanGen = !!stateBase.empresa && !!stateBase.crm && horasOk,
     bb = document.getElementById('base-btn-gen')
@@ -2476,16 +2552,43 @@ function renderDiagTags() {
       .join('')
 }
 
-function renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsPreco) {
+function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC) {
   const u = currentUser || {},
     cfg = loadConfig(),
     hoje = new Date(),
     val = new Date(hoje)
   val.setDate(hoje.getDate() + 15) // Validade fixa: 15 dias
   const fmtD = (d) => d.toLocaleDateString('pt-BR')
+  const isTodosBase = stateBase.integKey === 'todos'
+  /* Build setup detalhamento */
+  const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(stateBase)
+  const setupDetailParts = []
+  if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
+  if (_sRegras > 0) setupDetailParts.push('Regras ' + fmt(_sRegras))
+  if (_sPipe > 0) setupDetailParts.push(stateBase.integPipelines + ' pipeline(s) ' + fmt(_sPipe))
+  if (_sTar > 0) setupDetailParts.push('Tarefas ' + fmt(_sTar))
+  if (_sCamp > 0) setupDetailParts.push(stateBase.integCampos + ' campos (' + _bC + ' bloco(s)) ' + fmt(_sCamp))
+  const descSetup = setupDetailParts.length ? setupDetailParts.join(' + ') : 'Integração padrão'
+  const mrrDetailParts = []
+  if (_mTar > 0) mrrDetailParts.push('Tarefas ' + fmt(_mTar))
+  if (_mCamp > 0) mrrDetailParts.push('Campos (' + stateBase.integCampos + ') ' + fmt(_mCamp))
+  /* Build adicionais list */
+  const adicCfg = getAdicionaisConfig()
+  const adicAtivos = []
+  let adicTotal = 0
+  for (const [k, v] of Object.entries(adicCfg)) {
+    if (v.ativo && v.mrr > 0 && stateBase.adicionais && stateBase.adicionais[k]) {
+      adicAtivos.push(v.label + ' ' + fmt(v.mrr) + '/mês')
+      adicTotal += v.mrr
+    }
+  }
+  /* VOIP status */
+  const voipVal = stateBase.integVoip || ''
+  const voipStatus = voipVal === '_outro' ? 'Consultar' : voipVal ? 'Incluso' : 'Não incluso'
+  const voipLabel = voipVal === '_outro' ? 'VOIP não-listado' : voipVal || 'Sem VOIP'
   const payload = {
     tipo_proposta: 'upsell_base',
-    plano_integracao: stateBase.integKey,
+    plano_integracao: isTodosBase ? 'todos' : 'modular',
     nome_empresa: stateBase.empresa,
     crm_cliente: stateBase.crm,
     contato_nome: stateBase.contatoNome || '',
@@ -2493,6 +2596,9 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsP
     num_usuarios: stateBase.usuariosAtual,
     horas_atual: String(stateBase.horasAtual || '—'),
     valor_atual: stateBase.valorAtual > 0 ? `R$ ${stateBase.valorAtual.toLocaleString('pt-BR')}/mês` : '—',
+    horas_proposto: String(r.horasEfetivas),
+    valor_proposto: fmt(totalMensal) + '/mês',
+    acrescimo_mensal: stateBase.valorAtual > 0 ? fmt(totalMensal - stateBase.valorAtual) + '/mês' : '—',
     diag_crm: stateBase.diag.crm ? 'Sim' : 'Não',
     diag_voip: stateBase.diag.voip ? 'Sim' : 'Não',
     diag_whatsapp: stateBase.diag.whats ? 'Sim' : 'Não',
@@ -2500,25 +2606,41 @@ function renderBasePayload(r, integ, precoFinal, totalMensal, whatsTotal, whatsP
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${stateBase.empresa || 'Cliente'}`,
     pacote_horas: String(r.horasEfetivas),
     preco_mensalidade: `${fmt(precoFinal)}/mês`,
-    fee_manutencao:
-      stateBase.integKey === 'todos' ? 'Ver proposta' : integ.fee > 0 ? fmt(integ.fee) + '/mês' : 'Não incluso',
+    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
     preco_whatsapp: stateBase.whatsAtivo
       ? `${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`
       : 'Não incluso',
-    total_geral_mes: `${fmt(precoFinal + whatsTotal + (integ.fee || 0))}/mês`,
-    detalhe_desconto: 'Preço padrão', // Valor fixo — desconto removido da UI
-    preco_setup: stateBase.integKey === 'todos' ? 'Ver proposta' : integ.setup > 0 ? fmt(integ.setup) : 'Gratuito',
-    descricao_setup: integ.descricao,
+    total_geral_mes: fmt(totalMensal) + '/mês',
+    detalhe_desconto: 'Preço padrão',
+    preco_setup: isTodosBase ? 'Ver proposta' : setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    descricao_setup: isTodosBase ? 'Ver proposta' : descSetup,
     vendedor_nome: u.nome || '',
     vendedor_email: u.email || '',
     vendedor_telefone: u.telefone || '',
     vendedor_cidade: u.cidade || '',
-    desconto_pct: 0, // Valor fixo — desconto removido da UI
+    desconto_pct: 0,
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
     validade_proposta: fmtD(val),
-    preco_setup_basico: isCrmNativo(stateBase.crm) || stateBase.crm === '' ? 'Gratuito' : 'R$ 1.200',
+    // Componentes de integração — detalhes
+    personalizacao_regras: stateBase.integRegras ? 'Sim' : 'Não',
+    pipelines_adicionais: String(stateBase.integPipelines),
+    tarefas_automaticas: stateBase.integTarefas ? 'Sim' : 'Não',
+    campos_personalizados: String(stateBase.integCampos),
+    campos_blocos: String(_bC),
+    voip_cliente: voipLabel,
+    voip_status: voipStatus,
+    // Totais de integração
+    setup_total: isTodosBase ? 'Ver proposta' : setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    setup_detalhamento: isTodosBase ? 'Ver proposta' : descSetup,
+    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mrr_integracao_detalhamento: mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Não incluso',
+    // Adicionais
+    adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
+    adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
+    // Legado — backward compatibility
+    preco_setup_basico: isCrmNativo(stateBase.crm) || stateBase.crm === '' ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: fmt(precoFinal + 499 + whatsTotal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
@@ -2554,6 +2676,12 @@ function resetStateBase() {
     valorAtual: 0,
     usuariosAtual: 5,
     integKey: 'basico',
+    integRegras: false,
+    integPipelines: 0,
+    integTarefas: false,
+    integCampos: 0,
+    integVoip: '',
+    adicionais: {},
     whatsAtivo: true,
     whatsUsers: 5,
     diag: {
@@ -2579,7 +2707,9 @@ function resetStateBase() {
     ['base-usuarios-atual', '5'],
     ['base-valor-atual', ''],
     ['base-horas-input', '300'],
-    ['base-whats-users', '5']
+    ['base-whats-users', '5'],
+    ['base-integ-pipelines', '0'],
+    ['base-integ-campos', '0']
   ].forEach(([id, v]) => {
     const el = document.getElementById(id)
     if (el) el.value = v
@@ -2587,7 +2717,16 @@ function resetStateBase() {
   document.getElementById('base-comparativo').style.display = 'none'
   document.getElementById('base-integ-modo-esp')?.classList.add('active')
   document.getElementById('base-integ-modo-todos')?.classList.remove('active')
-  document.getElementById('base-integ-btns')?.style.setProperty('display', '')
+  const modularWrap = document.getElementById('base-integ-modular')
+  if (modularWrap) modularWrap.style.display = ''
+  document.getElementById('base-integ-regras-nao')?.classList.add('active')
+  document.getElementById('base-integ-regras-sim')?.classList.remove('active')
+  document.getElementById('base-integ-tarefas-nao')?.classList.add('active')
+  document.getElementById('base-integ-tarefas-sim')?.classList.remove('active')
+  const voipSel = document.getElementById('base-integ-voip')
+  if (voipSel) voipSel.value = ''
+  const voipTag = document.getElementById('base-integ-voip-tag')
+  if (voipTag) voipTag.style.display = 'none'
   updateBase()
 }
 
