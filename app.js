@@ -1963,20 +1963,41 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     hoje = new Date(),
     val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
-  /* Build setup description from components */
-  const setupParts = []
-  if (state.crm && !isCrmNativo(state.crm)) setupParts.push('CRM personalizado')
-  if (state.integRegras) setupParts.push('Regras de negócio')
-  if (state.integPipelines > 0) setupParts.push(state.integPipelines + ' pipeline(s)')
-  if (state.integTarefas) setupParts.push('Tarefas automáticas')
-  if (state.integCampos > 0) setupParts.push(state.integCampos + ' campos personalizados')
-  const descSetup = setupParts.length ? setupParts.join(', ') : 'Integração padrão'
+  /* Build setup detalhamento */
+  const ip = getIntegPrecos()
+  const isRd = (state.crm || '').toLowerCase() === 'rd station'
+  const _sCrm = state.crm && !isCrmNativo(state.crm) ? ip.crm_personalizado_setup : 0
+  const _sRegras = state.integRegras ? ip.personalizacao_regras_setup : 0
+  const _sPipe = state.integPipelines * ip.pipeline_adicional_setup
+  const _sTar = state.integTarefas ? ip.tarefas_auto_setup : 0
+  const _bC = ip.campos_custom_bloco > 0 ? Math.ceil(state.integCampos / ip.campos_custom_bloco) : 0
+  const _sCamp = isRd ? 0 : _bC * ip.campos_custom_setup_por_bloco
+  const _mTar = state.integTarefas ? ip.tarefas_auto_mrr : 0
+  const _mCamp = isRd ? 0 : _bC * ip.campos_custom_mrr_por_bloco
+  const setupDetailParts = []
+  if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
+  if (_sRegras > 0) setupDetailParts.push('Regras ' + fmt(_sRegras))
+  if (_sPipe > 0) setupDetailParts.push(state.integPipelines + ' pipeline(s) ' + fmt(_sPipe))
+  if (_sTar > 0) setupDetailParts.push('Tarefas ' + fmt(_sTar))
+  if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + ' bloco(s)) ' + fmt(_sCamp))
+  const descSetup = setupDetailParts.length ? setupDetailParts.join(' + ') : 'Integração padrão'
+  const mrrDetailParts = []
+  if (_mTar > 0) mrrDetailParts.push('Tarefas ' + fmt(_mTar))
+  if (_mCamp > 0) mrrDetailParts.push('Campos (' + state.integCampos + ') ' + fmt(_mCamp))
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
+  let adicTotal = 0
   for (const [k, v] of Object.entries(adicCfg)) {
-    if (v.ativo && v.mrr > 0 && state.adicionais[k]) adicAtivos.push(v.label + ' (' + fmt(v.mrr) + '/mês)')
+    if (v.ativo && v.mrr > 0 && state.adicionais[k]) {
+      adicAtivos.push(v.label + ' ' + fmt(v.mrr) + '/mês')
+      adicTotal += v.mrr
+    }
   }
+  /* VOIP status */
+  const voipVal = state.integVoip || ''
+  const voipStatus = voipVal === '_outro' ? 'Consultar' : voipVal ? 'Incluso' : 'Não incluso'
+  const voipLabel = voipVal === '_outro' ? 'VOIP não-listado' : voipVal || 'Sem VOIP'
   const data = {
     nome_empresa: state.empresa || '',
     crm_cliente: state.crm || '',
@@ -1991,29 +2012,45 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
         : 'Não incluso',
     total_geral_mes: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta',
-    detalhe_desconto: 'Preço padrão',
+    detalhe_desconto: 'Preço padrão', // Valor fixo — desconto removido da UI
     preco_setup: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
     descricao_setup: descSetup,
     vendedor_nome: currentUser.nome,
     vendedor_email: currentUser.email,
     vendedor_telefone: currentUser.telefone || '',
     vendedor_cidade: currentUser.cidade || '',
-    desconto_pct: 0,
+    desconto_pct: 0, // Valor fixo — desconto removido da UI
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
     validade_proposta: fmtD(val),
     tipo_proposta: 'novo',
     plano_integracao: 'modular',
+    // Componentes de integração — detalhes
+    personalizacao_regras: state.integRegras ? 'Sim' : 'Não',
+    pipelines_adicionais: String(state.integPipelines),
+    tarefas_automaticas: state.integTarefas ? 'Sim' : 'Não',
+    campos_personalizados: String(state.integCampos),
+    campos_blocos: String(_bC),
+    voip_cliente: voipLabel,
+    voip_status: voipStatus,
+    // Totais de integração
+    setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    setup_detalhamento: descSetup,
+    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mrr_integracao_detalhamento: mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Não incluso',
+    // Adicionais
+    adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
+    adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
+    // Legado — backward compatibility
     integ_regras: state.integRegras,
     integ_pipelines: state.integPipelines,
     integ_tarefas: state.integTarefas,
     integ_campos: state.integCampos,
     integ_voip: state.integVoip || 'Sem VOIP',
-    mrr_integracao: mrrInteg,
     mrr_adicionais: mrrAdicionais,
     adicionais_ativos: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
-    preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : fmt(getIntegPrecos().crm_personalizado_setup),
+    preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta'
   }
   const colored = JSON.stringify(data, null, 2)
