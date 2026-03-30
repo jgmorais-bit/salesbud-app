@@ -1853,9 +1853,9 @@ function renderBreakdown(containerId, dados) {
   const el = document.getElementById(containerId)
   if (!el) return
   const sub = (label, valor) =>
-    `<div style="display:flex;justify-content:space-between;padding:2px 0 2px 18px;font-size:11.5px;color:var(--text3)"><span style="display:flex;align-items:center;gap:4px"><span style="color:var(--border);font-family:monospace">|</span> ${esc(label)}</span><span>${fmt(valor)}/mes</span></div>`
+    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:12.5px;color:var(--text2)"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}/mes</span></div>`
   const subSetup = (label, valor) =>
-    `<div style="display:flex;justify-content:space-between;padding:2px 0 2px 18px;font-size:11.5px;color:var(--text3)"><span style="display:flex;align-items:center;gap:4px"><span style="color:var(--border);font-family:monospace">|</span> ${esc(label)}</span><span>${fmt(valor)}</span></div>`
+    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:12.5px;color:var(--text2)"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}</span></div>`
   let h = ''
   if (dados.mensalidade)
     h += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(dados.mensalidade)}/mes</span></div>`
@@ -1903,7 +1903,7 @@ function renderBreakdown(containerId, dados) {
   }
   if (dados.voip && dados.voip.label && dados.voip.label !== 'Sem VOIP') {
     const voipText = dados.voip.incluso ? `VOIP: ${esc(dados.voip.label)} (incluso)` : `VOIP: ${esc(dados.voip.label)} (consultar)`
-    h += `<div style="margin-top:8px;font-size:12px;color:var(--text3);font-weight:600">${voipText}</div>`
+    h += `<div style="margin-top:8px;font-size:13px;color:var(--text2);font-weight:600">${voipText}</div>`
   }
   el.innerHTML = h
 }
@@ -2050,22 +2050,6 @@ function update() {
   pills.innerHTML += `<div class="meta-pill">Horas <span>${r.horasEfetivas.toLocaleString('pt-BR')}h/mês</span></div>`
   if (state.whatsAtivo && state.whatsUsers > 0)
     pills.innerHTML += `<div class="meta-pill">WhatsApp <span>${state.whatsUsers} users</span></div>`
-  /* integ-badge-wrap: show modular summary */
-  const badgeWrap = document.getElementById('integ-badge-wrap')
-  if (badgeWrap) {
-    const parts = []
-    if (setupCrm > 0) parts.push('CRM personalizado')
-    if (state.integRegras) parts.push('Regras')
-    if (state.integPipelines > 0) parts.push(state.integPipelines + ' pipeline(s)')
-    if (state.integTarefas) parts.push('Tarefas auto')
-    if (state.integCampos > 0) parts.push(state.integCampos + ' campos')
-    if (state.integVoip) parts.push('VOIP')
-    if (parts.length) {
-      badgeWrap.innerHTML = `<div class="integ-badge"><span class="tag tag-intermediario">Modular</span>${esc(parts.join(' · '))}</div>`
-    } else {
-      badgeWrap.innerHTML = `<div class="integ-badge"><span class="tag tag-basico">Básico</span>Integração padrão</div>`
-    }
-  }
 
   /* topo do card: total geral */
   document.getElementById('price-main').textContent = totalGeral != null ? fmt(totalGeral) : '—'
@@ -2108,26 +2092,6 @@ function update() {
         ? { label: voipVal, incluso: true }
         : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
     })
-  }
-  /* Scope section — show modular details */
-  const scopeEl = document.getElementById('scope-section')
-  const scopeItems = document.getElementById('scope-items')
-  if (scopeEl && scopeItems) {
-    const scopeParts = []
-    if (setupCrm > 0) scopeParts.push('Setup CRM personalizado: ' + fmt(setupCrm))
-    if (state.integRegras) scopeParts.push('Personalização de regras: ' + fmt(setupRegras) + ' setup')
-    if (state.integPipelines > 0) scopeParts.push(state.integPipelines + ' pipeline(s) adicional(is): ' + fmt(setupPipelines) + ' setup')
-    if (state.integTarefas) scopeParts.push('Tarefas automáticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mês')
-    if (state.integCampos > 0) scopeParts.push(state.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mês')
-    if (state.integVoip && state.integVoip !== '_outro') scopeParts.push('VOIP: ' + state.integVoip + ' (incluso)')
-    if (state.integVoip === '_outro') scopeParts.push('VOIP não-listado (sob consulta)')
-    if (scopeParts.length) {
-      scopeEl.style.display = 'block'
-      scopeItems.innerHTML = scopeParts.map((s) => `<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('')
-    } else {
-      scopeEl.style.display = 'none'
-      scopeItems.innerHTML = ''
-    }
   }
   document.getElementById('premium-alert').style.display = 'none'
   renderPayload(r.horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais)
@@ -2598,23 +2562,6 @@ function updateBase() {
         ? { label: voipVal, incluso: true }
         : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
     })
-    /* Scope */
-    const bScope = document.getElementById('base-scope-section')
-    const bItems = document.getElementById('base-scope-items')
-    if (bScope && bItems) {
-      const scopeParts = []
-      if (setupCrm > 0) scopeParts.push('Setup CRM personalizado: ' + fmt(setupCrm))
-      if (stateBase.integRegras) scopeParts.push('Personalizacao de regras: ' + fmt(setupRegras) + ' setup')
-      if (stateBase.integPipelines > 0) scopeParts.push(stateBase.integPipelines + ' pipeline(s) adicional(is): ' + fmt(setupPipelines) + ' setup')
-      if (stateBase.integTarefas) scopeParts.push('Tarefas automaticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mes')
-      if (stateBase.integCampos > 0) scopeParts.push(stateBase.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mes')
-      if (stateBase.integVoip && stateBase.integVoip !== '_outro') scopeParts.push('VOIP: ' + stateBase.integVoip + ' (incluso)')
-      else if (stateBase.integVoip === '_outro') scopeParts.push('VOIP: nao-listado (consultar)')
-      if (scopeParts.length) {
-        bScope.style.display = 'block'
-        bItems.innerHTML = scopeParts.map((s) => `<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('')
-      } else { bScope.style.display = 'none' }
-    } else if (bScope) { bScope.style.display = 'none' }
   }
   /* Proposta Para — right panel summary */
   {
