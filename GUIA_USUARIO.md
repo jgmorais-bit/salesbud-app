@@ -1,90 +1,109 @@
-# SalesBud Propostas — Guia do Usuário
+# SalesBud Propostas -- Guia do Usuario
 
 ## Acesso
 
 1. Abra: **https://jgmorais-bit.github.io/salesbud-app**
-2. Faça login com seu email @salesbud.com.br e a senha fornecida
-3. Na primeira vez, troque sua senha: clique no seu avatar (canto inferior esquerdo) → **Alterar senha**
+2. Faca login com seu email @salesbud.com.br e a senha fornecida
+3. Na primeira vez, troque sua senha: clique no seu avatar (canto inferior esquerdo) -> **Alterar senha**
 
 ## Esqueci minha senha
 
 1. Na tela de login, clique em **"Esqueci minha senha"**
-2. Digite seu email e clique **"Enviar link de recuperação"**
-3. Verifique sua caixa de entrada (e spam) — chegará um email do Supabase Auth
-4. Clique no link do email → defina uma nova senha
+2. Digite seu email e clique **"Enviar link de recuperacao"**
+3. Verifique sua caixa de entrada (e spam) -- chegara um email do Supabase Auth
+4. Clique no link do email -> defina uma nova senha
 
 ---
 
 ## Gerar Proposta (Novos Clientes)
 
-### Passo 1 — Dados do cliente
-- Preencha o **nome da empresa** (obrigatório)
+### Passo 1 -- Dados do cliente
+- Preencha o **nome da empresa** (obrigatorio)
 - Preencha nome e email do contato
-- Selecione o **CRM** utilizado pelo cliente (obrigatório)
+- Selecione o **CRM** utilizado pelo cliente (obrigatorio)
+  - CRM Nativo (HubSpot, Pipedrive, RD Station): setup gratuito
+  - CRM Personalizado (qualquer outro): setup R$ 600
 
-### Passo 2 — Pacote de horas
-- Selecione as horas mensais ou use a **calculadora de consumo** (usuários × horas/dia × dias úteis)
-- O sistema calcula automaticamente o preço conforme a tabela
+### Passo 2 -- Pacote de horas
+- Informe as horas mensais desejadas
+- O sistema calcula automaticamente o preco conforme a tabela (50h a 1000h)
+- Faixas intermediarias sao calculadas por interpolacao
 
-### Passo 3 — Integração CRM
-- Escolha entre **Plano específico** ou **Todos os planos**
-- Se plano específico: selecione Básico, Intermediário ou Avançado
-- O preço do setup varia conforme o CRM:
-  - CRM nativo (HubSpot, Pipedrive, RD Station) → Básico gratuito
-  - Outros CRMs → Básico R$ 1.200
+### Passo 3 -- Integracao CRM
+Configure os componentes de integracao conforme a necessidade do cliente:
 
-### Passo 4 — WhatsApp (opcional)
-- Ative se o cliente quer WhatsApp
-- Informe o número de usuários — o preço por usuário é calculado automaticamente
+- **Personalizacao de Regras**: Padrao (gratuito) ou Personalizada (setup R$ 900). Passe o mouse no icone ? para ver o escopo de cada opcao.
+- **Pipelines adicionais**: quantidade de pipelines alem do primeiro incluso (setup R$ 400/cada)
+- **Tarefas Automaticas**: criacao automatica de proximos passos (setup R$ 100 + R$ 50/mes)
+- **Campos Personalizados**: preenchidos por IA, cobrados em blocos de 5 (setup + MRR R$ 100/bloco). Clientes RD Station: isentos.
+- **VOIP**: selecione o VOIP do cliente. Listados sao inclusos. Nao-listados: consultar time de Servicos.
 
-### Passo 5 — Desconto (opcional)
-- Selecione 0%, 5% ou 10%
-- Descontos acima de 10% requerem aprovação
+### Passo 4 -- WhatsApp
+- Ative/desative o WhatsApp
+- Informe a quantidade de usuarios
+- Preco por usuario conforme faixa (tabela visivel no app)
 
-### Passo 6 — Gerar proposta
-- Clique em **"Gerar Proposta"**
-- Aguarde o processamento (até 60 segundos)
-- O botão mostra o progresso: Enviando → Gerando apresentação → Exportando PDF → Quase lá
-- Quando concluído, você receberá um **email** com:
-  - PDF da proposta em anexo
-  - Link para editar a apresentação no Google Slides
-  - Modelo de email sugerido para enviar ao cliente
+### Passo 5 -- Adicionais
+- Se o admin ativou adicionais (ex: Contas-Enriquecimento, Chat com Bud), eles aparecerao aqui
+- Ative os que o cliente deseja -- o valor MRR e somado ao total
 
----
-
-## Gerar Proposta de Upsell (Clientes de Base)
-
-Funciona de forma similar, mas inclui:
-- **Dados do consumo atual** do cliente (horas, usuários, valor pago)
-- **Diagnóstico** com perguntas sobre CRM, VoIP, WhatsApp, etc.
-- **Comparativo** Atual vs Proposta com delta de horas e valor
-- Proposta gerada como "upsell_base" no histórico
+### Passo 6 -- Gerar
+- Confira o resumo no painel direito: MRR total + Setup total
+- Clique **"Gerar Proposta"**
+- O sistema gera a apresentacao em Google Slides, exporta PDF e envia por email
 
 ---
 
-## Histórico
+## Gerar Proposta (Clientes de Base)
 
-- Veja todas as propostas geradas pela equipe
-- **Filtros**: por tipo (Novo/Base), vendedor, e período (3/7/15/30/90 dias)
-- **Busca**: por empresa ou vendedor
-- **Seleção em massa**: marque propostas → exclua ou exporte CSV
-- **Editar**: altere dados de uma proposta existente
-- **Status**: Rascunho → Enviada → Ganha → Perdida
+### Passo 1 -- Dados do cliente + Diagnostico
+- Preencha empresa, CRM, contato
+- Informe horas e valor atuais do cliente
+- Preencha o diagnostico: CRM, VOIP, WhatsApp, CS
 
----
+### Passo 2 -- Configurar proposta
+- Selecione o pacote de horas proposto
+- Selecione o plano de integracao (Basico, Intermediario ou Avancado)
+- Configure WhatsApp
 
-## Dicas
-
-- O PDF e o link editável chegam no seu email corporativo
-- Use o **modelo de email sugerido** (no final do email recebido) para enviar ao cliente
-- O link do Google Slides é editável — você pode personalizar antes de enviar
-- Propostas são salvas automaticamente no histórico compartilhado
-- Se a automação estiver indisponível, o app mostra instruções para envio manual
+### Passo 3 -- Gerar
+- Confira o comparativo Atual x Proposta
+- Clique **"Gerar Proposta de Upsell"**
 
 ---
 
-## Suporte
+## Historico
 
-Em caso de problemas, contate o administrador:
-- João Morais — joao.morais@salesbud.com.br
-- Rafael Weigand — rafael.weigand@salesbud.com.br
+- Todas as propostas geradas ficam no historico compartilhado
+- Use os filtros para buscar por empresa, tipo, vendedor ou periodo
+- Altere o status: Enviada -> Negociacao -> Aprovada ou Perdida
+- Exporte para CSV ou edite detalhes (empresa, contato, observacao interna)
+
+---
+
+## Para Administradores
+
+### Adicionar novos usuarios
+1. Acesse o **Supabase Dashboard** (https://supabase.com/dashboard)
+2. Va em **Authentication** -> **Add User**
+3. Marque **"Auto Confirm User"**
+4. O perfil e criado automaticamente pelo trigger
+
+### Configuracoes (aba Configuracoes no app)
+
+| Secao | O que configura |
+|---|---|
+| Supabase | URL e anon key (ja configurado) |
+| Webhook | URL e token do Make |
+| Template | URL e versao do template Google Slides |
+| Tabela de precos | Pacotes de horas e valores (50h-1000h) |
+| Faixas WhatsApp | Faixas de preco por quantidade de usuarios |
+| CRMs disponiveis | Lista de CRMs (3 nativos + customizados) |
+| VOIPs disponiveis | Lista de VOIPs inclusos (12 padrao + customizados) |
+| Precos de integracao | Setup e MRR de cada componente |
+| Adicionais opcionais | Ativar/desativar e definir MRR de cada adicional |
+
+**Importante:** apos alterar qualquer configuracao, clique **Salvar**. As mudancas sao sincronizadas com o Supabase e ficam disponiveis para todos os vendedores.
+
+### Primeira vez apos deploy
+Abra a aba Configuracoes e clique Salvar em cada secao para popular as chaves no Supabase. Isso garante que todos os vendedores vejam os mesmos valores.

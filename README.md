@@ -1,6 +1,6 @@
 # SalesBud Propostas
 
-Gerador de propostas comerciais para o time de vendas SalesBud. Calcula pacotes, gera apresentações no Google Slides, exporta PDF e envia por email — tudo automatizado.
+Gerador de propostas comerciais para o time de vendas SalesBud. Calcula pacotes, configura integracoes modulares, gera apresentacoes no Google Slides, exporta PDF e envia por email -- tudo automatizado.
 
 ## Stack
 
@@ -8,100 +8,80 @@ Gerador de propostas comerciais para o time de vendas SalesBud. Calcula pacotes,
 |---|---|
 | Frontend | HTML + CSS + JavaScript (vanilla) |
 | Hospedagem | GitHub Pages |
-| Autenticação | Supabase Auth |
+| Autenticacao | Supabase Auth |
 | Banco de dados | Supabase (PostgreSQL) |
-| Automação | Make (webhook → Google Drive → Slides → Gmail) |
-| Template | Google Slides com variáveis dinâmicas |
+| Configuracoes | Supabase (tabela configuracoes, 7 chaves) |
+| Automacao | Make (webhook -> Google Drive -> Slides -> Gmail) |
+| Template | Google Slides com variaveis dinamicas |
 
 ## Arquitetura
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
-│  index.html │     │  styles.css  │     │     app.js       │
-│  (markup)   │────▶│  (estilos)   │     │  (3.176 linhas)  │
-└─────────────┘     └──────────────┘     └────────┬─────────┘
-                                                  │
-                    ┌─────────────────────────────▼──────────┐
-                    │           Supabase                      │
-                    │  ┌──────────┐ ┌────────┐ ┌───────────┐│
-                    │  │ Auth     │ │perfis  │ │propostas  ││
-                    │  │(12 users)│ │(perfil)│ │(histórico)││
-                    │  └──────────┘ └────────┘ └───────────┘│
-                    │  ┌──────────────┐                      │
-                    │  │configuracoes │                      │
-                    │  └──────────────┘                      │
-                    └────────────────────────────────────────┘
-                                                  │
-                    ┌─────────────────────────────▼──────────┐
-                    │           Make (8 módulos)              │
-                    │  Webhook → Copy → Slides → Delete →    │
-                    │  Set URL → PDF → Gmail → Response      │
-                    └────────────────────────────────────────┘
+index.html + styles.css + app.js
+         |
+         v
+    Supabase
+    - Auth (usuarios)
+    - perfis (dados do vendedor)
+    - propostas (historico)
+    - configuracoes (7 chaves de config compartilhada)
+    - Trigger: on_auth_user_created
+         |
+         v
+    Make (8 modulos)
+    Webhook -> Copy -> Slides -> Delete -> Set URL -> PDF -> Gmail -> Response
 ```
 
 ## Funcionalidades
 
-- **Novos Clientes**: cálculo de pacote, integração CRM, WhatsApp, desconto, proposta
-- **Clientes de Base**: diagnóstico, comparativo atual vs proposta, upsell
-- **Histórico**: filtros por tipo/vendedor/período, seleção em massa, export CSV
-- **Automação**: gera Slides, exporta PDF, envia email com link editável
-- **Lógica CRM**: nativo (HubSpot/Pipedrive/RD) = setup grátis; API aberta = R$1.200
-- **Todos os planos**: envia os 3 slides de proposta num único arquivo
+### Novos Clientes (componentes modulares)
+- Calculo de pacote de horas (tabela V2, 50h-1000h, editavel pelo admin)
+- Componentes de integracao: Personalizacao de Regras, Pipelines, Tarefas, Campos, VOIP
+- WhatsApp com faixas editaveis pelo admin
+- Adicionais opcionais configuraveis (Contas-Enriquecimento, Chat com Bud)
+- Tooltips informativos em cada componente
+- Regra RD Station: campos personalizados isentos
+- Setup total + MRR total calculados e exibidos separadamente
+
+### Clientes de Base
+- Diagnostico de expansao (CRM, VOIP, WhatsApp, CS)
+- Comparativo atual vs proposta
+- Sistema de tiers (Basico/Intermediario/Avancado)
+
+### Historico
+- Filtros por tipo, vendedor, periodo
+- Selecao em massa, export CSV
+- Edicao de proposta (empresa, contato, obs_interna)
+- Status: enviada, negociacao, aprovada, perdida
+
+### Configuracoes (admin)
+- Tabela de precos de pacotes de horas
+- Faixas de preco WhatsApp
+- Lista de CRMs disponiveis
+- Lista de VOIPs inclusos
+- Precos de componentes de integracao
+- Adicionais opcionais (label, MRR, ativo/inativo)
+
+### Gestao de usuarios
+- Criacao via Supabase Dashboard (trigger auto-insert em perfis)
+- Edicao de perfil pelo admin no app
+- Ativar/desativar usuarios
 
 ## Setup local
 
 ```bash
 git clone https://github.com/jgmorais-bit/salesbud-app.git
 cd salesbud-app
-# Abrir index.html no navegador — não precisa de build
+# Abrir index.html no navegador -- nao precisa de build
 ```
 
 ## Deploy
 
-Push pra `main` → GitHub Pages atualiza automaticamente (~1 min).
+Push para `main` -> GitHub Pages atualiza automaticamente.
 
-```bash
-git add .
-git commit -m "descrição da mudança"
-git push
-```
+## Documentacao
 
-## Estrutura de arquivos
-
-```
-├── index.html          # Markup HTML
-├── styles.css          # Estilos CSS
-├── app.js              # Lógica JavaScript (3.176 linhas, 33 seções)
-├── CONTEXT_v6.md       # Documento de contexto do projeto
-├── CODE_REVIEW.md      # Relatório de code review
-└── README.md           # Este arquivo
-```
-
-## Configuração
-
-### Supabase
-URL e anon key estão como defaults no `app.js` (CONFIG_DEFAULT). Tabelas necessárias: `propostas`, `perfis`, `configuracoes`.
-
-### Make
-Webhook URL configurável pela aba Configurações (admin only). Token de autenticação opcional via header `X-SalesBud-Token`.
-
-### Google Slides
-Template com variáveis `{{variavel}}` substituídas automaticamente pelo Make. Slides 12/13/14 = propostas por plano, Slide 15 = capa.
-
-## Usuários
-
-Gerenciados via Supabase Auth + tabela `perfis`. Admin cria contas no dashboard do Supabase e gerencia perfis pelo app.
-
-| Perfil | Acesso |
-|---|---|
-| Admin | Tudo: Propostas, Histórico, Usuários, Configurações |
-| Vendedor | Propostas e Histórico apenas |
-
-## Limites conhecidos
-
-| Recurso | Limite | Ação |
-|---|---|---|
-| Make (free) | 1.000 ops/mês | Upgrade Core ~$9/mês |
-| Supabase (free) | 500 MB banco, 500 MB bandwidth | Upgrade Pro $25/mês com 50+ users |
-| GitHub Pages | 100 GB bandwidth/mês | Suficiente para 100+ users |
-| Google Drive (pessoal) | 15 GB | Migrar pra Workspace quando cheio |
+- `CONTEXT_v7.md` — documento de contexto completo (referencia principal)
+- `GUIA_USUARIO.md` — guia de uso para AEs e admins
+- `GUIA_MIGRACAO.md` — plano de migracao de contas pessoais para organizacionais
+- `CODE_REVIEW.md` — review do codigo e schema SQL
