@@ -438,17 +438,43 @@
                 <input type="number" class="field-input" id="base-usuarios-atual" value="5" min="1" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
               </div>
             </div>
-            <div style="margin-top:12px">
-              <label class="field-label">Valor mensal pago (R$)</label>
-              <input type="number" class="field-input" id="base-valor-atual" placeholder="Ex: 1490" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+              <div>
+                <label class="field-label">Valor mensal pago (R$)</label>
+                <input type="number" class="field-input" id="base-valor-atual" placeholder="Ex: 1490" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+              </div>
+              <div>
+                <label class="field-label">Usuarios WhatsApp contratados</label>
+                <input type="number" class="field-input" id="base-whats-atual" value="0" min="0" placeholder="Ex: 5" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
+              </div>
             </div>
           </div>
 
-          <!-- Calcular Horas para Upsell/Crossell -->
+          <!-- 3. Diagnostico -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Calcular Horas para Upsell/Crossell</div>
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
-              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Por usuarios</div>
+            <div class="card-title">Diagnostico</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansao</div>
+            <div class="diag-row"><span class="diag-label">Integracao CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Nao</button></div></div>
+            <div class="diag-sub" id="diag-crm-sub" style="display:none">
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">CRM nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crmnativo-sim" onclick="setDiag('crmNativo',true)">Sim</button><button class="toggle-btn active" id="diag-crmnativo-nao" onclick="setDiag('crmNativo',false)">Nao</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos personalizados?</span><div class="toggle-row"><button class="toggle-btn" id="diag-campos-sim" onclick="setDiag('campos',true)">Sim</button><button class="toggle-btn active" id="diag-campos-nao" onclick="setDiag('campos',false)">Nao</button></div></div>
+              <div class="diag-sub" id="diag-campos-sub" style="display:none;margin-top:8px"><label class="field-label" style="font-size:12px">Quantos campos</label><input type="number" class="field-input" id="diag-ncampos" value="3" min="1" max="20" oninput="updateBase()" style="width:80px;margin-top:4px" /></div>
+            </div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Integracao Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voip-sim" onclick="setDiag('voip',true)">Sim</button><button class="toggle-btn active" id="diag-voip-nao" onclick="setDiag('voip',false)">Nao</button></div></div>
+            <div class="diag-sub" id="diag-voip-sub" style="display:none;margin-top:8px">
+              <div class="diag-row"><span class="diag-label" style="font-size:12px">Voip nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipnativo-sim" onclick="setDiag('voipNativo',true)">Sim</button><button class="toggle-btn active" id="diag-voipnativo-nao" onclick="setDiag('voipNativo',false)">Nao</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos no Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipcampos-sim" onclick="setDiag('voipCampos',true)">Sim</button><button class="toggle-btn active" id="diag-voipcampos-nao" onclick="setDiag('voipCampos',false)">Nao</button></div></div>
+            </div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Nao</button></div></div>
+          </div>
+
+          <!-- 4. Horas Adicionais para Upsell/Crossell -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Horas Adicionais para Upsell/Crossell</div>
+            <label class="field-label" style="display:block;margin-bottom:6px">Horas mensais contratadas</label>
+            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px;margin-bottom:14px" />
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Calculadora de consumo</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
                 <div><label class="field-label" style="font-size:10.5px">Usuarios</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
@@ -460,41 +486,40 @@
                   <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
                   <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 x 2h x 22 dias</div>
                 </div>
-                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar</button>
+                <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar esse valor</button>
               </div>
             </div>
-            <label class="field-label" style="display:block;margin-bottom:6px">Ou insira as horas diretamente</label>
-            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
           </div>
 
-          <!-- 4. Diagnóstico -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Diagnóstico</div>
-            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansão</div>
-            <div class="diag-row"><span class="diag-label">Integração CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Não</button></div></div>
-            <div class="diag-sub" id="diag-crm-sub" style="display:none">
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">CRM nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crmnativo-sim" onclick="setDiag('crmNativo',true)">Sim</button><button class="toggle-btn active" id="diag-crmnativo-nao" onclick="setDiag('crmNativo',false)">Não</button></div></div>
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos personalizados?</span><div class="toggle-row"><button class="toggle-btn" id="diag-campos-sim" onclick="setDiag('campos',true)">Sim</button><button class="toggle-btn active" id="diag-campos-nao" onclick="setDiag('campos',false)">Não</button></div></div>
-              <div class="diag-sub" id="diag-campos-sub" style="display:none;margin-top:8px"><label class="field-label" style="font-size:12px">Quantos campos</label><input type="number" class="field-input" id="diag-ncampos" value="3" min="1" max="20" oninput="updateBase()" style="width:80px;margin-top:4px" /></div>
+          <!-- 5. Pacote Proposto -->
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+            <div id="base-pacote-card" style="background:var(--navy);padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px" id="base-horas-label">300h</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-pacote-idx">R$/h base do tier</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Nova Mensalidade</div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="base-preco-label">R$ 1.490</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-delta-label">--</div>
+                <div style="font-size:11px;margin-top:3px;display:none" id="base-desconto-info"></div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header">Total c/ WhatsApp</div>
+                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">--</div>
+              </div>
             </div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Integração Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voip-sim" onclick="setDiag('voip',true)">Sim</button><button class="toggle-btn active" id="diag-voip-nao" onclick="setDiag('voip',false)">Não</button></div></div>
-            <div class="diag-sub" id="diag-voip-sub" style="display:none;margin-top:8px">
-              <div class="diag-row"><span class="diag-label" style="font-size:12px">Voip nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipnativo-sim" onclick="setDiag('voipNativo',true)">Sim</button><button class="toggle-btn active" id="diag-voipnativo-nao" onclick="setDiag('voipNativo',false)">Não</button></div></div>
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos no Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipcampos-sim" onclick="setDiag('voipCampos',true)">Sim</button><button class="toggle-btn active" id="diag-voipcampos-nao" onclick="setDiag('voipCampos',false)">Não</button></div></div>
-            </div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Não</button></div></div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Customer Success?</span><div class="toggle-row"><button class="toggle-btn" id="diag-cs-sim" onclick="setDiag('cs',true)">Sim</button><button class="toggle-btn active" id="diag-cs-nao" onclick="setDiag('cs',false)">Não</button></div></div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Dev / customização?</span><div class="toggle-row"><button class="toggle-btn" id="diag-extras-sim" onclick="setDiag('extras',true)">Sim</button><button class="toggle-btn active" id="diag-extras-nao" onclick="setDiag('extras',false)">Não</button></div></div>
           </div>
 
-          <!-- Proposta de Upsell -->
+          <!-- 6. Preenchimento Automatico de CRM -->
           <div class="card" style="margin-bottom:14px">
-            <div class="card-title">Integração CRM</div>
+            <div class="card-title">Preenchimento Automatico de CRM <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">HubSpot, Pipedrive e RD Station sao CRMs nativos -- setup gratuito, com 1 pipeline incluido.<br><br>Outros CRMs com API aberta tem setup de R$ 600. Na duvida sobre viabilidade de integracao, consulte o time de Servicos antes de fechar a proposta.</div></span></div>
 
-            <div style="display:flex;gap:6px;margin-bottom:12px">
-              <button class="toggle-btn active" id="base-integ-modo-esp" onclick="setBaseIntegModo('especifico')" style="font-size:12px;padding:5px 10px">Plano específico</button>
-              <button class="toggle-btn" id="base-integ-modo-todos" onclick="setBaseIntegModo('todos')" style="font-size:12px;padding:5px 10px">Todos os planos</button>
-            </div>
+            <details class="integ-boas-praticas">
+              <summary>Ver boas praticas</summary>
+              <div class="bp-body">
+                Valide com o cliente o nivel de personalizacao esperado antes de fechar a proposta. Monte o valor item a item usando os componentes abaixo -- facilita a justificativa e evita isencao total de setup. Evite prometer entregas fora do escopo padrao descrito neste guia. Campos personalizados e tarefas geram MRR -- inclua sempre que o cliente tiver essa necessidade. As negociacoes podem ser feitas no custo de setup destas frentes. Em caso de duvida ou personalizacao nao descrita nos tooltips, envolva o time de Servicos.
+              </div>
+            </details>
 
             <div id="base-integ-modular">
               <div class="field-row" style="margin-bottom:10px">
@@ -534,25 +559,27 @@
             </div>
           </div>
 
-          <div class="card" id="base-card-adicionais" style="display:none;margin-bottom:14px">
-            <div class="card-title">Adicionais</div>
-            <div id="base-adicionais-toggles"></div>
-          </div>
-
+          <!-- 7. WhatsApp -->
           <div class="card" style="margin-bottom:14px">
             <div class="card-title">WhatsApp</div>
             <div class="field-row">
               <label class="field-label">Incluir WhatsApp?</label>
               <div class="toggle-row">
                 <button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button>
-                <button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button>
+                <button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Nao</button>
               </div>
             </div>
             <div id="base-whats-wrap" class="field-row">
-              <label class="field-label">Número de usuários WhatsApp</label>
+              <label class="field-label">Numero de usuarios WhatsApp</label>
               <input type="number" class="field-input" id="base-whats-users" value="5" min="1" max="200" oninput="updateBase()" />
               <div id="base-whats-faixas-display" style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px"></div>
             </div>
+          </div>
+
+          <!-- 8. Adicionais Opcionais -->
+          <div class="card" id="base-card-adicionais" style="display:none;margin-bottom:14px">
+            <div class="card-title">Adicionais</div>
+            <div id="base-adicionais-toggles"></div>
           </div>
 
         </div><!-- /left-col -->
@@ -560,67 +587,54 @@
         <!-- ══ COLUNA DIREITA ══ -->
         <div class="right-col" style="position:sticky;top:24px;align-self:start">
 
-          <!-- 1. Diagnóstico de Expansão -->
+          <!-- Box 1. Proposta Para -->
+          <div class="proposta-card" id="base-proposta-card">
+            <div class="empresa-label">Proposta para</div>
+            <div class="empresa-name empty" id="base-company-display">Nome da empresa</div>
+            <div class="meta-pills" id="base-meta-pills"></div>
+            <div class="price-display">
+              <div class="price-label" id="base-price-label-header">Mensalidade total</div>
+              <div class="price-main" id="base-price-main">R$ 1.490</div>
+              <div id="base-price-main-sub" style="display:none;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-top:4px"></div>
+            </div>
+          </div>
+
+          <!-- Box 2. Diagnostico de Expansao -->
           <div class="card" id="base-diag-card" style="margin-bottom:16px;min-height:80px">
-            <div class="card-title" style="margin-bottom:10px">Diagnóstico de Expansão</div>
-            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span></div>
+            <div class="card-title" style="margin-bottom:10px">Diagnostico de Expansao</div>
+            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnostico ao lado para ver sugestoes</span></div>
             <div id="base-sugestao-hint" style="font-size:12px;color:var(--text3);line-height:1.5"></div>
           </div>
 
-          <!-- 2. Atual × Proposta -->
+          <!-- Box 3. Atual x Proposta -->
           <div class="card" id="base-comparativo" style="margin-bottom:16px;display:none">
-            <div class="card-title">Atual × Proposta</div>
+            <div class="card-title">Atual x Proposta</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div style="background:#F6F8FC;border-radius:var(--radius-sm);padding:14px">
                 <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">ATUAL</div>
-                <div style="font-size:18px;font-weight:800;color:var(--navy)" id="base-comp-atual-horas">—</div>
-                <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:2px" id="base-comp-atual-preco">—</div>
+                <div style="font-size:18px;font-weight:800;color:var(--navy)" id="base-comp-atual-horas">--</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:2px" id="base-comp-atual-preco">--</div>
               </div>
               <div style="background:var(--navy);border-radius:var(--radius-sm);padding:14px">
                 <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;margin-bottom:6px">PROPOSTA</div>
-                <div style="font-size:18px;font-weight:800;color:white" id="base-comp-novo-horas">—</div>
-                <div style="font-size:13px;font-weight:700;color:var(--pink);margin-top:2px" id="base-comp-novo-preco">—</div>
+                <div style="font-size:18px;font-weight:800;color:white" id="base-comp-novo-horas">--</div>
+                <div style="font-size:13px;font-weight:700;color:var(--pink);margin-top:2px" id="base-comp-novo-preco">--</div>
               </div>
             </div>
             <div id="base-delta-card" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(251,36,145,.08);border:1.5px solid rgba(251,36,145,.15);font-size:13px;font-weight:700;color:var(--pink);text-align:center"></div>
           </div>
 
-          <!-- 3. Pacote Proposto -->
-          <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
-            <div id="base-pacote-card" style="background:var(--navy);padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
-                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px" id="base-horas-label">300h</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-pacote-idx">R$/h base do tier</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Nova Mensalidade</div>
-                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--pink);letter-spacing:-0.5px" id="base-preco-label">R$ 1.490</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px" id="base-delta-label">—</div>
-                <div style="font-size:11px;margin-top:3px;display:none" id="base-desconto-info"></div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:8px;margin-bottom:2px" id="base-total-label-header">Total c/ WhatsApp</div>
-                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white;letter-spacing:-0.5px;display:none" id="base-total-geral-label">—</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Breakdown -->
+          <!-- Box 4. Breakdown -->
           <div class="card" style="margin-bottom:16px">
             <div class="card-title">Breakdown</div>
             <div id="base-price-rows"></div>
             <div id="base-scope-section" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Escopo da integração</div>
+              <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Escopo da integracao</div>
               <div id="base-scope-items"></div>
             </div>
           </div>
 
-          <!-- premium alert -->
-          <div class="premium-alert" id="base-premium-alert" style="display:none">
-            <div style="font-weight:700;color:var(--navy);margin-bottom:4px">Integração Premium</div>
-            <div style="font-size:13px;color:var(--text2)">Orçamento personalizado — valor definido após levantamento técnico.</div>
-          </div>
-
-          <!-- payload -->
+          <!-- Box 5. Payload -->
           <div class="card" style="margin-bottom:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px">PAYLOAD</div>
@@ -629,13 +643,13 @@
             <div class="payload-code" id="base-payload" style="background:var(--navy);border-radius:var(--radius-sm);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.6"></div>
           </div>
 
-          <!-- 5. Botões -->
+          <!-- Botoes de acao -->
           <div class="btn-gerar-wrap">
             <span class="btn-tooltip" id="base-btn-gen-tooltip">Preencha o nome da empresa para continuar</span>
             <button class="btn-gerar" id="base-btn-gen" onclick="gerarPropostaBase()" disabled>Gerar Proposta de Upsell</button>
           </div>
           <div style="margin-top:8px">
-            <button onclick="salvarProposta('base')" style="width:100%;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar proposta</button>
+            <button onclick="salvarProposta('base')" style="width:100%;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Salvar proposta</button>
           </div>
 
         </div><!-- /right-col -->
@@ -881,6 +895,32 @@ CREATE POLICY "Acesso total para autenticados"
             </table>
           </div>
           <button onclick="adicionarLinhaTabela()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
+        </div>
+
+        <!-- Tabela de preços — Base (CS/Upsell) -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Tabela de Precos — Clientes de Base (CS/Upsell)</span>
+            <div style="display:flex;gap:8px">
+              <button onclick="resetarTabelaBase()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrao</button>
+              <button onclick="salvarTabelaBasePrecos()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar tabela</button>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 10px">Tabela de precos para propostas de upsell/crossell de clientes de base. Editavel independentemente da tabela de Novos Clientes.</p>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px" id="cfg-price-base-table">
+              <thead>
+                <tr style="border-bottom:2px solid var(--border)">
+                  <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Pacote (horas)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Preco (R$/mes)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">R$/hora <span class="rph-header-note">(calc.)</span></th>
+                  <th style="padding:8px 10px"></th>
+                </tr>
+              </thead>
+              <tbody id="cfg-price-base-tbody"></tbody>
+            </table>
+          </div>
+          <button onclick="adicionarLinhaTabelaBase()" style="margin-top:12px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);cursor:pointer;width:100%">+ Adicionar faixa</button>
         </div>
 
         <!-- WHATSAPP FAIXAS -->

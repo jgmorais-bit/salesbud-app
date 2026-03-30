@@ -1109,6 +1109,7 @@ function iniciarApp() {
   initSupabase()
   syncConfigFromSupabase().catch(() => {})
   syncTabelaFromSupabase().catch(() => {})
+  syncTabelaBaseFromSupabase().catch(() => {})
   syncCrmFromSupabase().catch(() => {})
   syncWhatsappFromSupabase().catch(() => {})
   syncVoipFromSupabase().catch(() => {})
@@ -1329,8 +1330,33 @@ const TABELA_HORAS_DEFAULT = [
   { horas: 950, preco: 3590 },
   { horas: 1000, preco: 3590 }
 ]
+const TABELA_HORAS_BASE_DEFAULT = [
+  { horas: 50, preco: 449 },
+  { horas: 70, preco: 499 },
+  { horas: 100, preco: 599 },
+  { horas: 150, preco: 799 },
+  { horas: 200, preco: 990 },
+  { horas: 250, preco: 1240 },
+  { horas: 300, preco: 1490 },
+  { horas: 350, preco: 1740 },
+  { horas: 400, preco: 1990 },
+  { horas: 450, preco: 2240 },
+  { horas: 500, preco: 2490 },
+  { horas: 550, preco: 2590 },
+  { horas: 600, preco: 2690 },
+  { horas: 650, preco: 2790 },
+  { horas: 700, preco: 2890 },
+  { horas: 750, preco: 2990 },
+  { horas: 800, preco: 3190 },
+  { horas: 850, preco: 3390 },
+  { horas: 900, preco: 3590 },
+  { horas: 950, preco: 3590 },
+  { horas: 1000, preco: 3590 }
+]
 let tabelaEditavel = null
 let _tabelaSynced = false
+let tabelaBaseEditavel = null
+let _tabelaBaseSynced = false
 function getTabelaAtiva() {
   if (tabelaEditavel) return tabelaEditavel
   try {
@@ -1342,6 +1368,18 @@ function getTabelaAtiva() {
   } catch {}
   tabelaEditavel = TABELA_HORAS_DEFAULT.map((t) => ({ ...t }))
   return tabelaEditavel
+}
+function getTabelaBaseAtiva() {
+  if (tabelaBaseEditavel) return tabelaBaseEditavel
+  try {
+    const s = JSON.parse(localStorage.getItem('salesbud_tabela_base') || 'null')
+    if (s && s.length > 0) {
+      tabelaBaseEditavel = s
+      return s
+    }
+  } catch {}
+  tabelaBaseEditavel = TABELA_HORAS_BASE_DEFAULT.map((t) => ({ ...t }))
+  return tabelaBaseEditavel
 }
 async function syncTabelaFromSupabase() {
   if (!supabaseClient) return
@@ -1363,8 +1401,29 @@ async function syncTabelaFromSupabase() {
   }
   _tabelaSynced = true
 }
-function calcPrecoExato(horas) {
-  const tab = getTabelaAtiva().map((t) => ({ ...t, precoHora: t.preco / t.horas }))
+async function syncTabelaBaseFromSupabase() {
+  if (!supabaseClient) return
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'tabela_precos_base')
+      .maybeSingle()
+    if (error) throw error
+    if (data?.valor && Array.isArray(data.valor) && data.valor.length > 0) {
+      tabelaBaseEditavel = data.valor
+      try { localStorage.setItem('salesbud_tabela_base', JSON.stringify(data.valor)) } catch {}
+      _tabelaBaseSynced = true
+      return
+    }
+  } catch (e) {
+    console.warn('syncTabelaBaseFromSupabase:', e.message)
+  }
+  _tabelaBaseSynced = true
+}
+function calcPrecoExato(horas, modulo) {
+  const tabSrc = modulo === 'base' ? getTabelaBaseAtiva() : getTabelaAtiva()
+  const tab = tabSrc.map((t) => ({ ...t, precoHora: t.preco / t.horas }))
   if (!horas || horas <= 0) return { precoEfetivo: 0, precoHora: 0, tierIdx: 0, horasEfetivas: 0, exato: false }
   const ul = tab[tab.length - 1],
     ie = tab.findIndex((t) => t.horas === horas)
@@ -1788,7 +1847,69 @@ function calcAdicionaisMrr(s) {
 }
 
 /* ════════════════════════════════════════
-   UPDATE / CÁLCULOS (Novos Clientes)
+   BREAKDOWN COMPARTILHADO
+════════════════════════════════════════ */
+function renderBreakdown(containerId, dados) {
+  const el = document.getElementById(containerId)
+  if (!el) return
+  const sub = (label, valor) =>
+    `<div style="display:flex;justify-content:space-between;padding:2px 0 2px 18px;font-size:11.5px;color:var(--text3)"><span style="display:flex;align-items:center;gap:4px"><span style="color:var(--border);font-family:monospace">|</span> ${esc(label)}</span><span>${fmt(valor)}/mes</span></div>`
+  const subSetup = (label, valor) =>
+    `<div style="display:flex;justify-content:space-between;padding:2px 0 2px 18px;font-size:11.5px;color:var(--text3)"><span style="display:flex;align-items:center;gap:4px"><span style="color:var(--border);font-family:monospace">|</span> ${esc(label)}</span><span>${fmt(valor)}</span></div>`
+  let h = ''
+  if (dados.mensalidade)
+    h += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(dados.mensalidade)}/mes</span></div>`
+  if (dados.integMrr > 0) {
+    h += `<div class="price-row"><span class="price-row-label">Integracao</span><span class="price-row-val amber">${fmt(dados.integMrr)}/mes</span></div>`
+    if (dados.integDetalheMrr) {
+      for (const item of dados.integDetalheMrr) {
+        if (item.valor > 0) h += sub(item.label, item.valor)
+      }
+    }
+  }
+  if (dados.adicionaisMrr > 0) {
+    h += `<div class="price-row"><span class="price-row-label">Adicionais</span><span class="price-row-val green">${fmt(dados.adicionaisMrr)}/mes</span></div>`
+    if (dados.adicionaisDetalhe) {
+      for (const item of dados.adicionaisDetalhe) {
+        if (item.valor > 0) h += sub(item.label, item.valor)
+      }
+    }
+  }
+  const subtotal = dados.mensalidade + dados.integMrr + dados.adicionaisMrr
+  const whatsVal = dados.whatsapp?.total || 0
+  const whatsUsers = dados.whatsapp?.users || 0
+  if (subtotal && (dados.integMrr > 0 || dados.adicionaisMrr > 0 || whatsVal > 0))
+    h += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(subtotal)}/mes</span></div>`
+  if (whatsVal > 0)
+    h += `<div class="price-row"><span class="price-row-label">WhatsApp (${whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsVal)}/mes</span></div>`
+  const totalComWA = dados.totalComWA || subtotal + whatsVal
+  const totalSemWA = dados.totalSemWA || subtotal
+  if (totalComWA) {
+    const sep = 'border-top:2px solid var(--navy);margin-top:4px'
+    if (whatsVal > 0) {
+      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(totalSemWA)}/mes</span></div>`
+      h += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalComWA)}/mes</span></div>`
+    } else {
+      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalComWA)}/mes</span></div>`
+    }
+  }
+  if (dados.setupTotal > 0) {
+    h += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantacao . pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(dados.setupTotal)}</span></div>`
+    if (dados.setupDetalhe) {
+      for (const item of dados.setupDetalhe) {
+        if (item.valor > 0) h += subSetup(item.label, item.valor)
+      }
+    }
+  }
+  if (dados.voip && dados.voip.label && dados.voip.label !== 'Sem VOIP') {
+    const voipText = dados.voip.incluso ? `VOIP: ${esc(dados.voip.label)} (incluso)` : `VOIP: ${esc(dados.voip.label)} (consultar)`
+    h += `<div style="margin-top:8px;font-size:12px;color:var(--text3);font-weight:600">${voipText}</div>`
+  }
+  el.innerHTML = h
+}
+
+/* ════════════════════════════════════════
+   UPDATE / CALCULOS (Novos Clientes)
 ════════════════════════════════════════ */
 function update() {
   state.empresa = document.getElementById('empresa').value.trim()
@@ -1956,34 +2077,38 @@ function update() {
     } else pmSub.style.display = 'none'
   }
   /* BREAKDOWN */
-  let html = ''
-  if (precoBase)
-    html += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`
-
-  if (mrrInteg > 0)
-    html += `<div class="price-row"><span class="price-row-label">Integração</span><span class="price-row-val amber">${fmt(mrrInteg)}/mês</span></div>`
-  if (mrrAdicionais > 0) {
+  {
+    const integDetail = []
+    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automaticas', valor: mrrTarefas })
+    if (mrrCampos > 0) integDetail.push({ label: 'Campos personalizados (' + state.integCampos + ')', valor: mrrCampos })
+    const adicDetail = []
     for (const [k, v] of Object.entries(adicCfg)) {
       if (v.ativo && v.mrr > 0 && state.adicionais[k])
-        html += `<div class="price-row"><span class="price-row-label">${esc(v.label)}</span><span class="price-row-val green">${fmt(v.mrr)}/mês</span></div>`
+        adicDetail.push({ label: v.label, valor: v.mrr })
     }
+    const setupDetail = []
+    if (setupCrm > 0) setupDetail.push({ label: 'CRM personalizado', valor: setupCrm })
+    if (setupRegras > 0) setupDetail.push({ label: 'Personalizacao de regras', valor: setupRegras })
+    if (setupPipelines > 0) setupDetail.push({ label: 'Pipelines adicionais (' + state.integPipelines + ')', valor: setupPipelines })
+    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automaticas', valor: setupTarefas })
+    if (setupCampos > 0) setupDetail.push({ label: 'Campos personalizados (' + state.integCampos + ')', valor: setupCampos })
+    const voipVal = state.integVoip || ''
+    renderBreakdown('price-rows', {
+      mensalidade: precoBase,
+      integMrr: mrrInteg,
+      integDetalheMrr: integDetail,
+      adicionaisMrr: mrrAdicionais,
+      adicionaisDetalhe: adicDetail,
+      whatsapp: { total: whatsTotal, users: state.whatsUsers },
+      totalSemWA: mensalSB,
+      totalComWA: totalGeral,
+      setupTotal,
+      setupDetalhe: setupDetail,
+      voip: voipVal && voipVal !== '_outro'
+        ? { label: voipVal, incluso: true }
+        : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
+    })
   }
-  if (mensalSB != null && (mrrInteg > 0 || mrrAdicionais > 0 || whatsTotal > 0))
-    html += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`
-  if (whatsTotal > 0)
-    html += `<div class="price-row"><span class="price-row-label">WhatsApp (${state.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`
-  if (totalGeral != null) {
-    const sepStyle = 'border-top:2px solid var(--navy);margin-top:4px'
-    if (whatsTotal > 0) {
-      html += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`
-      html += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalGeral)}/mês</span></div>`
-    } else {
-      html += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalGeral)}/mês</span></div>`
-    }
-  }
-  if (setupTotal > 0)
-    html += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantação · pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(setupTotal)}</span></div>`
-  document.getElementById('price-rows').innerHTML = html
   /* Scope section — show modular details */
   const scopeEl = document.getElementById('scope-section')
   const scopeItems = document.getElementById('scope-items')
@@ -2342,21 +2467,6 @@ function setDiag(key, val) {
   document.getElementById('diag-campos-sub')?.style.setProperty('display', stateBase.diag.campos ? 'block' : 'none')
   updateBase()
 }
-function setBaseIntegModo(modo) {
-  const isTodos = modo === 'todos'
-  document.getElementById('base-integ-modo-esp').classList.toggle('active', !isTodos)
-  document.getElementById('base-integ-modo-todos').classList.toggle('active', isTodos)
-  const modularWrap = document.getElementById('base-integ-modular')
-  if (modularWrap) modularWrap.style.display = isTodos ? 'none' : ''
-  if (isTodos) {
-    if (stateBase.integKey !== 'todos') stateBase._prevIntegKey = stateBase.integKey
-    stateBase.integKey = 'todos'
-  } else {
-    stateBase.integKey = stateBase._prevIntegKey || 'basico'
-  }
-  updateBase()
-}
-
 function updateBase() {
   stateBase.empresa = document.getElementById('base-empresa')?.value.trim() || ''
   stateBase.crm = document.getElementById('base-crm')?.value || ''
@@ -2366,6 +2476,7 @@ function updateBase() {
   stateBase.valorAtual = parseFloat(document.getElementById('base-valor-atual')?.value) || 0
   stateBase.usuariosAtual = parseInt(document.getElementById('base-usuarios-atual')?.value) || 0
   stateBase.whatsUsers = parseInt(document.getElementById('base-whats-users')?.value) || 1
+  stateBase.whatsAtual = parseInt(document.getElementById('base-whats-atual')?.value) || 0
   stateBase.diag.nCampos = parseInt(document.getElementById('diag-ncampos')?.value) || 0
   /* Read modular integration fields from DOM */
   stateBase.integRegras = document.getElementById('base-integ-regras-sim')?.classList.contains('active') || false
@@ -2374,20 +2485,16 @@ function updateBase() {
   stateBase.integCampos = parseInt(document.getElementById('base-integ-campos')?.value) || 0
   stateBase.integVoip = document.getElementById('base-integ-voip')?.value || ''
   const hd = parseInt(document.getElementById('base-horas-input')?.value) || 0,
-    r = calcPrecoExato(hd)
+    r = calcPrecoExato(hd, 'base')
   const precoBase = r.precoEfetivo,
     precoFinal = precoBase
-  const isTodosBase = stateBase.integKey === 'todos'
   let setupTotal = 0, mrrInteg = 0, blocosC = 0, setupCrm = 0, setupRegras = 0, setupPipelines = 0, setupTarefas = 0, setupCampos = 0, mrrTarefas = 0, mrrCampos = 0
-  if (isTodosBase) {
-    // "Todos os planos" mode — no individual pricing
-  } else {
+  {
     const calc = calcIntegModular(stateBase)
     setupTotal = calc.setupTotal; mrrInteg = calc.mrrInteg; blocosC = calc.blocosC
     setupCrm = calc.setupCrm; setupRegras = calc.setupRegras; setupPipelines = calc.setupPipelines
     setupTarefas = calc.setupTarefas; setupCampos = calc.setupCampos
     mrrTarefas = calc.mrrTarefas; mrrCampos = calc.mrrCampos
-    // RD Station nota
     const notaRd = document.getElementById('base-integ-nota-rd')
     if (notaRd) notaRd.style.display = calc.isRd && stateBase.integCampos > 0 ? 'block' : 'none'
   }
@@ -2405,14 +2512,11 @@ function updateBase() {
   // Adicionais
   const adicResult = calcAdicionaisMrr(stateBase)
   const mrrAdicionais = adicResult.total
-  // Show/hide modular wrap based on "Todos os planos"
-  const modularWrap = document.getElementById('base-integ-modular')
-  if (modularWrap) modularWrap.style.display = isTodosBase ? 'none' : ''
   const whatsTotal = stateBase.whatsAtivo ? getTotalWhats(stateBase.whatsUsers) : 0,
     whatsPreco = stateBase.whatsAtivo ? getWhatsPrice(stateBase.whatsUsers) : 0
   const totalMensal = precoFinal + mrrInteg + mrrAdicionais + whatsTotal
   document.getElementById('base-horas-label').textContent = r.horasEfetivas.toLocaleString('pt-BR') + 'h'
-  const tLen = getTabelaAtiva().length
+  const tLen = getTabelaBaseAtiva().length
   document.getElementById('base-pacote-idx').textContent = r.acimaDaTabela
     ? `R$ ${r.precoHora.toFixed(3)}/h (acima da tabela)`
     : r.interpolado
@@ -2436,10 +2540,10 @@ function updateBase() {
   if (dl && stateBase.valorAtual > 0) {
     const dv = totalMensal - stateBase.valorAtual,
       p = Math.round((Math.abs(dv) / stateBase.valorAtual) * 100),
-      s = dv >= 0 ? '+' : ''
+      s = dv > 0 ? '+' : dv < 0 ? '-' : ''
     dl.innerHTML =
       dv !== 0
-        ? `<span style="color:${dv > 0 ? 'var(--pink)' : 'var(--green)'};font-weight:700">${s}${fmt(dv)}/mês</span> <span style="opacity:.5">(${s}${p}%)</span>`
+        ? `<span style="color:${dv > 0 ? 'var(--pink)' : 'var(--green)'};font-weight:700">${s}${fmt(Math.abs(dv))}/mes</span> <span style="opacity:.5">(${s}${p}%)</span>`
         : `<span style="opacity:.6">Mesmo valor atual</span>`
   } else if (dl) dl.textContent = ''
   const cc = document.getElementById('base-comparativo')
@@ -2463,60 +2567,81 @@ function updateBase() {
   } else if (cc) cc.style.display = 'none'
   /* BREAKDOWN */
   {
-    let bhtml = ''
-    if (precoBase)
-      bhtml += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(precoBase)}/mês</span></div>`
-    if (mrrInteg > 0)
-      bhtml += `<div class="price-row"><span class="price-row-label">Integração</span><span class="price-row-val amber">${fmt(mrrInteg)}/mês</span></div>`
-    if (mrrAdicionais > 0) {
-      for (const [k, v] of Object.entries(adicResult.cfg)) {
-        if (v.ativo && v.mrr > 0 && stateBase.adicionais[k])
-          bhtml += `<div class="price-row"><span class="price-row-label">${esc(v.label)}</span><span class="price-row-val green">${fmt(v.mrr)}/mês</span></div>`
-      }
-    }
     const mensalSB = precoFinal + mrrInteg + mrrAdicionais
-    if (mensalSB && (mrrInteg > 0 || mrrAdicionais > 0 || whatsTotal > 0))
-      bhtml += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(mensalSB)}/mês</span></div>`
-    if (whatsTotal > 0)
-      bhtml += `<div class="price-row"><span class="price-row-label">WhatsApp (${stateBase.whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsTotal)}/mês</span></div>`
-    if (totalMensal) {
-      const sepStyle = 'border-top:2px solid var(--navy);margin-top:4px'
-      if (whatsTotal > 0) {
-        bhtml += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(mensalSB)}/mês</span></div>`
-        bhtml += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalMensal)}/mês</span></div>`
-      } else {
-        bhtml += `<div class="price-row total" style="${sepStyle}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalMensal)}/mês</span></div>`
-      }
+    const integDetail = []
+    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automaticas', valor: mrrTarefas })
+    if (mrrCampos > 0) integDetail.push({ label: 'Campos personalizados (' + stateBase.integCampos + ')', valor: mrrCampos })
+    const adicDetail = []
+    for (const [k, v] of Object.entries(adicResult.cfg)) {
+      if (v.ativo && v.mrr > 0 && stateBase.adicionais[k])
+        adicDetail.push({ label: v.label, valor: v.mrr })
     }
-    if (!isTodosBase && setupTotal > 0)
-      bhtml += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantação · pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(setupTotal)}</span></div>`
-    const bRows = document.getElementById('base-price-rows')
-    if (bRows) bRows.innerHTML = bhtml
+    const setupDetail = []
+    if (setupCrm > 0) setupDetail.push({ label: 'CRM personalizado', valor: setupCrm })
+    if (setupRegras > 0) setupDetail.push({ label: 'Personalizacao de regras', valor: setupRegras })
+    if (setupPipelines > 0) setupDetail.push({ label: 'Pipelines adicionais (' + stateBase.integPipelines + ')', valor: setupPipelines })
+    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automaticas', valor: setupTarefas })
+    if (setupCampos > 0) setupDetail.push({ label: 'Campos personalizados (' + stateBase.integCampos + ')', valor: setupCampos })
+    const voipVal = stateBase.integVoip || ''
+    renderBreakdown('base-price-rows', {
+      mensalidade: precoBase,
+      integMrr: mrrInteg,
+      integDetalheMrr: integDetail,
+      adicionaisMrr: mrrAdicionais,
+      adicionaisDetalhe: adicDetail,
+      whatsapp: { total: whatsTotal, users: stateBase.whatsUsers },
+      totalSemWA: mensalSB,
+      totalComWA: totalMensal,
+      setupTotal,
+      setupDetalhe: setupDetail,
+      voip: voipVal && voipVal !== '_outro'
+        ? { label: voipVal, incluso: true }
+        : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
+    })
     /* Scope */
     const bScope = document.getElementById('base-scope-section')
     const bItems = document.getElementById('base-scope-items')
-    if (bScope && bItems && !isTodosBase) {
+    if (bScope && bItems) {
       const scopeParts = []
       if (setupCrm > 0) scopeParts.push('Setup CRM personalizado: ' + fmt(setupCrm))
-      if (stateBase.integRegras) scopeParts.push('Personalização de regras: ' + fmt(setupRegras) + ' setup')
+      if (stateBase.integRegras) scopeParts.push('Personalizacao de regras: ' + fmt(setupRegras) + ' setup')
       if (stateBase.integPipelines > 0) scopeParts.push(stateBase.integPipelines + ' pipeline(s) adicional(is): ' + fmt(setupPipelines) + ' setup')
-      if (stateBase.integTarefas) scopeParts.push('Tarefas automáticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mês')
-      if (stateBase.integCampos > 0) scopeParts.push(stateBase.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mês')
+      if (stateBase.integTarefas) scopeParts.push('Tarefas automaticas: ' + fmt(setupTarefas) + ' setup + ' + fmt(mrrTarefas) + '/mes')
+      if (stateBase.integCampos > 0) scopeParts.push(stateBase.integCampos + ' campos (' + blocosC + ' bloco(s)): ' + fmt(setupCampos) + ' setup + ' + fmt(mrrCampos) + '/mes')
       if (stateBase.integVoip && stateBase.integVoip !== '_outro') scopeParts.push('VOIP: ' + stateBase.integVoip + ' (incluso)')
-      else if (stateBase.integVoip === '_outro') scopeParts.push('VOIP: não-listado (consultar)')
+      else if (stateBase.integVoip === '_outro') scopeParts.push('VOIP: nao-listado (consultar)')
       if (scopeParts.length) {
         bScope.style.display = 'block'
         bItems.innerHTML = scopeParts.map((s) => `<div class="scope-item"><div class="scope-dot"></div><span>${esc(s)}</span></div>`).join('')
       } else { bScope.style.display = 'none' }
-    } else if (bScope) {
-      if (isTodosBase) {
-        bScope.style.display = 'block'
-        bItems.innerHTML = '<div class="scope-item"><div class="scope-dot"></div><span>Plano de integração a definir com o cliente</span></div>'
-      } else { bScope.style.display = 'none' }
+    } else if (bScope) { bScope.style.display = 'none' }
+  }
+  /* Proposta Para — right panel summary */
+  {
+    const cd = document.getElementById('base-company-display')
+    if (cd) {
+      cd.textContent = stateBase.empresa || 'Nome da empresa'
+      cd.classList.toggle('empty', !stateBase.empresa)
     }
+    const pills = document.getElementById('base-meta-pills')
+    if (pills) {
+      const parts = []
+      parts.push(`Horas ${r.horasEfetivas.toLocaleString('pt-BR')}h/mes`)
+      if (stateBase.whatsAtivo && stateBase.whatsUsers > 0)
+        parts.push(`WhatsApp ${stateBase.whatsUsers} users`)
+      pills.innerHTML = parts.map(p => `<span class="pill">${p}</span>`).join('')
+    }
+    const pm = document.getElementById('base-price-main')
+    if (pm) pm.textContent = fmt(totalMensal) + '/mes'
+    const plh = document.getElementById('base-price-label-header')
+    if (plh) plh.textContent = stateBase.valorAtual > 0 ? 'Nova mensalidade' : 'Mensalidade total'
+    const psub = document.getElementById('base-price-main-sub')
+    if (psub && whatsTotal > 0) {
+      psub.style.display = 'block'
+      psub.textContent = 's/ WhatsApp: ' + fmt(totalMensal - whatsTotal) + '/mes'
+    } else if (psub) { psub.style.display = 'none' }
   }
   renderDiagTags()
-  document.getElementById('base-premium-alert').style.display = 'none'
   renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC)
   const horasOk = hd > 0,
     baseCanGen = !!stateBase.empresa && !!stateBase.crm && horasOk,
@@ -2540,10 +2665,10 @@ function renderDiagTags() {
   const d = stateBase.diag,
     el = document.getElementById('base-diag-tags')
   if (!el) return
-  const touched = d.crm || d.voip || d.whats || d.cs || d.extras
+  const touched = d.crm || d.voip || d.whats
   if (!touched) {
     el.innerHTML =
-      '<span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span>'
+      '<span style="font-size:12px;color:var(--text4)">Preencha o diagnostico ao lado para ver sugestoes</span>'
     const h = document.getElementById('base-sugestao-hint')
     if (h) h.innerHTML = ''
     return
@@ -2554,21 +2679,17 @@ function renderDiagTags() {
   if (d.voip) ativos.push(d.voipNativo ? 'Voip Nativo' : 'Voip Externo')
   if (d.voip && d.voipCampos) ativos.push('Campos Voip')
   if (d.whats) ativos.push('WhatsApp')
-  if (d.cs) ativos.push('Customer Success')
-  if (d.extras) ativos.push('Dev Custom')
   const opsAlta = [],
     opsMed = []
   if (!d.crm) opsAlta.push('Ativar CRM')
   if (!d.voip) opsAlta.push('Integrar Voip')
   if (!d.whats) opsAlta.push('Ativar WhatsApp')
   if (d.crm && !d.campos) opsMed.push('Campos personalizados')
-  if (!d.cs) opsMed.push('Customer Success')
-  if (!d.extras) opsMed.push('Dev / Automação')
   const score = ativos.length,
-    sp = Math.round((score / 7) * 100),
-    sc = score <= 2 ? '#D97706' : score <= 4 ? '#2563EB' : 'var(--green)',
-    sl = score <= 2 ? 'Baixa adoção' : score <= 4 ? 'Adoção parcial' : 'Alta adoção'
-  let html = `<div style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:#F6F8FC;border-radius:8px;border:1.5px solid var(--border)"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Score de Adoção</div><div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:${sp}%;background:${sc};border-radius:99px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${sc}">${score}/7</div><div style="font-size:10px;color:var(--text3);font-weight:600">${sl}</div></div></div>`
+    sp = Math.round((score / 5) * 100),
+    sc = score <= 1 ? '#D97706' : score <= 3 ? '#2563EB' : 'var(--green)',
+    sl = score <= 1 ? 'Baixa adocao' : score <= 3 ? 'Adocao parcial' : 'Alta adocao'
+  let html = `<div style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:#F6F8FC;border-radius:8px;border:1.5px solid var(--border)"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Score de Adocao</div><div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:${sp}%;background:${sc};border-radius:99px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${sc}">${score}/5</div><div style="font-size:10px;color:var(--text3);font-weight:600">${sl}</div></div></div>`
   if (ativos.length)
     html +=
       `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:100%;margin-bottom:5px">Ativo agora</div>` +
@@ -2614,7 +2735,6 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     val = new Date(hoje)
   val.setDate(hoje.getDate() + 15) // Validade fixa: 15 dias
   const fmtD = (d) => d.toLocaleDateString('pt-BR')
-  const isTodosBase = stateBase.integKey === 'todos'
   /* Build setup detalhamento */
   const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(stateBase)
   const setupDetailParts = []
@@ -2643,7 +2763,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
   const voipLabel = voipVal === '_outro' ? 'VOIP não-listado' : voipVal || 'Sem VOIP'
   const payload = {
     tipo_proposta: 'upsell_base',
-    plano_integracao: isTodosBase ? 'todos' : 'modular',
+    plano_integracao: 'modular',
     nome_empresa: stateBase.empresa,
     crm_cliente: stateBase.crm,
     contato_nome: stateBase.contatoNome || '',
@@ -2657,7 +2777,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     diag_crm: stateBase.diag.crm ? 'Sim' : 'Não',
     diag_voip: stateBase.diag.voip ? 'Sim' : 'Não',
     diag_whatsapp: stateBase.diag.whats ? 'Sim' : 'Não',
-    diag_cs: stateBase.diag.cs ? 'Sim' : 'Não',
+    whatsapp_atual: String(stateBase.whatsAtual || 0),
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${stateBase.empresa || 'Cliente'}`,
     pacote_horas: String(r.horasEfetivas),
     preco_mensalidade: `${fmt(precoFinal)}/mês`,
@@ -2667,8 +2787,8 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
       : 'Não incluso',
     total_geral_mes: fmt(totalMensal) + '/mês',
     detalhe_desconto: 'Preço padrão',
-    preco_setup: isTodosBase ? 'Ver proposta' : setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
-    descricao_setup: isTodosBase ? 'Ver proposta' : descSetup,
+    preco_setup: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    descricao_setup: descSetup,
     vendedor_nome: u.nome || '',
     vendedor_email: u.email || '',
     vendedor_telefone: u.telefone || '',
@@ -2687,8 +2807,8 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     voip_cliente: voipLabel,
     voip_status: voipStatus,
     // Totais de integração
-    setup_total: isTodosBase ? 'Ver proposta' : setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
-    setup_detalhamento: isTodosBase ? 'Ver proposta' : descSetup,
+    setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
+    setup_detalhamento: descSetup,
     mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
     mrr_integracao_detalhamento: mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Não incluso',
     // Adicionais
@@ -2770,10 +2890,6 @@ function resetStateBase() {
     if (el) el.value = v
   })
   document.getElementById('base-comparativo').style.display = 'none'
-  document.getElementById('base-integ-modo-esp')?.classList.add('active')
-  document.getElementById('base-integ-modo-todos')?.classList.remove('active')
-  const modularWrap = document.getElementById('base-integ-modular')
-  if (modularWrap) modularWrap.style.display = ''
   document.getElementById('base-integ-regras-nao')?.classList.add('active')
   document.getElementById('base-integ-regras-sim')?.classList.remove('active')
   document.getElementById('base-integ-tarefas-nao')?.classList.add('active')
@@ -2866,6 +2982,7 @@ function initConfig() {
     }
   }
   renderTabelaConfig()
+  renderTabelaBaseConfig()
   renderWhatsConfigTable()
 }
 function salvarConfig() {
@@ -2983,6 +3100,83 @@ async function resetarTabela() {
   }
   renderTabelaConfig()
   showToast('Tabela restaurada.', 'success')
+}
+
+/* ════════════════════════════════════════
+   TABELA DE PREÇOS — BASE (CS/Upsell)
+════════════════════════════════════════ */
+function renderTabelaBaseConfig() {
+  const tb = document.getElementById('cfg-price-base-tbody')
+  if (!tb) return
+  const tab = getTabelaBaseAtiva()
+  tb.innerHTML = tab
+    .map(
+      (row, i) =>
+        `<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px"><input type="number" value="${row.horas}" min="1" onchange="atualizarLinhaTabelaBaseConfig(${i},'horas',this.value)" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px;text-align:right"><input type="number" value="${row.preco}" min="1" onchange="atualizarLinhaTabelaBaseConfig(${i},'preco',this.value)" style="width:110px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy);text-align:right" /></td><td style="padding:6px 10px;text-align:right;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">R$ ${(row.preco / row.horas).toFixed(3).replace('.', ',')}</td><td style="padding:6px 10px;text-align:right"><button onclick="removerLinhaTabelaBase(${i})" style="font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer">rem</button></td></tr>`
+    )
+    .join('')
+}
+function atualizarLinhaTabelaBaseConfig(idx, field, val) {
+  const tab = getTabelaBaseAtiva()
+  tab[idx][field] = parseInt(val) || 0
+  tab.sort((a, b) => a.horas - b.horas)
+  tabelaBaseEditavel = tab
+  renderTabelaBaseConfig()
+}
+function removerLinhaTabelaBase(idx) {
+  const tab = getTabelaBaseAtiva()
+  if (tab.length <= 2) {
+    showToast('Minimo 2 faixas.', 'info')
+    return
+  }
+  tab.splice(idx, 1)
+  tabelaBaseEditavel = tab
+  renderTabelaBaseConfig()
+}
+function adicionarLinhaTabelaBase() {
+  const tab = getTabelaBaseAtiva(),
+    last = tab[tab.length - 1]
+  tab.push({ horas: last.horas + 100, preco: Math.round(last.preco * 1.1) })
+  tabelaBaseEditavel = tab
+  renderTabelaBaseConfig()
+}
+async function salvarTabelaBasePrecos() {
+  if (currentUser?.perfil !== 'admin') {
+    showToast('Apenas administradores podem salvar a tabela.', 'info')
+    return
+  }
+  const tab = getTabelaBaseAtiva()
+  tabelaBaseEditavel = tab
+  try { localStorage.setItem('salesbud_tabela_base', JSON.stringify(tab)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'tabela_precos_base', valor: tab }, { onConflict: 'chave' })
+      showToast('Tabela Base salva no Supabase.', 'success')
+    } catch (e) {
+      console.warn('salvarTabelaBasePrecos Supabase:', e.message)
+      showToast('Tabela salva localmente. Falha ao sincronizar.', 'info')
+    }
+  } else {
+    showToast('Tabela salva localmente (Supabase indisponivel).', 'info')
+  }
+}
+async function resetarTabelaBase() {
+  if (!confirm('Restaurar tabela de Base original?')) return
+  tabelaBaseEditavel = TABELA_HORAS_BASE_DEFAULT.map((t) => ({ ...t }))
+  try { localStorage.setItem('salesbud_tabela_base', JSON.stringify(tabelaBaseEditavel)) } catch {}
+  if (supabaseClient) {
+    try {
+      await supabaseClient
+        .from('configuracoes')
+        .upsert({ chave: 'tabela_precos_base', valor: tabelaBaseEditavel }, { onConflict: 'chave' })
+    } catch (e) {
+      console.warn('resetarTabelaBase Supabase:', e.message)
+    }
+  }
+  renderTabelaBaseConfig()
+  showToast('Tabela Base restaurada.', 'success')
 }
 
 /* ════════════════════════════════════════
