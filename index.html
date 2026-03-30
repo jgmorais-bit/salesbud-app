@@ -205,7 +205,7 @@
               </div>
             </div>
             <div class="field-row" style="margin-top:14px">
-              <label class="field-label">CRM atual <span style="color:var(--pink)">*</span> <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">HubSpot, Pipedrive e RD Station são CRMs nativos — setup gratuito com 1 pipeline incluído. Outros CRMs com API aberta têm setup de R$ 600. Na dúvida sobre viabilidade de integração, consulte o time de Serviços antes de fechar.</div></span></label>
+              <label class="field-label">CRM atual <span style="color:var(--pink)">*</span> <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">HubSpot, Pipedrive e RD Station são CRMs nativos — setup gratuito, com 1 pipeline incluído.<br><br>Outros CRMs com API aberta têm setup de R$ 600. Na dúvida sobre viabilidade de integração, consulte o time de Serviços antes de fechar a proposta.</div></span></label>
               <select class="field-select" id="crm" onchange="update()">
                 <option value="">Selecione o CRM</option>
               </select>
@@ -277,18 +277,18 @@
             <div class="field-row" style="margin-bottom:10px">
               <label class="field-label">Personalizacao de Regras de Negocio</label>
               <div class="toggle-row">
-                <button class="toggle-btn active" id="integ-regras-nao" onclick="toggleIntegRegras(false)">Padrão <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Envio automático do resumo da reunião segundo o template do app utilizado pelo cliente para o campo de notas do negócio mais recente no CRM. Essa é a regra padrão para todos os CRMs, nativos ou não. Sem custo adicional.</div></span></button>
-                <button class="toggle-btn" id="integ-regras-sim" onclick="toggleIntegRegras(true)">Personalizada <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box"><strong>Personalização de Regras de Negócio</strong><br><br>&#8226; Match de reuniões por título ou link;<br>&#8226; Integração com outros objetos além de notas (Atividades, por exemplo);<br>&#8226; Envio de template de WhatsApp para outros objetos;<br>&#8226; Escolha enviar para oportunidade aberta ou fechada.</div></span></button>
+                <button class="toggle-btn active" id="integ-regras-nao" onclick="toggleIntegRegras(false)">Padrão <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Integração Padrão: Envio automático do resumo da reunião para o campo de notas do negócio mais recente no CRM, seguindo o template utilizado pelo cliente dentro do aplicativo Salesbud.<br><br>Essa é a regra padrão para todos os CRMs — nativos ou personalizados. Sem custo adicional.</div></span></button>
+                <button class="toggle-btn" id="integ-regras-sim" onclick="toggleIntegRegras(true)">Personalizada <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Personalização de Regras de Negócio (setup R$ 900) - Inclui personalizações como:<br><br>&#8226; Match de reuniões por título ou link;<br>&#8226; Integração com outros objetos além de notas (ex.: Atividades);<br>&#8226; Envio de template de WhatsApp para outros objetos;<br>&#8226; Escolha entre enviar para oportunidade aberta ou fechada.<br><br>Personalizações fora desse escopo devem ser validadas com o time de Serviços.</div></span></button>
               </div>
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Pipelines adicionais <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">O primeiro pipeline já está incluído. Pipelines extras servem para separar fluxos distintos — por exemplo, um pipeline para SDR e outro para Closer. Cada pipeline adicional tem setup de R$ 400.</div></span></label>
+              <label class="field-label">Pipelines adicionais <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Pipelines Adicionais (setup R$ 400 por pipeline): O primeiro pipeline já está incluído. Cada pipeline adicional serve para separar fluxos distintos — por exemplo, um pipeline para SDR e outro para Closer.</div></span></label>
               <input type="number" class="field-input" id="integ-pipelines" value="0" min="0" max="10" oninput="update()" style="width:80px" />
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Tarefas Automáticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">A Salesbud cria automaticamente uma tarefa de próximos passos no negócio do CRM, com base nos pontos discutidos na reunião. Setup de R$ 100 + R$ 50 por mês.</div></span></label>
+              <label class="field-label">Tarefas Automáticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Tarefas Automáticas (setup R$ 100 + R$ 50/mês): A Salesbud cria automaticamente uma tarefa de próximos passos no negócio do CRM, com base nos pontos discutidos na reunião.</div></span></label>
               <div class="toggle-row">
                 <button class="toggle-btn active" id="integ-tarefas-nao" onclick="toggleIntegTarefas(false)">Nao</button>
                 <button class="toggle-btn" id="integ-tarefas-sim" onclick="toggleIntegTarefas(true)">Sim</button>
@@ -296,13 +296,13 @@
             </div>
 
             <div class="field-row" style="margin-bottom:10px">
-              <label class="field-label">Campos Personalizados (quantidade) <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Campos preenchidos automaticamente pela IA da Salesbud com base no que foi dito na reunião. Cada bloco de 5 campos custa R$ 100 de setup + R$ 100 por mês.<br><br>Exemplo: 10 campos = 2 blocos = R$ 200 de setup + R$ 200 por mês. Clientes que usam RD Station são isentos de cobrança.</div></span></label>
+              <label class="field-label">Campos Personalizados (quantidade) <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Campos Personalizados (R$ 100 de setup + R$ 100/mês a cada 5 campos):<br><br>Campos preenchidos automaticamente pela IA da Salesbud, com base no que foi dito na reunião. A cobrança é por blocos de 5 campos:<br><br>&#8226; 5 campos = R$ 100 de setup + R$ 100/mês<br>&#8226; 10 campos = R$ 200 de setup + R$ 200/mês<br>&#8226; 15 campos = R$ 300 de setup + R$ 300/mês<br><br>Clientes RD Station com integração nativa são isentos dessa cobrança — os campos devem ser configurados via produto, em tela.</div></span></label>
               <input type="number" class="field-input" id="integ-campos" value="0" min="0" max="50" step="5" oninput="update()" style="width:80px" />
               <div class="integ-nota-rd" id="integ-nota-rd">Campos personalizados isentos para RD Station (realizados via produto, em tela)</div>
             </div>
 
             <div class="field-row">
-              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIPs da lista são inclusos, sem custo de setup — a cobrança vem nas horas do pacote. VOIPs fora da lista devem ser consultados com o time de Serviços e podem ter custo adicional.</div></span></label>
+              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a analise de viabilidade.</div></span></label>
               <select class="field-input" id="integ-voip" onchange="update()">
                 <option value="">Sem VOIP</option>
               </select>
