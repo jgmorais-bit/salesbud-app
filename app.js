@@ -1619,6 +1619,10 @@ function toggleIntegRegras(val) {
   state.integRegras = val
   document.getElementById('integ-regras-sim').classList.toggle('active', val)
   document.getElementById('integ-regras-nao').classList.toggle('active', !val)
+  const tipEl = document.getElementById('tip-regras')
+  if (tipEl) tipEl.textContent = val
+    ? 'Inclui: match de reunioes por titulo ou link, integracao com outros objetos alem de notas (ex: Atividades), envio de template de WhatsApp para outros objetos, escolha enviar para oportunidade aberta ou fechada. Personalizacoes fora deste escopo devem ser validadas com o time de Servicos.'
+    : 'Integracao default -- envio do resumo da reuniao para o campo de notas do negocio mais recente do contato ou empresa encontrado na reuniao. Para CRMs nao-nativos, esta regra tambem e considerada padrao, sem personalizacao.'
   update()
 }
 function toggleIntegTarefas(val) {
@@ -1803,10 +1807,20 @@ function update() {
   const setupPipelines = state.integPipelines * ip.pipeline_adicional_setup
   const setupTarefas = state.integTarefas ? ip.tarefas_auto_setup : 0
   const blocosC = ip.campos_custom_bloco > 0 ? Math.ceil(state.integCampos / ip.campos_custom_bloco) : 0
-  const setupCampos = blocosC * ip.campos_custom_setup_por_bloco
-  const setupTotal = setupCrm + setupRegras + setupPipelines + setupTarefas + setupCampos
+  let setupCampos = blocosC * ip.campos_custom_setup_por_bloco
   const mrrTarefas = state.integTarefas ? ip.tarefas_auto_mrr : 0
-  const mrrCampos = blocosC * ip.campos_custom_mrr_por_bloco
+  let mrrCampos = blocosC * ip.campos_custom_mrr_por_bloco
+  /* RD Station: campos personalizados isentos */
+  const isRdStation = (state.crm || '').toLowerCase() === 'rd station'
+  const notaRd = document.getElementById('integ-nota-rd')
+  if (isRdStation && state.integCampos > 0) {
+    setupCampos = 0
+    mrrCampos = 0
+    if (notaRd) notaRd.style.display = 'block'
+  } else {
+    if (notaRd) notaRd.style.display = 'none'
+  }
+  const setupTotal = setupCrm + setupRegras + setupPipelines + setupTarefas + setupCampos
   const mrrInteg = mrrTarefas + mrrCampos
   /* Adicionais */
   const adicCfg = getAdicionaisConfig()
