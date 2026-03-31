@@ -309,7 +309,7 @@ async function renderHistorico() {
           st = d._status_proposta || 'enviada',
           pf = d._fonte || 'local'
         const _chk = _histSelected.has(d.id)
-        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td><div style="display:flex;gap:6px">${pf === 'supabase' ? `<button onclick="reenviarProposta(${d.id})" style="font-size:11px;padding:3px 10px;border:1.5px solid #BFDBFE;border-radius:4px;background:#EFF6FF;color:#2563EB;cursor:pointer;font-family:inherit;font-weight:600">Reenviar</button>` : ''}<button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
+        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td><div style="display:flex;gap:6px">${pf === 'supabase' ? `<button data-resend-id="${d.id}" onclick="reenviarProposta(${d.id})" style="font-size:11px;padding:3px 10px;border:1.5px solid #BFDBFE;border-radius:4px;background:#EFF6FF;color:#2563EB;cursor:pointer;font-family:inherit;font-weight:600">Reenviar</button>` : ''}<button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
       })
       .join('')
   }
@@ -2119,18 +2119,22 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     hoje = new Date(),
     val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
-  /* Build setup detalhamento */
+  /* Build detalhamentos de integração */
   const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(state)
   const setupDetailParts = []
   if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
-  if (_sRegras > 0) setupDetailParts.push('Regras ' + fmt(_sRegras))
-  if (_sPipe > 0) setupDetailParts.push(state.integPipelines + ' pipeline(s) ' + fmt(_sPipe))
-  if (_sTar > 0) setupDetailParts.push('Tarefas ' + fmt(_sTar))
-  if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + ' bloco(s)) ' + fmt(_sCamp))
-  const descSetup = setupDetailParts.length ? setupDetailParts.join(' + ') : 'Integração padrão'
+  if (_sRegras > 0) setupDetailParts.push('Personalização de regras ' + fmt(_sRegras))
+  if (_sPipe > 0) setupDetailParts.push(state.integPipelines + (_sPipe / (ip.pipeline_adicional_setup || 400) === 1 ? ' pipeline adicional ' : ' pipelines adicionais ') + fmt(_sPipe))
+  if (_sTar > 0) setupDetailParts.push('Tarefas automáticas ' + fmt(_sTar))
+  if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco) ' : ' blocos) ') + fmt(_sCamp))
+  const isCrmNat = isCrmNativo(state.crm) || state.crm === ''
+  const descSetup = setupDetailParts.length
+    ? setupDetailParts.join(' + ')
+    : (isCrmNat ? 'Setup gratuito (CRM nativo)' : 'Integração padrão')
   const mrrDetailParts = []
-  if (_mTar > 0) mrrDetailParts.push('Tarefas ' + fmt(_mTar))
-  if (_mCamp > 0) mrrDetailParts.push('Campos (' + state.integCampos + ') ' + fmt(_mCamp))
+  if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
+  if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + state.integCampos + ') ' + fmt(_mCamp) + '/mês')
+  const mrrDetalhe = mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Integração padrão (sem custo adicional)'
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -2185,7 +2189,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
     setup_detalhamento: descSetup,
     mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
-    mrr_integracao_detalhamento: mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Não incluso',
+    mrr_integracao_detalhamento: mrrDetalhe,
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
@@ -2197,7 +2201,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     integ_voip: state.integVoip || 'Sem VOIP',
     mrr_adicionais: mrrAdicionais,
     adicionais_ativos: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
-    preco_setup_basico: isCrmNativo(state.crm) || state.crm === '' ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
+    preco_setup_basico: isCrmNat ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta'
   }
   const colored = JSON.stringify(data, null, 2)
@@ -2687,18 +2691,22 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     val = new Date(hoje)
   val.setDate(hoje.getDate() + 15) // Validade fixa: 15 dias
   const fmtD = (d) => d.toLocaleDateString('pt-BR')
-  /* Build setup detalhamento */
+  /* Build detalhamentos de integração */
   const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(stateBase)
   const setupDetailParts = []
   if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
-  if (_sRegras > 0) setupDetailParts.push('Regras ' + fmt(_sRegras))
-  if (_sPipe > 0) setupDetailParts.push(stateBase.integPipelines + ' pipeline(s) ' + fmt(_sPipe))
-  if (_sTar > 0) setupDetailParts.push('Tarefas ' + fmt(_sTar))
-  if (_sCamp > 0) setupDetailParts.push(stateBase.integCampos + ' campos (' + _bC + ' bloco(s)) ' + fmt(_sCamp))
-  const descSetup = setupDetailParts.length ? setupDetailParts.join(' + ') : 'Integração padrão'
+  if (_sRegras > 0) setupDetailParts.push('Personalização de regras ' + fmt(_sRegras))
+  if (_sPipe > 0) setupDetailParts.push(stateBase.integPipelines + (_sPipe / (ip.pipeline_adicional_setup || 400) === 1 ? ' pipeline adicional ' : ' pipelines adicionais ') + fmt(_sPipe))
+  if (_sTar > 0) setupDetailParts.push('Tarefas automáticas ' + fmt(_sTar))
+  if (_sCamp > 0) setupDetailParts.push(stateBase.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco) ' : ' blocos) ') + fmt(_sCamp))
+  const isCrmNat = isCrmNativo(stateBase.crm) || stateBase.crm === ''
+  const descSetup = setupDetailParts.length
+    ? setupDetailParts.join(' + ')
+    : (isCrmNat ? 'Setup gratuito (CRM nativo)' : 'Integração padrão')
   const mrrDetailParts = []
-  if (_mTar > 0) mrrDetailParts.push('Tarefas ' + fmt(_mTar))
-  if (_mCamp > 0) mrrDetailParts.push('Campos (' + stateBase.integCampos + ') ' + fmt(_mCamp))
+  if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
+  if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + stateBase.integCampos + ') ' + fmt(_mCamp) + '/mês')
+  const mrrDetalhe = mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Integração padrão (sem custo adicional)'
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -2763,12 +2771,12 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
     setup_detalhamento: descSetup,
     mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
-    mrr_integracao_detalhamento: mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Não incluso',
+    mrr_integracao_detalhamento: mrrDetalhe,
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
     // Legado — backward compatibility
-    preco_setup_basico: isCrmNativo(stateBase.crm) || stateBase.crm === '' ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
+    preco_setup_basico: isCrmNat ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: fmt(totalMensal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
@@ -2799,31 +2807,49 @@ async function gerarPropostaBase() {
    REENVIAR PROPOSTA (Histórico)
 ════════════════════════════════════════ */
 async function reenviarProposta(propostaId) {
-  if (!supabaseClient) { showToast('Supabase não conectado.', 'info'); return }
-  const { data, error } = await supabaseClient
-    .from('propostas')
-    .select('payload_json')
-    .eq('id', propostaId)
-    .single()
-  if (error || !data?.payload_json) {
-    showToast('Erro: payload não encontrado.', 'info')
+  const btn = document.querySelector(`[data-resend-id="${propostaId}"]`)
+  if (!btn || btn.disabled) return
+  btn.disabled = true
+  btn.textContent = 'Enviando...'
+  btn.style.opacity = '0.5'
+  if (!supabaseClient) {
+    showToast('Supabase não conectado.', 'info')
+    btn.disabled = false; btn.textContent = 'Reenviar'; btn.style.opacity = ''
     return
   }
-  const wh = getWebhookUrl()
-  if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
-    showToast('Webhook não configurado.', 'info')
-    return
-  }
-  const btn = document.querySelector(`button[onclick="reenviarProposta(${propostaId})"]`)
-  if (btn) { btn.disabled = true; btn.textContent = 'Reenviando...' }
   try {
-    const r = await fetch(wh, { method: 'POST', headers: getWebhookHeaders(), body: JSON.stringify(data.payload_json) })
-    if (!r.ok) throw new Error('HTTP ' + r.status)
-    showToast('Proposta reenviada! Verifique o Gmail.', 'success')
-    if (btn) { btn.textContent = 'Reenviada'; setTimeout(() => { btn.textContent = 'Reenviar'; btn.disabled = false }, 3000) }
+    const { data, error } = await supabaseClient
+      .from('propostas')
+      .select('payload_json')
+      .eq('id', propostaId)
+      .single()
+    if (error || !data?.payload_json) {
+      showToast('Erro: payload não encontrado.', 'info')
+      btn.disabled = false; btn.textContent = 'Reenviar'; btn.style.opacity = ''
+      return
+    }
+    const wh = getWebhookUrl()
+    if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
+      showToast('Webhook não configurado.', 'info')
+      btn.disabled = false; btn.textContent = 'Reenviar'; btn.style.opacity = ''
+      return
+    }
+    // Fire-and-forget — não espera resposta do Make
+    fetch(wh, {
+      method: 'POST',
+      headers: getWebhookHeaders(),
+      body: typeof data.payload_json === 'string' ? data.payload_json : JSON.stringify(data.payload_json)
+    }).catch(() => {})
+    showToast('Proposta reenviada! Verifique o email em alguns segundos.', 'success')
+    btn.textContent = 'Reenviado'
+    btn.style.background = 'var(--green)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--green)'; btn.style.opacity = ''
+    setTimeout(() => {
+      btn.disabled = false; btn.textContent = 'Reenviar'
+      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''
+    }, 30000)
   } catch (e) {
-    showToast('Falha ao reenviar: ' + (e.message || 'tente novamente'), 'info')
-    if (btn) { btn.textContent = 'Reenviar'; btn.disabled = false }
+    showToast('Erro ao reenviar: ' + e.message, 'info')
+    btn.disabled = false; btn.textContent = 'Reenviar'; btn.style.opacity = ''
   }
 }
 
