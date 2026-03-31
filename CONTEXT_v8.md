@@ -1,5 +1,5 @@
 # SalesBud Propostas -- Context Document v8
-> Ultima atualizacao: 30/03/2026 -- App em producao com componentes modulares em ambas as abas
+> Ultima atualizacao: 31/03/2026 -- Fixes pos-Sprint 6: payload, login, reenviar, template slide unico
 
 ## Projeto
 
@@ -8,7 +8,7 @@ Gerador de propostas comerciais interno para o time de vendas SalesBud. Frontend
 - **App em producao**: https://jgmorais-bit.github.io/salesbud-app
 - **Repositorio**: https://github.com/jgmorais-bit/salesbud-app (publico)
 - **Pasta local**: ~/salesbud-propostas/
-- **Branch**: main
+- **Branch**: main (fixes diretos) | feature branches + PR para sprints
 - **Arquivos**: index.html + styles.css + app.js
 - **Desktop only** -- nao ha versao mobile, sem emojis
 
@@ -18,12 +18,15 @@ Gerador de propostas comerciais interno para o time de vendas SalesBud. Frontend
 
 ### Funcionalidades completas
 - Login centralizado via Supabase Auth (email/senha)
+- Tela de "Carregando..." durante verificacao de sessao (sem flash de login ao recarregar)
+- Toggle "Manter conectado" no login (marcado por padrao): desmarcado = sessao expira ao fechar browser
 - Esqueci minha senha (Supabase envia email de recuperacao)
 - Alterar senha pelo perfil (modal no dropdown do avatar)
 - Usuarios criados via Supabase Dashboard (trigger auto-insert em perfis)
 - Aba Novos Clientes -- componentes modulares de integracao, WhatsApp, adicionais, payload
 - Aba Clientes de Base -- modelo Upgrade (horas adicionais), diagnostico, comparativo, componentes modulares
 - Historico compartilhado via Supabase com filtros, KPIs, export CSV, selecao em massa, edicao (obs_interna)
+- Botao "Reenviar" no historico: busca payload_json do Supabase e dispara webhook (fire-and-forget, cooldown 30s)
 - Configuracoes centralizadas no Supabase: 2 tabelas de precos, faixas WhatsApp, CRMs, VOIPs, precos de integracao, adicionais
 - CRM obrigatorio + lista customizavel por admin
 - Tooltips informativos em cada componente de integracao (ambas as abas)
@@ -152,9 +155,15 @@ Trigger `on_auth_user_created`: insere automaticamente em `perfis` quando um usu
 | salesbud_adicionais | CACHE (sync com Supabase) |
 | salesbud_users_v1 | CACHE (fallback perfis) |
 | salesbud_historico | CACHE (fallback propostas) |
-| salesbud_session | SESSAO (login) |
+| salesbud_session | SESSAO (login fallback localStorage) |
 | salesbud_last_email | INDIVIDUAL (pre-fill login) |
 | salesbud_banner_dismissed_ver | INDIVIDUAL (banner dismiss) |
+| salesbud_no_persist | FLAG (manter conectado = OFF: set 'true', apagado no logout) |
+
+### sessionStorage
+| Chave | Classificacao |
+|---|---|
+| salesbud_session_temp | FLAG (manter conectado = OFF: presente durante a sessao, limpa ao fechar browser) |
 
 ---
 
@@ -162,14 +171,14 @@ Trigger `on_auth_user_created`: insere automaticamente em `perfis` quando um usu
 
 ### Fluxo
 1. AE preenche dados do cliente (empresa, CRM, contato)
-2. AE seleciona pacote de horas (tabela V2, 50h-1000h)
+2. AE seleciona pacote de horas (tabela V2, 50h-1000h; minimo 50h, nao e possivel gerar com menos)
 3. AE configura componentes de integracao:
    - Personalizacao de Regras (padrao vs personalizada)
    - Pipelines adicionais (0+)
    - Tarefas Automaticas (toggle)
    - Campos Personalizados (quantidade, blocos de 5)
    - VOIP (listado=incluso, nao-listado=consultar)
-4. AE ativa/desativa WhatsApp e define quantidade de usuarios
+4. AE ativa/desativa WhatsApp e define quantidade de usuarios (inicia em 1)
 5. AE ativa/desativa adicionais opcionais (configurados pelo admin)
 6. App calcula: Setup total + MRR total (horas + integracao + WhatsApp + adicionais)
 7. AE gera proposta -> webhook -> Make -> Google Slides -> PDF -> email
@@ -197,8 +206,10 @@ O CS informa o consumo atual do cliente e propoe horas ADICIONAIS. O sistema cal
 1. CS preenche dados do cliente (empresa, CRM, contato)
 2. CS informa Consumo Atual: horas contratadas, usuarios ativos, valor mensal pago, usuarios WhatsApp contratados
 3. CS preenche Diagnostico: CRM ativa? (nativo? campos?), VOIP? (nativo? campos?), WhatsApp ativo?
+   - Score de adocao /5; tags "Ativo agora" e "Expansao possivel" (sem textos prescritivos)
 4. CS informa horas mensais adicionais (campo direto ou calculadora de consumo)
    - totalHoras = horasAtuais + horasAdicionais
+   - Linha informativa: "Atual: Xh + Adicional: Yh = Novo pacote: Zh"
    - Calculadora: estimativa - horasAtuais = adicional (minimo 0)
 5. CS configura componentes de integracao (mesmos de Novos Clientes)
 6. CS configura WhatsApp e adicionais opcionais
@@ -254,6 +265,36 @@ VOIP: Api4com (incluso)
 ```
 
 Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = "Sem VOIP", linha omitida.
+"Escopo da Integracao" removido de ambas as abas (redundante com breakdown).
+
+---
+
+## Template Google Slides
+
+### Slide unico "Proposta Comercial"
+- 3 slides antigos (Basica/Intermediaria/Avancada) substituidos por 1 slide unico modular
+- Template ID: `1noZ8EHZJ4EPUrvuowd2UZjl24Lj9QXKH2ErPClZT_XA` (mesmo ID)
+
+### Tags ativas no template (mapeadas no Make)
+| Tag | Exemplo de valor |
+|---|---|
+| {{nome_empresa}} | Acme Corp |
+| {{crm_cliente}} | HubSpot |
+| {{pacote_horas}} | 100 |
+| {{preco_mensalidade}} | R$ 599/mes |
+| {{fee_manutencao}} | R$ 150/mes ou "Nao incluso" |
+| {{mrr_integracao_detalhamento}} | ver regras abaixo |
+| {{setup_total}} | R$ 1.400 ou "Gratuito" |
+| {{setup_detalhamento}} | ver regras abaixo |
+| {{voip_cliente}} | Api4com |
+| {{voip_status}} | Incluso / Consultar / Nao incluso |
+| {{adicionais_lista}} | Chat com Bud R$ 150/mes |
+| {{total_geral_mes}} | R$ 2.790/mes |
+| {{vendedor_nome}} | Joao Silva |
+| {{data_proposta}} | 31/03/2026 |
+
+### Tags removidas do Make (obsoletas)
+- `preco_setup`, `preco_setup_basico`, `total_avancado`
 
 ---
 
@@ -264,6 +305,7 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 - Edicao de obs_interna
 - Status: enviada, negociacao, aprovada, perdida (com motivo)
 - Sem coluna de desconto (removida)
+- Botao "Reenviar": disponivel para propostas com payload_json no Supabase; dispara webhook em fire-and-forget; cooldown de 30s para evitar duplicatas
 
 ---
 
@@ -294,12 +336,12 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | titulo_proposta | "Salesbud - Apresentacao e Proposta - {empresa}" |
 | pacote_horas | Quantidade de horas do pacote |
 | preco_mensalidade | Preco mensal do pacote |
-| fee_manutencao | MRR de integracao |
+| fee_manutencao | MRR de integracao formatado ou "Nao incluso" |
 | preco_whatsapp | WhatsApp formatado |
 | total_geral_mes | MRR total |
 | detalhe_desconto | "Preco padrao" (fixo) |
-| preco_setup | Setup total |
-| descricao_setup | Detalhamento dos componentes de setup |
+| preco_setup | Setup total numerico (legado) |
+| descricao_setup | Identico a setup_detalhamento (ver regras abaixo) |
 | vendedor_nome | Nome do vendedor |
 | vendedor_email | Email do vendedor |
 | vendedor_telefone | Telefone do vendedor |
@@ -318,12 +360,35 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | campos_blocos | Blocos de 5 campos |
 | voip_cliente | VOIP selecionado |
 | voip_status | "Incluso" / "Consultar" / "Nao incluso" |
-| setup_total | Setup total formatado |
-| setup_detalhamento | Detalhamento do setup |
+| setup_total | "Gratuito" ou valor formatado (ex: "R$ 1.400") |
+| setup_detalhamento | ver regras abaixo |
 | mrr_integracao | MRR de integracao formatado |
-| mrr_integracao_detalhamento | Detalhe do MRR |
+| mrr_integracao_detalhamento | ver regras abaixo |
 | adicionais_lista | Lista de adicionais ativos |
 | adicionais_total | Total de adicionais MRR |
+
+### Regras de formatacao do payload (6 cenarios cobertos)
+
+**`mrr_integracao_detalhamento`**
+- CRM nao selecionado: `"Sem integracao de CRM"`
+- CRM nativo, sem extras pagos: `"Integracao padrao incluida"`
+- Com extras: `"Tarefas automaticas R$ 50/mes + Campos personalizados (5) R$ 100/mes"`
+
+**`setup_total`**
+- Setup = 0: `"Gratuito"`
+- Setup > 0: valor formatado, ex: `"R$ 1.400"`
+
+**`setup_detalhamento` / `descricao_setup`** (identicos)
+- CRM nao selecionado: `"Sem integracao de CRM"`
+- CRM nativo, sem extras de setup: `"CRM nativo -- setup gratuito"`
+- Com extras: itens joined por " + ", ex: `"CRM personalizado R$ 600 + Personalizacao de regras R$ 900"`
+  - Itens possiveis: "CRM personalizado R$X", "Personalizacao de regras R$X", "N pipeline(s) adicional(is) R$X", "Tarefas automaticas R$X", "N campos (B bloco(s)) R$X"
+  - "CRM nativo" nunca aparece no detalhamento de setup (e gratuito, nao e listado)
+
+**`voip_status`**
+- VOIP na lista de inclusos: `"Incluso"`
+- VOIP nao listado: `"Consultar"`
+- Sem VOIP selecionado: `"Nao incluso"`
 
 ### Variaveis exclusivas de Novos Clientes
 | Variavel | Descricao |
@@ -335,8 +400,8 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | integ_voip | String (legado) |
 | mrr_adicionais | Numerico (legado) |
 | adicionais_ativos | String (legado) |
-| preco_setup_basico | Referencia: setup CRM basico |
-| total_avancado | Referencia: total com tudo |
+| preco_setup_basico | "Gratuito" (nativo ou sem CRM) ou valor CRM personalizado |
+| total_avancado | Total com tudo incluso |
 
 ### Variaveis exclusivas de Base
 | Variavel | Descricao |
@@ -359,7 +424,7 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 
 1. **Formulario de criacao de usuario removido** -- trigger `on_auth_user_created` substitui. Usuarios criados via Supabase Dashboard com "Auto Confirm User".
 2. **Desconto e validade removidos da UI** -- payload mantem `desconto_pct: 0` e `validade_proposta` com +15 dias fixos para compatibilidade com Make.
-3. **plano_integracao: 'modular'** -- ambos os modulos enviam componentes individuais.
+3. **`plano_integracao: 'modular'`** -- ambos os modulos enviam componentes individuais.
 4. **Toggle "Todos os planos" removido** -- sempre modular, sem opcao de tier unico.
 5. **Modelo de upsell: Upgrade** -- campo "Horas mensais adicionais", total = atual + adicional, preco pela tabela Base por volume.
 6. **"Escopo da Integracao" removido** -- redundante com breakdown detalhado de sub-itens.
@@ -367,14 +432,26 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 8. **App desktop only** -- sem versao mobile, tooltips por hover, sem emojis.
 9. **Duas tabelas de precos independentes** -- Novos Clientes e Base/CS, editaveis separadamente pelo admin.
 10. **`calcPrecoExato(horas, modulo)` parametrizado** -- `'base'` le de `tabela_precos_base`, default le de `tabela_precos`.
+11. **Horas minimo 50** -- campo de horas inicia em 50 e nao aceita valor menor; nao e possivel gerar proposta com menos de 50h.
+12. **WhatsApp inicia em 1 usuario** -- default corrigido de 5 para 1.
+13. **Botao Reenviar: fire-and-forget** -- fetch sem await, feedback imediato, cooldown 30s. Disponivel para qualquer proposta com payload_json salvo no Supabase.
+14. **Template slide unico** -- 3 slides antigos (Basica/Intermediaria/Avancada) substituidos por 1 slide modular com tags novas. Template ID inalterado.
+15. **Loading screen anti-flash** -- overlay `screen-loading` cobre login/app durante verificacao de sessao. `screen-login` nao tem mais `active` por padrao. Timeout de 5s como fallback.
+16. **"Manter conectado" OFF** -- grava `salesbud_no_persist` no localStorage + `salesbud_session_temp` no sessionStorage. Ao reabrir o browser (sessionStorage limpo), init detecta e faz signOut automatico antes de restaurar sessao.
+
+---
+
+## Workflow de Desenvolvimento
+
+- **Fixes pequenos** (1-3 arquivos, sem risco de regressao): commit direto na main, Claude Sonnet auto
+- **Sprints grandes** (multiplas funcionalidades ou refactor): feature branch + Pull Request, Claude Opus max effort
+- Push apos cada commit
 
 ---
 
 ## Pendencias
 
 - Tabela de precos Base: CS vai definir valores especificos (hoje usa mesma V2 como default)
-- Template Google Slides: precisa de tags novas para variaveis modulares do payload
-- Make: precisa mapear variaveis novas do payload (integracao, adicionais, diagnostico)
 - Migracao de contas pessoais para organizacionais (GUIA_MIGRACAO.md)
 - Upgrade do Make para plano Core (~$9/mes)
 - Paginacao no historico (quando > 500 propostas)
