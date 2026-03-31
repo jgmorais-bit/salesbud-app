@@ -62,7 +62,7 @@ async function testarSupabase() {
     const { error } = await supabaseClient.from('propostas').select('id').limit(1)
     if (error) throw error
     if (s) {
-      s.textContent = 'Conectado ✓'
+      s.textContent = 'Conectado'
       s.style.background = '#F0FDF4'
       s.style.color = '#16A34A'
     }
@@ -641,7 +641,7 @@ async function checkHubSpotPrefill() {
     update()
     if (title) title.textContent = `Dados carregados — ${deal.nome_empresa || deal.dealname || 'Deal ' + dealId}`
     if (loader)
-      loader.innerHTML = `<span style="color:#16A34A;font-size:12px;font-weight:600">✓ Preenchido automaticamente</span>`
+      loader.innerHTML = `<span style="color:#16A34A;font-size:12px;font-weight:600">Preenchido automaticamente</span>`
   } catch (e) {
     clearTimeout(to)
     if (title) title.textContent = e.name === 'AbortError' ? 'Timeout — preencha manualmente' : 'Falha ao buscar deal'
@@ -1607,7 +1607,7 @@ function renderWhatsConfigTable() {
     `<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px"><input type="number" value="${f.min}" min="1" onchange="atualizarWhatsLinha(${i},'min',this.value)" style="width:70px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px"><input type="number" value="${f.max ?? ''}" min="0" placeholder="∞" onchange="atualizarWhatsLinha(${i},'max',this.value)" style="width:70px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy)" /></td><td style="padding:6px 10px;text-align:right"><input type="number" value="${f.preco}" min="1" onchange="atualizarWhatsLinha(${i},'preco',this.value)" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;color:var(--navy);text-align:right" /></td><td style="padding:6px 10px;text-align:right"><button onclick="removerWhatsFaixa(${i})" style="font-size:11px;padding:3px 8px;border:1px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer">rem</button></td></tr>`
   ).join('')
 }
-const fmt = (v) => (v == null ? 'Sob consulta' : 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0 }))
+const fmt = (v) => (v == null || isNaN(v) ? 'Sob consulta' : 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0 }))
 function getWhatsPrice(u) {
   const faixas = getWhatsFaixas()
   const tier = faixas.find((t) => u >= t.min && (t.max == null || u <= t.max))
@@ -2238,7 +2238,7 @@ async function enviarWebhook(payloadText, btnEl, btnTextoOriginal, onSuccess) {
       clearEtapas()
       if (r.ok) {
         await onSuccess()
-        btnEl.innerHTML = '✓ Proposta enviada!'
+        btnEl.innerHTML = 'Proposta enviada!'
         btnEl.style.background = 'var(--green)'
         showToast('Proposta enviada! Verifique o Gmail.', 'success')
         setTimeout(() => { btnEl.innerHTML = btnTextoOriginal; btnEl.style.background = ''; btnEl.disabled = false; }, 4000)
@@ -2764,7 +2764,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
     // Legado — backward compatibility
     preco_setup_basico: isCrmNativo(stateBase.crm) || stateBase.crm === '' ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
-    total_avancado: fmt(precoFinal + 499 + whatsTotal) + '/mês'
+    total_avancado: fmt(totalMensal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
     .replace(/"([^"]+)":/g, `<span style="color:#93C5FD">"$1"</span>:`)
@@ -3594,7 +3594,7 @@ function processImportFile(file) {
       tabelaEditavel = data
       const area = document.getElementById('import-preview-area')
       area.style.display = 'block'
-      area.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">${data.length} faixas importadas ✓</div><div class="import-preview"><table><thead><tr><th>Horas</th><th>Preço</th><th>R$/h</th></tr></thead><tbody>${data.map((r) => `<tr><td>${r.horas.toLocaleString('pt-BR')}h</td><td>${fmt(r.preco)}</td><td>R$ ${(r.preco / r.horas).toFixed(3)}</td></tr>`).join('')}</tbody></table></div><button onclick="salvarTabelaPrecos()" style="margin-top:10px;padding:8px 16px;background:var(--pink);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar esta tabela</button>`
+      area.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">${data.length} faixas importadas</div><div class="import-preview"><table><thead><tr><th>Horas</th><th>Preço</th><th>R$/h</th></tr></thead><tbody>${data.map((r) => `<tr><td>${r.horas.toLocaleString('pt-BR')}h</td><td>${fmt(r.preco)}</td><td>R$ ${(r.preco / r.horas).toFixed(3)}</td></tr>`).join('')}</tbody></table></div><button onclick="salvarTabelaPrecos()" style="margin-top:10px;padding:8px 16px;background:var(--pink);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar esta tabela</button>`
       renderTabelaConfig()
     } catch (err) {
       showToast('Erro ao processar arquivo: ' + err.message, 'info')
@@ -3723,7 +3723,7 @@ function baixarPDF(modulo) {
 
   ${integ ? `<div class="section" style="margin-top:24px"><div class="section-title">Integração CRM</div><div class="row"><span class="label">Plano</span><span class="val">${integ}</span></div></div>` : ''}
 
-  <div class="validity">✓ Proposta válida até ${validade}</div>
+  <div class="validity">Proposta valida ate ${validade}</div>
 
   <div class="footer">
     SalesBud · Proposta gerada em ${data} por ${vendedor}<br>
@@ -3803,7 +3803,7 @@ async function editarProposta(id, fonte) {
     <div style="background:white;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1E2A3B">Editar Proposta</h3>
-        <button onclick="fecharEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6B7A99">✕</button>
+        <button onclick="fecharEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6B7A99">X</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div><label style="font-size:12px;font-weight:700;color:#6B7A99;display:block;margin-bottom:4px">Empresa</label>

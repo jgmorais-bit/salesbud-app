@@ -157,7 +157,7 @@
 
     <!-- TEMPLATE UPDATE BANNER (FEATURE) -->
     <div id="template-update-banner">
-      <span class="banner-icon">📋</span>
+      <span class="banner-icon"></span>
       <div class="banner-text">
         <strong id="banner-template-msg">Template atualizado</strong>
         <span id="banner-template-sub">Versão nova disponível — todos os cálculos usarão o template atualizado.</span>
@@ -211,7 +211,7 @@
               </select>
               <span class="field-error-msg" id="err-crm">Selecione o CRM</span>
               <div id="crm-api-aviso" style="display:none;margin-top:6px;padding:7px 11px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:6px;font-size:12px;color:#92400E;font-weight:500">
-                ⚠️ Integração via API aberta — sujeita a <strong>consulta de viabilidade técnica</strong> antes da contratação.
+                Integracao via API aberta — sujeita a <strong>consulta de viabilidade técnica</strong> antes da contratação.
               </div>
             </div>
           </div>
@@ -265,7 +265,7 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Integração CRM</div>
+            <div class="card-title">Preenchimento Automatico de CRM</div>
 
             <details class="integ-boas-praticas">
               <summary>Ver boas praticas</summary>
@@ -368,7 +368,7 @@
             <button class="btn-gerar" id="btn-gen" onclick="gerarProposta()" disabled>Gerar Proposta</button>
           </div>
           <div style="margin-top:8px">
-            <button id="btn-salvar" onclick="salvarProposta('proposta')" style="width:100%;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar proposta</button>
+            <button id="btn-salvar" onclick="salvarProposta('proposta')" style="width:100%;padding:10px;background:white;color:var(--navy);border:2px solid var(--navy);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Salvar proposta</button>
           </div>
           <div style="font-size:11px;color:var(--text3);text-align:center;line-height:1.5;margin-top:6px">A proposta será enviada para seu e-mail assim que gerada.</div>
         </div>
@@ -1086,12 +1086,12 @@ CREATE POLICY "Acesso total para autenticados"
     <h3>Por que a proposta foi perdida?</h3>
     <p>Isso nos ajuda a melhorar as próximas abordagens. Pode pular se preferir.</p>
     <div class="perda-options">
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Preço')">💰 Preço</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Concorrente')">⚔️ Concorrente</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Sem decisão')">⏳ Sem decisão</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Timing ruim')">📅 Timing ruim</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Produto não atende')">🔧 Produto</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Outro')">💬 Outro</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Preco')">Preco</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Concorrente')">Concorrente</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Sem decisao')">Sem decisao</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Timing ruim')">Timing ruim</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Produto nao atende')">Produto</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Outro')">Outro</button>
     </div>
     <textarea class="perda-obs" id="perda-obs" placeholder="Observação opcional..."></textarea>
     <div class="perda-actions">
