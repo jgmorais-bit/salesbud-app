@@ -309,7 +309,7 @@ async function renderHistorico() {
           st = d._status_proposta || 'enviada',
           pf = d._fonte || 'local'
         const _chk = _histSelected.has(d.id)
-        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td><div style="display:flex;gap:6px"><button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
+        return `<tr><td style="text-align:center;padding:0 8px"><input type="checkbox" class="hist-check" data-id="${d.id}" data-fonte="${pf}" ${_chk ? 'checked' : ''} onchange="onHistCheck(this)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--pink)"></td><td style="font-size:12px;color:var(--text3)">${df}</td><td style="font-weight:600;color:var(--text)">${esc(d.nome_empresa || '—')}</td><td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;${ts}">${tl}</span></td><td style="font-size:13px;color:var(--text2)">${esc(d.vendedor_nome || '—')}</td><td style="font-weight:600;color:var(--navy)">${esc(d.pacote_horas || '—')}h</td><td style="font-weight:700">${esc(d.preco_mensalidade || '—')}</td><td><select class="status-badge status-${st}" data-prop-id="${d.id}" data-fonte="${pf}" onchange="atualizarStatusProposta(${d.id},this.value,'${pf}')" style="border:none;outline:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;appearance:none;padding:3px 9px;border-radius:20px"><option value="enviada" ${st === 'enviada' ? 'selected' : ''}>Enviada</option><option value="negociacao" ${st === 'negociacao' ? 'selected' : ''}>Negociação</option><option value="aprovada" ${st === 'aprovada' ? 'selected' : ''}>Aprovada</option><option value="perdida" ${st === 'perdida' ? 'selected' : ''}>Perdida</option></select>${d._motivo_perda ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(d._motivo_perda)}</div>` : ''}</td><td><div style="display:flex;gap:6px">${pf === 'supabase' ? `<button onclick="reenviarProposta(${d.id})" style="font-size:11px;padding:3px 10px;border:1.5px solid #BFDBFE;border-radius:4px;background:#EFF6FF;color:#2563EB;cursor:pointer;font-family:inherit;font-weight:600">Reenviar</button>` : ''}<button onclick="editarProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid var(--border);border-radius:4px;background:white;color:var(--navy);cursor:pointer;font-family:inherit;font-weight:600">Editar</button><button onclick="excluirProposta(${d.id},'${pf}')" style="font-size:11px;padding:3px 10px;border:1.5px solid #FCA5A5;border-radius:4px;background:#FEF2F2;color:#DC2626;cursor:pointer;font-family:inherit;font-weight:600">Excluir</button></div></td></tr>`
       })
       .join('')
   }
@@ -1666,7 +1666,7 @@ let state = {
   integVoip: '',
   adicionais: {},
   whatsAtivo: true,
-  whatsUsers: 5
+  whatsUsers: 1
 }
 function toggleIntegRegras(val) {
   state.integRegras = val
@@ -1948,8 +1948,9 @@ function update() {
   }
   state.whatsUsers = parseInt(document.getElementById('whats-users')?.value) || 0
 
-  const hd = parseInt(document.getElementById('horas-input').value) || 0,
-    r = calcPrecoExato(hd)
+  let hd = parseInt(document.getElementById('horas-input').value) || 0
+  if (hd > 0 && hd < 50) { hd = 50; document.getElementById('horas-input').value = 50 }
+  const r = calcPrecoExato(hd)
   const aA = document.getElementById('horas-acima-aviso'),
     aI = document.getElementById('horas-interpolado-aviso')
   if (r.acimaDaTabela) {
@@ -2286,7 +2287,7 @@ function calcPreviewHoras() {
 function aplicarCalcHoras() {
   const t = parseInt(document.getElementById('calc-resultado').dataset.valor) || 0
   if (!t) return
-  document.getElementById('horas-input').value = t
+  document.getElementById('horas-input').value = Math.max(50, t)
   update()
 }
 
@@ -2306,15 +2307,15 @@ function resetState() {
     integVoip: '',
     adicionais: {},
     whatsAtivo: true,
-    whatsUsers: 5
+    whatsUsers: 1
   }
   ;['empresa', 'contato-nome', 'contato-email'].forEach((id) => {
     const el = document.getElementById(id)
     if (el) el.value = ''
   })
   document.getElementById('crm').value = ''
-  document.getElementById('horas-input').value = '300'
-  document.getElementById('whats-users').value = '5'
+  document.getElementById('horas-input').value = '50'
+  document.getElementById('whats-users').value = '1'
   /* Reset modular integration controls */
   document.getElementById('integ-regras-nao')?.classList.add('active')
   document.getElementById('integ-regras-sim')?.classList.remove('active')
@@ -2363,7 +2364,7 @@ const stateBase = {
   integVoip: '',
   adicionais: {},
   whatsAtivo: true,
-  whatsUsers: 5,
+  whatsUsers: 1,
   diag: {
     crm: false,
     crmNativo: false,
@@ -2406,7 +2407,8 @@ function aplicarBaseCalc() {
   const t = parseInt(document.getElementById('base-calc-resultado')?.dataset.valor) || 0
   if (!t) return
   const horasAtuais = parseInt(document.getElementById('base-horas-atual')?.value) || 0
-  const adicional = Math.max(0, t - horasAtuais)
+  const totalDesejado = Math.max(50, t)
+  const adicional = Math.max(0, totalDesejado - horasAtuais)
   document.getElementById('base-horas-input').value = adicional
   updateBase()
 }
@@ -2458,7 +2460,10 @@ function updateBase() {
   /* Resumo horas: Atual Xh + Adicional Yh = Novo pacote Zh */
   const resumoEl = document.getElementById('base-horas-resumo')
   if (resumoEl) {
-    if (horasAdicionais > 0 && stateBase.horasAtual > 0) {
+    if (totalHoras > 0 && totalHoras < 50) {
+      resumoEl.style.display = 'block'
+      resumoEl.innerHTML = `<span style="color:#D97706">Pacote total (${totalHoras}h) abaixo do minimo de 50h</span>`
+    } else if (horasAdicionais > 0 && stateBase.horasAtual > 0) {
       resumoEl.style.display = 'block'
       resumoEl.textContent = `Atual: ${stateBase.horasAtual}h + Adicional: ${horasAdicionais}h = Novo pacote: ${totalHoras}h`
     } else { resumoEl.style.display = 'none' }
@@ -2601,7 +2606,7 @@ function updateBase() {
   }
   renderDiagTags()
   renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC, horasAdicionais)
-  const horasOk = totalHoras > 0,
+  const horasOk = totalHoras >= 50,
     baseCanGen = !!stateBase.empresa && !!stateBase.crm && horasOk,
     bb = document.getElementById('base-btn-gen')
   if (bb) bb.disabled = !baseCanGen
@@ -2614,7 +2619,7 @@ function updateBase() {
   if (bt) {
     if (!stateBase.empresa) bt.textContent = 'Preencha o nome da empresa'
     else if (!stateBase.crm) bt.textContent = 'Selecione o CRM'
-    else if (!horasOk) bt.textContent = 'Informe o volume de horas'
+    else if (!horasOk) bt.textContent = 'Pacote total deve ser de pelo menos 50h'
     else bt.textContent = 'Pronto para gerar!'
   }
 }
@@ -2789,6 +2794,39 @@ async function gerarPropostaBase() {
     showToast('Proposta gerada! Verifique o Gmail.', 'success')
   })
 }
+
+/* ════════════════════════════════════════
+   REENVIAR PROPOSTA (Histórico)
+════════════════════════════════════════ */
+async function reenviarProposta(propostaId) {
+  if (!supabaseClient) { showToast('Supabase não conectado.', 'info'); return }
+  const { data, error } = await supabaseClient
+    .from('propostas')
+    .select('payload_json')
+    .eq('id', propostaId)
+    .single()
+  if (error || !data?.payload_json) {
+    showToast('Erro: payload não encontrado.', 'info')
+    return
+  }
+  const wh = getWebhookUrl()
+  if (!wh || wh === CONFIG_DEFAULT.webhookUrl) {
+    showToast('Webhook não configurado.', 'info')
+    return
+  }
+  const btn = document.querySelector(`button[onclick="reenviarProposta(${propostaId})"]`)
+  if (btn) { btn.disabled = true; btn.textContent = 'Reenviando...' }
+  try {
+    const r = await fetch(wh, { method: 'POST', headers: getWebhookHeaders(), body: JSON.stringify(data.payload_json) })
+    if (!r.ok) throw new Error('HTTP ' + r.status)
+    showToast('Proposta reenviada! Verifique o Gmail.', 'success')
+    if (btn) { btn.textContent = 'Reenviada'; setTimeout(() => { btn.textContent = 'Reenviar'; btn.disabled = false }, 3000) }
+  } catch (e) {
+    showToast('Falha ao reenviar: ' + (e.message || 'tente novamente'), 'info')
+    if (btn) { btn.textContent = 'Reenviar'; btn.disabled = false }
+  }
+}
+
 function resetStateBase() {
   Object.assign(stateBase, {
     empresa: '',
@@ -2806,7 +2844,7 @@ function resetStateBase() {
     integVoip: '',
     adicionais: {},
     whatsAtivo: true,
-    whatsUsers: 5,
+    whatsUsers: 1,
     diag: {
       crm: false,
       crmNativo: false,
@@ -2829,8 +2867,8 @@ function resetStateBase() {
     ['base-horas-atual', ''],
     ['base-usuarios-atual', '5'],
     ['base-valor-atual', ''],
-    ['base-horas-input', '300'],
-    ['base-whats-users', '5'],
+    ['base-horas-input', '0'],
+    ['base-whats-users', '1'],
     ['base-integ-pipelines', '0'],
     ['base-integ-campos', '0']
   ].forEach(([id, v]) => {
