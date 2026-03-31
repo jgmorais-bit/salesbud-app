@@ -462,11 +462,12 @@
             <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Nao</button></div></div>
           </div>
 
-          <!-- 4. Horas Adicionais para Upsell/Crossell -->
+          <!-- 4. Novo Pacote de Horas -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Horas Adicionais para Upsell/Crossell</div>
-            <label class="field-label" style="display:block;margin-bottom:6px">Horas mensais contratadas</label>
-            <input type="number" class="field-input" id="base-horas-input" value="300" min="1" max="999999" placeholder="Ex: 300" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px;margin-bottom:14px" />
+            <div class="card-title">Novo Pacote de Horas</div>
+            <label class="field-label" style="display:block;margin-bottom:6px">Horas mensais adicionais</label>
+            <input type="number" class="field-input" id="base-horas-input" value="0" min="0" max="999999" placeholder="Ex: 50" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
+            <div id="base-horas-resumo" style="display:none;font-size:12.5px;color:var(--text3);margin-top:6px;margin-bottom:14px"></div>
             <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px">
               <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Calculadora de consumo</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">

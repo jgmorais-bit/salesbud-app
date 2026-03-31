@@ -1853,9 +1853,9 @@ function renderBreakdown(containerId, dados) {
   const el = document.getElementById(containerId)
   if (!el) return
   const sub = (label, valor) =>
-    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:12.5px;color:var(--text2)"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}/mes</span></div>`
+    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:13px;color:#64748B"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}/mes</span></div>`
   const subSetup = (label, valor) =>
-    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:12.5px;color:var(--text2)"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}</span></div>`
+    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:13px;color:#64748B"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}</span></div>`
   let h = ''
   if (dados.mensalidade)
     h += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(dados.mensalidade)}/mes</span></div>`
@@ -1894,7 +1894,7 @@ function renderBreakdown(containerId, dados) {
     }
   }
   if (dados.setupTotal > 0) {
-    h += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantacao . pontual)</span></span><span class="price-row-val amber" style="font-size:13px">${fmt(dados.setupTotal)}</span></div>`
+    h += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantacao . pontual)</span></span><span class="price-row-val" style="font-size:14px;font-weight:700;color:var(--pink)">${fmt(dados.setupTotal)}</span></div>`
     if (dados.setupDetalhe) {
       for (const item of dados.setupDetalhe) {
         if (item.valor > 0) h += subSetup(item.label, item.valor)
@@ -2405,7 +2405,9 @@ function baseCalcPreview() {
 function aplicarBaseCalc() {
   const t = parseInt(document.getElementById('base-calc-resultado')?.dataset.valor) || 0
   if (!t) return
-  document.getElementById('base-horas-input').value = t
+  const horasAtuais = parseInt(document.getElementById('base-horas-atual')?.value) || 0
+  const adicional = Math.max(0, t - horasAtuais)
+  document.getElementById('base-horas-input').value = adicional
   updateBase()
 }
 const DIAG_ID = {
@@ -2448,10 +2450,19 @@ function updateBase() {
   stateBase.integTarefas = document.getElementById('base-integ-tarefas-sim')?.classList.contains('active') || false
   stateBase.integCampos = parseInt(document.getElementById('base-integ-campos')?.value) || 0
   stateBase.integVoip = document.getElementById('base-integ-voip')?.value || ''
-  const hd = parseInt(document.getElementById('base-horas-input')?.value) || 0,
-    r = calcPrecoExato(hd, 'base')
+  const horasAdicionais = parseInt(document.getElementById('base-horas-input')?.value) || 0
+  const totalHoras = stateBase.horasAtual + horasAdicionais
+  const r = calcPrecoExato(totalHoras, 'base')
   const precoBase = r.precoEfetivo,
     precoFinal = precoBase
+  /* Resumo horas: Atual Xh + Adicional Yh = Novo pacote Zh */
+  const resumoEl = document.getElementById('base-horas-resumo')
+  if (resumoEl) {
+    if (horasAdicionais > 0 && stateBase.horasAtual > 0) {
+      resumoEl.style.display = 'block'
+      resumoEl.textContent = `Atual: ${stateBase.horasAtual}h + Adicional: ${horasAdicionais}h = Novo pacote: ${totalHoras}h`
+    } else { resumoEl.style.display = 'none' }
+  }
   let setupTotal = 0, mrrInteg = 0, blocosC = 0, setupCrm = 0, setupRegras = 0, setupPipelines = 0, setupTarefas = 0, setupCampos = 0, mrrTarefas = 0, mrrCampos = 0
   {
     const calc = calcIntegModular(stateBase)
@@ -2589,8 +2600,8 @@ function updateBase() {
     } else if (psub) { psub.style.display = 'none' }
   }
   renderDiagTags()
-  renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC)
-  const horasOk = hd > 0,
+  renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC, horasAdicionais)
+  const horasOk = totalHoras > 0,
     baseCanGen = !!stateBase.empresa && !!stateBase.crm && horasOk,
     bb = document.getElementById('base-btn-gen')
   if (bb) bb.disabled = !baseCanGen
@@ -2660,22 +2671,11 @@ function renderDiagTags() {
         )
         .join('')
   el.innerHTML = html
-  const hints = []
-  if (!d.crm && !d.voip && !d.whats) hints.push('Nenhum canal ativo — potencial amplo de expansão.')
-  if (d.crm && d.campos && (d.nCampos || 0) >= 5)
-    hints.push('Muitos campos — pacote Intermediário ou Premium recomendado.')
-  if (!d.whats && !d.voip) hints.push('Sem canal de comunicação ativo — abertura para proposta multi-canal.')
   const he = document.getElementById('base-sugestao-hint')
-  if (he)
-    he.innerHTML = hints
-      .map(
-        (h) =>
-          `<div style="margin-bottom:5px;padding:6px 10px;background:#FFFBEB;border-left:3px solid #FDE68A;border-radius:0 6px 6px 0;font-size:12px;color:var(--text2)">${h}</div>`
-      )
-      .join('')
+  if (he) he.innerHTML = ''
 }
 
-function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC) {
+function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, setupTotal, mrrInteg, mrrAdicionais, blocosC, horasAdicionais) {
   const u = currentUser || {},
     cfg = loadConfig(),
     hoje = new Date(),
@@ -2718,6 +2718,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     num_usuarios: stateBase.usuariosAtual,
     horas_atual: String(stateBase.horasAtual || '—'),
     valor_atual: stateBase.valorAtual > 0 ? `R$ ${stateBase.valorAtual.toLocaleString('pt-BR')}/mês` : '—',
+    horas_adicionais: String(horasAdicionais || 0),
     horas_proposto: String(r.horasEfetivas),
     valor_proposto: fmt(totalMensal) + '/mês',
     acrescimo_mensal: stateBase.valorAtual > 0 ? fmt(totalMensal - stateBase.valorAtual) + '/mês' : '—',
