@@ -211,7 +211,7 @@
               </select>
               <span class="field-error-msg" id="err-crm">Selecione o CRM</span>
               <div id="crm-api-aviso" style="display:none;margin-top:6px;padding:7px 11px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:6px;font-size:12px;color:#92400E;font-weight:500">
-                Integracao via API aberta — sujeita a <strong>consulta de viabilidade técnica</strong> antes da contratação.
+                Integração via API aberta — sujeita a <strong>consulta de viabilidade técnica</strong> antes da contratação.
               </div>
             </div>
           </div>
@@ -265,12 +265,12 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Preenchimento Automatico de CRM</div>
+            <div class="card-title">Preenchimento Automático de CRM</div>
 
             <details class="integ-boas-praticas">
-              <summary>Ver boas praticas</summary>
+              <summary>Ver boas práticas</summary>
               <div class="bp-body">
-                Valide com o cliente o nivel de personalizacao esperado antes de fechar a proposta. Monte o valor item a item usando os componentes abaixo -- facilita a justificativa e evita isencao total de setup. Evite prometer entregas fora do escopo padrao descrito neste guia. Campos personalizados e tarefas geram MRR -- inclua sempre que o cliente tiver essa necessidade. As negociacoes podem ser feitas no custo de setup destas frentes. Em caso de duvida ou personalizacao nao descrita nos tooltips, envolva o time de Servicos.
+                Valide com o cliente o nível de personalização esperado antes de fechar a proposta. Monte o valor item a item usando os componentes abaixo — facilita a justificativa e evita isenção total de setup. Evite prometer entregas fora do escopo padrão descrito neste guia. Campos personalizados e tarefas geram MRR — inclua sempre que o cliente tiver essa necessidade. As negociações podem ser feitas no custo de setup destas frentes. Em caso de dúvida ou personalização não descrita nos tooltips, envolva o time de Serviços.
               </div>
             </details>
 
@@ -290,7 +290,7 @@
             <div class="field-row" style="margin-bottom:10px">
               <label class="field-label">Tarefas Automáticas <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">Tarefas Automáticas (setup R$ 100 + R$ 50/mês): A Salesbud cria automaticamente uma tarefa de próximos passos no negócio do CRM, com base nos pontos discutidos na reunião.</div></span></label>
               <div class="toggle-row">
-                <button class="toggle-btn active" id="integ-tarefas-nao" onclick="toggleIntegTarefas(false)">Nao</button>
+                <button class="toggle-btn active" id="integ-tarefas-nao" onclick="toggleIntegTarefas(false)">Não</button>
                 <button class="toggle-btn" id="integ-tarefas-sim" onclick="toggleIntegTarefas(true)">Sim</button>
               </div>
             </div>
@@ -302,7 +302,7 @@
             </div>
 
             <div class="field-row">
-              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a analise de viabilidade.</div></span></label>
+              <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a análise de viabilidade.</div></span></label>
               <select class="field-input" id="integ-voip" onchange="update()">
                 <option value="">Sem VOIP</option>
               </select>
@@ -383,7 +383,7 @@
         <div class="left-col">
 
           <!-- 1. Vendedor -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div class="vendedor-chip" id="base-vendedor-chip" style="margin-bottom:0">
               <div class="vendedor-chip-avatar" id="base-chip-avatar">?</div>
               <div class="vendedor-chip-info">
@@ -394,7 +394,7 @@
           </div>
 
           <!-- 2. Cliente -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div class="card-title">Cliente</div>
             <div class="field-row">
               <label class="field-label">Empresa <span style="color:var(--pink)">*</span></label>
@@ -420,7 +420,7 @@
           </div>
 
           <!-- 3. Consumo Atual -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div class="card-title">Consumo Atual</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div>
@@ -438,32 +438,32 @@
                 <input type="number" class="field-input" id="base-valor-atual" placeholder="Ex: 1490" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
               </div>
               <div>
-                <label class="field-label">Usuarios WhatsApp contratados</label>
+                <label class="field-label">Usuários WhatsApp contratados</label>
                 <input type="number" class="field-input" id="base-whats-atual" value="0" min="0" placeholder="Ex: 5" oninput="updateBase()" style="margin-top:4px;font-weight:700" />
               </div>
             </div>
           </div>
 
           <!-- 3. Diagnostico -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Diagnostico</div>
-            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansao</div>
-            <div class="diag-row"><span class="diag-label">Integracao CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Nao</button></div></div>
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-title">Diagnóstico</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Orienta a proposta de expansão</div>
+            <div class="diag-row"><span class="diag-label">Integração CRM ativa?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crm-sim" onclick="setDiag('crm',true)">Sim</button><button class="toggle-btn active" id="diag-crm-nao" onclick="setDiag('crm',false)">Não</button></div></div>
             <div class="diag-sub" id="diag-crm-sub" style="display:none">
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">CRM nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crmnativo-sim" onclick="setDiag('crmNativo',true)">Sim</button><button class="toggle-btn active" id="diag-crmnativo-nao" onclick="setDiag('crmNativo',false)">Nao</button></div></div>
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos personalizados?</span><div class="toggle-row"><button class="toggle-btn" id="diag-campos-sim" onclick="setDiag('campos',true)">Sim</button><button class="toggle-btn active" id="diag-campos-nao" onclick="setDiag('campos',false)">Nao</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">CRM nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-crmnativo-sim" onclick="setDiag('crmNativo',true)">Sim</button><button class="toggle-btn active" id="diag-crmnativo-nao" onclick="setDiag('crmNativo',false)">Não</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos personalizados?</span><div class="toggle-row"><button class="toggle-btn" id="diag-campos-sim" onclick="setDiag('campos',true)">Sim</button><button class="toggle-btn active" id="diag-campos-nao" onclick="setDiag('campos',false)">Não</button></div></div>
               <div class="diag-sub" id="diag-campos-sub" style="display:none;margin-top:8px"><label class="field-label" style="font-size:12px">Quantos campos</label><input type="number" class="field-input" id="diag-ncampos" value="3" min="1" max="20" oninput="updateBase()" style="width:80px;margin-top:4px" /></div>
             </div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Integracao Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voip-sim" onclick="setDiag('voip',true)">Sim</button><button class="toggle-btn active" id="diag-voip-nao" onclick="setDiag('voip',false)">Nao</button></div></div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">Integração Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voip-sim" onclick="setDiag('voip',true)">Sim</button><button class="toggle-btn active" id="diag-voip-nao" onclick="setDiag('voip',false)">Não</button></div></div>
             <div class="diag-sub" id="diag-voip-sub" style="display:none;margin-top:8px">
-              <div class="diag-row"><span class="diag-label" style="font-size:12px">Voip nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipnativo-sim" onclick="setDiag('voipNativo',true)">Sim</button><button class="toggle-btn active" id="diag-voipnativo-nao" onclick="setDiag('voipNativo',false)">Nao</button></div></div>
-              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos no Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipcampos-sim" onclick="setDiag('voipCampos',true)">Sim</button><button class="toggle-btn active" id="diag-voipcampos-nao" onclick="setDiag('voipCampos',false)">Nao</button></div></div>
+              <div class="diag-row"><span class="diag-label" style="font-size:12px">Voip nativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipnativo-sim" onclick="setDiag('voipNativo',true)">Sim</button><button class="toggle-btn active" id="diag-voipnativo-nao" onclick="setDiag('voipNativo',false)">Não</button></div></div>
+              <div class="diag-row" style="margin-top:8px"><span class="diag-label" style="font-size:12px">Campos no Voip?</span><div class="toggle-row"><button class="toggle-btn" id="diag-voipcampos-sim" onclick="setDiag('voipCampos',true)">Sim</button><button class="toggle-btn active" id="diag-voipcampos-nao" onclick="setDiag('voipCampos',false)">Não</button></div></div>
             </div>
-            <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Nao</button></div></div>
+            <div class="diag-row" style="margin-top:12px"><span class="diag-label">WhatsApp ativo?</span><div class="toggle-row"><button class="toggle-btn" id="diag-whats-sim" onclick="setDiag('whats',true)">Sim</button><button class="toggle-btn active" id="diag-whats-nao" onclick="setDiag('whats',false)">Não</button></div></div>
           </div>
 
           <!-- 4. Novo Pacote de Horas -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div class="card-title">Novo Pacote de Horas</div>
             <label class="field-label" style="display:block;margin-bottom:6px">Horas mensais adicionais</label>
             <input type="number" class="field-input" id="base-horas-input" value="0" min="0" max="999999" placeholder="Ex: 50" oninput="updateBase()" style="font-size:18px;font-weight:700;color:var(--navy);width:160px" />
@@ -471,9 +471,9 @@
             <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px">
               <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Calculadora de consumo</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="field-label" style="font-size:10.5px">Usuarios</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
-                <div><label class="field-label" style="font-size:10.5px">Dias uteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
                 <div>
@@ -487,7 +487,7 @@
           </div>
 
           <!-- 5. Pacote Proposto -->
-          <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
             <div id="base-pacote-card" style="background:var(--navy);padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
               <div>
                 <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px">Pacote proposto</div>
@@ -506,13 +506,13 @@
           </div>
 
           <!-- 6. Preenchimento Automatico de CRM -->
-          <div class="card" style="margin-bottom:14px">
-            <div class="card-title">Preenchimento Automatico de CRM <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">HubSpot, Pipedrive e RD Station sao CRMs nativos -- setup gratuito, com 1 pipeline incluido.<br><br>Outros CRMs com API aberta tem setup de R$ 600. Na duvida sobre viabilidade de integracao, consulte o time de Servicos antes de fechar a proposta.</div></span></div>
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-title">Preenchimento Automático de CRM <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">HubSpot, Pipedrive e RD Station são CRMs nativos — setup gratuito, com 1 pipeline incluído.<br><br>Outros CRMs com API aberta têm setup de R$ 600. Na dúvida sobre viabilidade de integração, consulte o time de Serviços antes de fechar a proposta.</div></span></div>
 
             <details class="integ-boas-praticas">
-              <summary>Ver boas praticas</summary>
+              <summary>Ver boas práticas</summary>
               <div class="bp-body">
-                Valide com o cliente o nivel de personalizacao esperado antes de fechar a proposta. Monte o valor item a item usando os componentes abaixo -- facilita a justificativa e evita isencao total de setup. Evite prometer entregas fora do escopo padrao descrito neste guia. Campos personalizados e tarefas geram MRR -- inclua sempre que o cliente tiver essa necessidade. As negociacoes podem ser feitas no custo de setup destas frentes. Em caso de duvida ou personalizacao nao descrita nos tooltips, envolva o time de Servicos.
+                Valide com o cliente o nível de personalização esperado antes de fechar a proposta. Monte o valor item a item usando os componentes abaixo — facilita a justificativa e evita isenção total de setup. Evite prometer entregas fora do escopo padrão descrito neste guia. Campos personalizados e tarefas geram MRR — inclua sempre que o cliente tiver essa necessidade. As negociações podem ser feitas no custo de setup destas frentes. Em caso de dúvida ou personalização não descrita nos tooltips, envolva o time de Serviços.
               </div>
             </details>
 
@@ -545,7 +545,7 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a analise de viabilidade.</div></span></label>
+                <label class="field-label">VOIP <span class="tip-wrap"><span class="tip-icon">?</span><div class="tip-box">VOIP: VOIPs da lista são inclusos, sem custo adicional de setup — a cobrança vem nas horas do pacote.<br><br>VOIPs não listados devem ser consultados com o time de Serviços e podem ter custo de setup - sujeito a análise de viabilidade.</div></span></label>
                 <select class="field-input" id="base-integ-voip" onchange="updateBase()">
                   <option value="">Sem VOIP</option>
                 </select>
@@ -555,24 +555,24 @@
           </div>
 
           <!-- 7. WhatsApp -->
-          <div class="card" style="margin-bottom:14px">
+          <div class="card" style="margin-bottom:20px">
             <div class="card-title">WhatsApp</div>
             <div class="field-row">
               <label class="field-label">Incluir WhatsApp?</label>
               <div class="toggle-row">
                 <button class="toggle-btn active" id="base-whats-sim" onclick="toggleBaseWhats(true)">Sim</button>
-                <button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Nao</button>
+                <button class="toggle-btn" id="base-whats-nao" onclick="toggleBaseWhats(false)">Não</button>
               </div>
             </div>
             <div id="base-whats-wrap" class="field-row">
-              <label class="field-label">Numero de usuarios WhatsApp</label>
+              <label class="field-label">Número de usuários WhatsApp</label>
               <input type="number" class="field-input" id="base-whats-users" value="5" min="1" max="200" oninput="updateBase()" />
               <div id="base-whats-faixas-display" style="margin-top:8px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px"></div>
             </div>
           </div>
 
           <!-- 8. Adicionais Opcionais -->
-          <div class="card" id="base-card-adicionais" style="display:none;margin-bottom:14px">
+          <div class="card" id="base-card-adicionais" style="display:none;margin-bottom:20px">
             <div class="card-title">Adicionais</div>
             <div id="base-adicionais-toggles"></div>
           </div>
@@ -595,14 +595,14 @@
           </div>
 
           <!-- Box 2. Diagnostico de Expansao -->
-          <div class="card" id="base-diag-card" style="margin-bottom:16px;min-height:80px">
-            <div class="card-title" style="margin-bottom:10px">Diagnostico de Expansao</div>
-            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnostico ao lado para ver sugestoes</span></div>
+          <div class="card" id="base-diag-card" style="margin-bottom:20px;min-height:80px">
+            <div class="card-title" style="margin-bottom:10px">Diagnóstico de Expansão</div>
+            <div id="base-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"><span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span></div>
             <div id="base-sugestao-hint" style="font-size:12px;color:var(--text3);line-height:1.5"></div>
           </div>
 
           <!-- Box 3. Atual x Proposta -->
-          <div class="card" id="base-comparativo" style="margin-bottom:16px;display:none">
+          <div class="card" id="base-comparativo" style="margin-bottom:20px;display:none">
             <div class="card-title">Atual x Proposta</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div style="background:#F6F8FC;border-radius:var(--radius-sm);padding:14px">
@@ -620,13 +620,13 @@
           </div>
 
           <!-- Box 4. Breakdown -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div class="card-title">Breakdown</div>
             <div id="base-price-rows"></div>
           </div>
 
           <!-- Box 5. Payload -->
-          <div class="card" style="margin-bottom:16px">
+          <div class="card" style="margin-bottom:20px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px">PAYLOAD</div>
               <button class="copy-btn" onclick="copyBasePayload()" style="color:var(--text3)">Copiar</button>
@@ -891,19 +891,19 @@ CREATE POLICY "Acesso total para autenticados"
         <!-- Tabela de preços — Base (CS/Upsell) -->
         <div class="card" style="margin-bottom:20px">
           <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
-            <span>Tabela de Precos — Clientes de Base (CS/Upsell)</span>
+            <span>Tabela de Preços — Clientes de Base (CS/Upsell)</span>
             <div style="display:flex;gap:8px">
-              <button onclick="resetarTabelaBase()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrao</button>
+              <button onclick="resetarTabelaBase()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">Restaurar padrão</button>
               <button onclick="salvarTabelaBasePrecos()" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;background:var(--pink);color:white;border:none;cursor:pointer">Salvar tabela</button>
             </div>
           </div>
-          <p style="font-size:12px;color:var(--text3);margin:0 0 10px">Tabela de precos para propostas de upsell/crossell de clientes de base. Editavel independentemente da tabela de Novos Clientes.</p>
+          <p style="font-size:12px;color:var(--text3);margin:0 0 10px">Tabela de preços para propostas de upsell/crossell de clientes de base. Editável independentemente da tabela de Novos Clientes.</p>
           <div style="overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:13px" id="cfg-price-base-table">
               <thead>
                 <tr style="border-bottom:2px solid var(--border)">
                   <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Pacote (horas)</th>
-                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Preco (R$/mes)</th>
+                  <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Preço (R$/mês)</th>
                   <th style="text-align:right;padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">R$/hora <span class="rph-header-note">(calc.)</span></th>
                   <th style="padding:8px 10px"></th>
                 </tr>
@@ -1086,11 +1086,11 @@ CREATE POLICY "Acesso total para autenticados"
     <h3>Por que a proposta foi perdida?</h3>
     <p>Isso nos ajuda a melhorar as próximas abordagens. Pode pular se preferir.</p>
     <div class="perda-options">
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Preco')">Preco</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Preço')">Preço</button>
       <button class="perda-opt" onclick="selectPerdaOpt(this,'Concorrente')">Concorrente</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Sem decisao')">Sem decisao</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Sem decisão')">Sem decisão</button>
       <button class="perda-opt" onclick="selectPerdaOpt(this,'Timing ruim')">Timing ruim</button>
-      <button class="perda-opt" onclick="selectPerdaOpt(this,'Produto nao atende')">Produto</button>
+      <button class="perda-opt" onclick="selectPerdaOpt(this,'Produto não atende')">Produto</button>
       <button class="perda-opt" onclick="selectPerdaOpt(this,'Outro')">Outro</button>
     </div>
     <textarea class="perda-obs" id="perda-obs" placeholder="Observação opcional..."></textarea>

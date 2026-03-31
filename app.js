@@ -1853,14 +1853,14 @@ function renderBreakdown(containerId, dados) {
   const el = document.getElementById(containerId)
   if (!el) return
   const sub = (label, valor) =>
-    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:13px;color:#64748B"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}/mes</span></div>`
+    `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:13px;color:#64748B"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}/mês</span></div>`
   const subSetup = (label, valor) =>
     `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 18px;font-size:13px;color:#64748B"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--text4);font-family:monospace;font-size:11px">|</span> ${esc(label)}</span><span style="font-weight:600">${fmt(valor)}</span></div>`
   let h = ''
   if (dados.mensalidade)
-    h += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(dados.mensalidade)}/mes</span></div>`
+    h += `<div class="price-row"><span class="price-row-label">Mensalidade</span><span class="price-row-val green">${fmt(dados.mensalidade)}/mês</span></div>`
   if (dados.integMrr > 0) {
-    h += `<div class="price-row"><span class="price-row-label">Integracao</span><span class="price-row-val amber">${fmt(dados.integMrr)}/mes</span></div>`
+    h += `<div class="price-row"><span class="price-row-label">Integração</span><span class="price-row-val amber">${fmt(dados.integMrr)}/mês</span></div>`
     if (dados.integDetalheMrr) {
       for (const item of dados.integDetalheMrr) {
         if (item.valor > 0) h += sub(item.label, item.valor)
@@ -1868,7 +1868,7 @@ function renderBreakdown(containerId, dados) {
     }
   }
   if (dados.adicionaisMrr > 0) {
-    h += `<div class="price-row"><span class="price-row-label">Adicionais</span><span class="price-row-val green">${fmt(dados.adicionaisMrr)}/mes</span></div>`
+    h += `<div class="price-row"><span class="price-row-label">Adicionais</span><span class="price-row-val green">${fmt(dados.adicionaisMrr)}/mês</span></div>`
     if (dados.adicionaisDetalhe) {
       for (const item of dados.adicionaisDetalhe) {
         if (item.valor > 0) h += sub(item.label, item.valor)
@@ -1879,22 +1879,22 @@ function renderBreakdown(containerId, dados) {
   const whatsVal = dados.whatsapp?.total || 0
   const whatsUsers = dados.whatsapp?.users || 0
   if (subtotal && (dados.integMrr > 0 || dados.adicionaisMrr > 0 || whatsVal > 0))
-    h += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(subtotal)}/mes</span></div>`
+    h += `<div class="price-row" style="border-top:1px solid var(--border2);margin-top:2px"><span class="price-row-label" style="color:var(--text3)">Subtotal</span><span class="price-row-val" style="color:var(--text2);font-size:13px">${fmt(subtotal)}/mês</span></div>`
   if (whatsVal > 0)
-    h += `<div class="price-row"><span class="price-row-label">WhatsApp (${whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsVal)}/mes</span></div>`
+    h += `<div class="price-row"><span class="price-row-label">WhatsApp (${whatsUsers} users)</span><span class="price-row-val green">${fmt(whatsVal)}/mês</span></div>`
   const totalComWA = dados.totalComWA || subtotal + whatsVal
   const totalSemWA = dados.totalSemWA || subtotal
   if (totalComWA) {
     const sep = 'border-top:2px solid var(--navy);margin-top:4px'
     if (whatsVal > 0) {
-      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(totalSemWA)}/mes</span></div>`
-      h += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalComWA)}/mes</span></div>`
+      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total s/ WA</span><span class="price-row-total-val" style="font-size:15px;color:var(--text2)">${fmt(totalSemWA)}/mês</span></div>`
+      h += `<div class="price-row total" style="padding-top:6px"><span class="price-row-total-label">Total c/ WA</span><span class="price-row-total-val">${fmt(totalComWA)}/mês</span></div>`
     } else {
-      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalComWA)}/mes</span></div>`
+      h += `<div class="price-row total" style="${sep}"><span class="price-row-total-label">Total mensal</span><span class="price-row-total-val">${fmt(totalComWA)}/mês</span></div>`
     }
   }
   if (dados.setupTotal > 0) {
-    h += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantacao . pontual)</span></span><span class="price-row-val" style="font-size:14px;font-weight:700;color:var(--pink)">${fmt(dados.setupTotal)}</span></div>`
+    h += `<div class="price-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)"><span class="price-row-label" style="color:var(--text3)">+ Setup <span style="font-size:11px;font-weight:400">(implantação · pontual)</span></span><span class="price-row-val" style="font-size:14px;font-weight:700;color:var(--pink)">${fmt(dados.setupTotal)}</span></div>`
     if (dados.setupDetalhe) {
       for (const item of dados.setupDetalhe) {
         if (item.valor > 0) h += subSetup(item.label, item.valor)
@@ -2063,7 +2063,7 @@ function update() {
   /* BREAKDOWN */
   {
     const integDetail = []
-    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automaticas', valor: mrrTarefas })
+    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automáticas', valor: mrrTarefas })
     if (mrrCampos > 0) integDetail.push({ label: 'Campos personalizados (' + state.integCampos + ')', valor: mrrCampos })
     const adicDetail = []
     for (const [k, v] of Object.entries(adicCfg)) {
@@ -2072,9 +2072,9 @@ function update() {
     }
     const setupDetail = []
     if (setupCrm > 0) setupDetail.push({ label: 'CRM personalizado', valor: setupCrm })
-    if (setupRegras > 0) setupDetail.push({ label: 'Personalizacao de regras', valor: setupRegras })
+    if (setupRegras > 0) setupDetail.push({ label: 'Personalização de regras', valor: setupRegras })
     if (setupPipelines > 0) setupDetail.push({ label: 'Pipelines adicionais (' + state.integPipelines + ')', valor: setupPipelines })
-    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automaticas', valor: setupTarefas })
+    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automáticas', valor: setupTarefas })
     if (setupCampos > 0) setupDetail.push({ label: 'Campos personalizados (' + state.integCampos + ')', valor: setupCampos })
     const voipVal = state.integVoip || ''
     renderBreakdown('price-rows', {
@@ -2090,7 +2090,7 @@ function update() {
       setupDetalhe: setupDetail,
       voip: voipVal && voipVal !== '_outro'
         ? { label: voipVal, incluso: true }
-        : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
+        : voipVal === '_outro' ? { label: 'não-listado', incluso: false } : null
     })
   }
   document.getElementById('premium-alert').style.display = 'none'
@@ -2518,7 +2518,7 @@ function updateBase() {
       s = dv > 0 ? '+' : dv < 0 ? '-' : ''
     dl.innerHTML =
       dv !== 0
-        ? `<span style="color:${dv > 0 ? 'var(--pink)' : 'var(--green)'};font-weight:700">${s}${fmt(Math.abs(dv))}/mes</span> <span style="opacity:.5">(${s}${p}%)</span>`
+        ? `<span style="color:${dv > 0 ? 'var(--pink)' : 'var(--green)'};font-weight:700">${s}${fmt(Math.abs(dv))}/mês</span> <span style="opacity:.5">(${s}${p}%)</span>`
         : `<span style="opacity:.6">Mesmo valor atual</span>`
   } else if (dl) dl.textContent = ''
   const cc = document.getElementById('base-comparativo')
@@ -2544,7 +2544,7 @@ function updateBase() {
   {
     const mensalSB = precoFinal + mrrInteg + mrrAdicionais
     const integDetail = []
-    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automaticas', valor: mrrTarefas })
+    if (mrrTarefas > 0) integDetail.push({ label: 'Tarefas automáticas', valor: mrrTarefas })
     if (mrrCampos > 0) integDetail.push({ label: 'Campos personalizados (' + stateBase.integCampos + ')', valor: mrrCampos })
     const adicDetail = []
     for (const [k, v] of Object.entries(adicResult.cfg)) {
@@ -2553,9 +2553,9 @@ function updateBase() {
     }
     const setupDetail = []
     if (setupCrm > 0) setupDetail.push({ label: 'CRM personalizado', valor: setupCrm })
-    if (setupRegras > 0) setupDetail.push({ label: 'Personalizacao de regras', valor: setupRegras })
+    if (setupRegras > 0) setupDetail.push({ label: 'Personalização de regras', valor: setupRegras })
     if (setupPipelines > 0) setupDetail.push({ label: 'Pipelines adicionais (' + stateBase.integPipelines + ')', valor: setupPipelines })
-    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automaticas', valor: setupTarefas })
+    if (setupTarefas > 0) setupDetail.push({ label: 'Tarefas automáticas', valor: setupTarefas })
     if (setupCampos > 0) setupDetail.push({ label: 'Campos personalizados (' + stateBase.integCampos + ')', valor: setupCampos })
     const voipVal = stateBase.integVoip || ''
     renderBreakdown('base-price-rows', {
@@ -2571,7 +2571,7 @@ function updateBase() {
       setupDetalhe: setupDetail,
       voip: voipVal && voipVal !== '_outro'
         ? { label: voipVal, incluso: true }
-        : voipVal === '_outro' ? { label: 'nao-listado', incluso: false } : null
+        : voipVal === '_outro' ? { label: 'não-listado', incluso: false } : null
     })
   }
   /* Proposta Para — right panel summary */
@@ -2584,19 +2584,19 @@ function updateBase() {
     const pills = document.getElementById('base-meta-pills')
     if (pills) {
       const parts = []
-      parts.push(`Horas ${r.horasEfetivas.toLocaleString('pt-BR')}h/mes`)
+      parts.push(`Horas ${r.horasEfetivas.toLocaleString('pt-BR')}h/mês`)
       if (stateBase.whatsAtivo && stateBase.whatsUsers > 0)
         parts.push(`WhatsApp ${stateBase.whatsUsers} users`)
       pills.innerHTML = parts.map(p => `<span class="pill">${p}</span>`).join('')
     }
     const pm = document.getElementById('base-price-main')
-    if (pm) pm.textContent = fmt(totalMensal) + '/mes'
+    if (pm) pm.textContent = fmt(totalMensal) + '/mês'
     const plh = document.getElementById('base-price-label-header')
     if (plh) plh.textContent = stateBase.valorAtual > 0 ? 'Nova mensalidade' : 'Mensalidade total'
     const psub = document.getElementById('base-price-main-sub')
     if (psub && whatsTotal > 0) {
       psub.style.display = 'block'
-      psub.textContent = 's/ WhatsApp: ' + fmt(totalMensal - whatsTotal) + '/mes'
+      psub.textContent = 's/ WhatsApp: ' + fmt(totalMensal - whatsTotal) + '/mês'
     } else if (psub) { psub.style.display = 'none' }
   }
   renderDiagTags()
@@ -2626,7 +2626,7 @@ function renderDiagTags() {
   const touched = d.crm || d.voip || d.whats
   if (!touched) {
     el.innerHTML =
-      '<span style="font-size:12px;color:var(--text4)">Preencha o diagnostico ao lado para ver sugestoes</span>'
+      '<span style="font-size:12px;color:var(--text4)">Preencha o diagnóstico ao lado para ver sugestões</span>'
     const h = document.getElementById('base-sugestao-hint')
     if (h) h.innerHTML = ''
     return
@@ -2646,8 +2646,8 @@ function renderDiagTags() {
   const score = ativos.length,
     sp = Math.round((score / 5) * 100),
     sc = score <= 1 ? '#D97706' : score <= 3 ? '#2563EB' : 'var(--green)',
-    sl = score <= 1 ? 'Baixa adocao' : score <= 3 ? 'Adocao parcial' : 'Alta adocao'
-  let html = `<div style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:#F6F8FC;border-radius:8px;border:1.5px solid var(--border)"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Score de Adocao</div><div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:${sp}%;background:${sc};border-radius:99px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${sc}">${score}/5</div><div style="font-size:10px;color:var(--text3);font-weight:600">${sl}</div></div></div>`
+    sl = score <= 1 ? 'Baixa adoção' : score <= 3 ? 'Adoção parcial' : 'Alta adoção'
+  let html = `<div style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:#F6F8FC;border-radius:8px;border:1.5px solid var(--border)"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Score de Adoção</div><div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:${sp}%;background:${sc};border-radius:99px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${sc}">${score}/5</div><div style="font-size:10px;color:var(--text3);font-weight:600">${sl}</div></div></div>`
   if (ativos.length)
     html +=
       `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:100%;margin-bottom:5px">Ativo agora</div>` +
