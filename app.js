@@ -2127,14 +2127,21 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
   if (_sPipe > 0) setupDetailParts.push(state.integPipelines + (_sPipe / (ip.pipeline_adicional_setup || 400) === 1 ? ' pipeline adicional ' : ' pipelines adicionais ') + fmt(_sPipe))
   if (_sTar > 0) setupDetailParts.push('Tarefas automáticas ' + fmt(_sTar))
   if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco) ' : ' blocos) ') + fmt(_sCamp))
-  const isCrmNat = isCrmNativo(state.crm) || state.crm === ''
-  const descSetup = setupDetailParts.length
-    ? setupDetailParts.join(' + ')
-    : (isCrmNat ? 'Setup gratuito (CRM nativo)' : 'Integração padrão')
+  const isEmpty = !state.crm || state.crm === ''
+  const isCrmNat = isCrmNativo(state.crm)
+  const descSetup = isEmpty
+    ? 'Sem integração de CRM'
+    : setupDetailParts.length
+      ? setupDetailParts.join(' + ')
+      : 'CRM nativo — setup gratuito'
   const mrrDetailParts = []
   if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
   if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + state.integCampos + ') ' + fmt(_mCamp) + '/mês')
-  const mrrDetalhe = mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Integração padrão (sem custo adicional)'
+  const mrrDetalhe = isEmpty
+    ? 'Sem integração de CRM'
+    : mrrDetailParts.length
+      ? mrrDetailParts.join(' + ')
+      : 'Integração padrão incluída'
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -2201,7 +2208,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     integ_voip: state.integVoip || 'Sem VOIP',
     mrr_adicionais: mrrAdicionais,
     adicionais_ativos: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
-    preco_setup_basico: isCrmNat ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
+    preco_setup_basico: (isCrmNat || isEmpty) ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta'
   }
   const colored = JSON.stringify(data, null, 2)
@@ -2699,14 +2706,21 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
   if (_sPipe > 0) setupDetailParts.push(stateBase.integPipelines + (_sPipe / (ip.pipeline_adicional_setup || 400) === 1 ? ' pipeline adicional ' : ' pipelines adicionais ') + fmt(_sPipe))
   if (_sTar > 0) setupDetailParts.push('Tarefas automáticas ' + fmt(_sTar))
   if (_sCamp > 0) setupDetailParts.push(stateBase.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco) ' : ' blocos) ') + fmt(_sCamp))
-  const isCrmNat = isCrmNativo(stateBase.crm) || stateBase.crm === ''
-  const descSetup = setupDetailParts.length
-    ? setupDetailParts.join(' + ')
-    : (isCrmNat ? 'Setup gratuito (CRM nativo)' : 'Integração padrão')
+  const isEmpty = !stateBase.crm || stateBase.crm === ''
+  const isCrmNat = isCrmNativo(stateBase.crm)
+  const descSetup = isEmpty
+    ? 'Sem integração de CRM'
+    : setupDetailParts.length
+      ? setupDetailParts.join(' + ')
+      : 'CRM nativo — setup gratuito'
   const mrrDetailParts = []
   if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
   if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + stateBase.integCampos + ') ' + fmt(_mCamp) + '/mês')
-  const mrrDetalhe = mrrDetailParts.length ? mrrDetailParts.join(' + ') : 'Integração padrão (sem custo adicional)'
+  const mrrDetalhe = isEmpty
+    ? 'Sem integração de CRM'
+    : mrrDetailParts.length
+      ? mrrDetailParts.join(' + ')
+      : 'Integração padrão incluída'
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -2776,7 +2790,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
     // Legado — backward compatibility
-    preco_setup_basico: isCrmNat ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
+    preco_setup_basico: (isCrmNat || isEmpty) ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
     total_avancado: fmt(totalMensal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
