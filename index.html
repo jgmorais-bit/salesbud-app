@@ -14,6 +14,14 @@
 </head>
 <body>
 
+<!-- Overlay de carregamento — visível até a sessão ser verificada -->
+<div id="screen-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="text-align:center">
+    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--navy)">Salesbud</div>
+    <div style="font-size:13px;color:var(--text3);margin-top:8px">Carregando...</div>
+  </div>
+</div>
+
 <!-- ══════════════════════════
      SCREEN: SETUP INICIAL
 ══════════════════════════ -->
@@ -38,7 +46,7 @@
 <!-- ══════════════════════════
      SCREEN: LOGIN
 ══════════════════════════ -->
-<div id="screen-login" class="screen active">
+<div id="screen-login" class="screen">
   <div class="login-left">
     <div class="login-brand">
       <div class="login-brand-icon">S</div>
@@ -63,7 +71,7 @@
         <label>Senha</label>
         <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);cursor:pointer;margin-bottom:16px"><input type="checkbox" id="keep-logged"> Manter conectado</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);cursor:pointer;margin-bottom:16px"><input type="checkbox" id="keep-logged" checked> Manter conectado</label>
       <button class="btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
       <div style="text-align:center;margin-top:14px">
         <button onclick="toggleEsqueciSenha()" style="background:none;border:none;color:var(--pink);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0">Esqueci minha senha</button>

@@ -838,6 +838,14 @@ async function fazerLogin() {
           currentUser = { ...perfil, _supabaseUid: data.user.id }
           errEl.style.display = 'none'
           localStorage.removeItem(LAST_EMAIL_KEY)
+          const keepLogged = document.getElementById('keep-logged')?.checked ?? true
+          if (!keepLogged) {
+            localStorage.setItem('salesbud_no_persist', 'true')
+            sessionStorage.setItem('salesbud_session_temp', 'true')
+          } else {
+            localStorage.removeItem('salesbud_no_persist')
+            sessionStorage.removeItem('salesbud_session_temp')
+          }
           iniciarApp()
           if (btnEl) {
             btnEl.disabled = false
@@ -885,6 +893,8 @@ async function fazerLogout() {
       console.warn('signOut:', e.message)
     }
   }
+  localStorage.removeItem('salesbud_no_persist')
+  sessionStorage.removeItem('salesbud_session_temp')
   currentUser = null
   clearSession()
   mostrarScreen('login')
@@ -892,10 +902,17 @@ async function fazerLogout() {
   document.getElementById('login-senha').value = ''
 }
 document.addEventListener('DOMContentLoaded', async () => {
+  const loading = document.getElementById('screen-loading')
+  const hideLoading = () => { if (loading) loading.style.display = 'none' }
+  const timeoutId = setTimeout(() => { hideLoading(); mostrarScreen('login') }, 5000)
+
   loadUsersLocal()
   initSupabase()
   const _hp = new URLSearchParams(window.location.hash.substring(1))
   if (_hp.get('type') === 'recovery' && _hp.get('access_token')) {
+    clearTimeout(timeoutId)
+    hideLoading()
+    mostrarScreen('login')
     document.getElementById('login-normal-content').style.display = 'none'
     document.getElementById('reset-password-wrapper').style.display = 'block'
     return
@@ -906,10 +923,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('login-email').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') fazerLogin()
   })
+  // Se "manter conectado" estava OFF e o sessionStorage foi limpo (browser fechado/reaberto) → logout automático
+  if (localStorage.getItem('salesbud_no_persist') === 'true' && !sessionStorage.getItem('salesbud_session_temp')) {
+    if (isSupabaseAuthReady()) {
+      try { await supabaseClient.auth.signOut() } catch {}
+    }
+    clearTimeout(timeoutId)
+    hideLoading()
+    const lastEmail = localStorage.getItem(LAST_EMAIL_KEY)
+    if (lastEmail) { const el = document.getElementById('login-email'); if (el) el.value = lastEmail }
+    mostrarScreen('login')
+    return
+  }
   if (await restoreSession()) {
+    clearTimeout(timeoutId)
+    hideLoading()
     iniciarApp()
     return
   }
+  clearTimeout(timeoutId)
+  hideLoading()
   const hasAdminPwd = DB.users.some((u) => u.perfil === 'admin' && u.senha)
   if (!hasAdminPwd && !isSupabaseAuthReady()) {
     mostrarSetup()
@@ -920,6 +953,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = document.getElementById('login-email')
     if (el) el.value = lastEmail
   }
+  mostrarScreen('login')
 })
 
 /* ════════════════════════════════════════
