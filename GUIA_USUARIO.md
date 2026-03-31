@@ -15,7 +15,7 @@
 
 ---
 
-## Gerar Proposta (Novos Clientes)
+## Para AEs -- Gerar Proposta (Novos Clientes)
 
 ### Passo 1 -- Dados do cliente
 - Preencha o **nome da empresa** (obrigatorio)
@@ -25,18 +25,21 @@
   - CRM Personalizado (qualquer outro): setup R$ 600
 
 ### Passo 2 -- Pacote de horas
-- Informe as horas mensais desejadas
+- Informe as horas mensais desejadas (campo direto)
+- Use a **Calculadora de Consumo** para estimar: Usuarios x Horas/dia x Dias uteis
+- Clique "Usar esse valor" para aplicar a estimativa
 - O sistema calcula automaticamente o preco conforme a tabela (50h a 1000h)
-- Faixas intermediarias sao calculadas por interpolacao
 
-### Passo 3 -- Integracao CRM
-Configure os componentes de integracao conforme a necessidade do cliente:
+### Passo 3 -- Preenchimento Automatico de CRM
+Configure os componentes de integracao conforme a necessidade do cliente. Passe o mouse no icone **?** de cada componente para ver o escopo e os precos:
 
-- **Personalizacao de Regras**: Padrao (gratuito) ou Personalizada (setup R$ 900). Passe o mouse no icone ? para ver o escopo de cada opcao.
+- **Padrao / Personalizada**: Padrao (gratuito) ou Personalizada (setup R$ 900)
 - **Pipelines adicionais**: quantidade de pipelines alem do primeiro incluso (setup R$ 400/cada)
 - **Tarefas Automaticas**: criacao automatica de proximos passos (setup R$ 100 + R$ 50/mes)
 - **Campos Personalizados**: preenchidos por IA, cobrados em blocos de 5 (setup + MRR R$ 100/bloco). Clientes RD Station: isentos.
 - **VOIP**: selecione o VOIP do cliente. Listados sao inclusos. Nao-listados: consultar time de Servicos.
+
+Dica: clique em **"Ver boas praticas"** para orientacoes sobre negociacao.
 
 ### Passo 4 -- WhatsApp
 - Ative/desative o WhatsApp
@@ -44,30 +47,49 @@ Configure os componentes de integracao conforme a necessidade do cliente:
 - Preco por usuario conforme faixa (tabela visivel no app)
 
 ### Passo 5 -- Adicionais
-- Se o admin ativou adicionais (ex: Contas-Enriquecimento, Chat com Bud), eles aparecerao aqui
+- Se o admin ativou adicionais (ex: Chat com Bud), eles aparecerao aqui
 - Ative os que o cliente deseja -- o valor MRR e somado ao total
 
 ### Passo 6 -- Gerar
-- Confira o resumo no painel direito: MRR total + Setup total
+- Confira o **Breakdown** no painel direito: MRR total + Setup total com sub-itens detalhados
 - Clique **"Gerar Proposta"**
 - O sistema gera a apresentacao em Google Slides, exporta PDF e envia por email
 
 ---
 
-## Gerar Proposta (Clientes de Base)
+## Para CS / Account Managers -- Proposta de Upsell (Clientes de Base)
 
-### Passo 1 -- Dados do cliente + Diagnostico
-- Preencha empresa, CRM, contato
-- Informe horas e valor atuais do cliente
-- Preencha o diagnostico: CRM, VOIP, WhatsApp, CS
+### Passo 1 -- Dados do cliente
+- Preencha empresa, CRM e contato
 
-### Passo 2 -- Configurar proposta
-- Selecione o pacote de horas proposto
-- Selecione o plano de integracao (Basico, Intermediario ou Avancado)
-- Configure WhatsApp
+### Passo 2 -- Consumo Atual
+Informe os dados atuais do cliente:
+- **Horas contratadas**: pacote atual
+- **Usuarios ativos**: quantidade de usuarios
+- **Valor mensal pago**: mensalidade atual em R$
+- **Usuarios WhatsApp contratados**: se o cliente ja usa WhatsApp
 
-### Passo 3 -- Gerar
-- Confira o comparativo Atual x Proposta
+### Passo 3 -- Diagnostico
+Preencha o diagnostico de adocao do cliente:
+- **Integracao CRM ativa?** -> Se sim: CRM nativo? Campos personalizados?
+- **Integracao VOIP?** -> Se sim: VOIP nativo? Campos no VOIP?
+- **WhatsApp ativo?**
+
+O painel direito mostra o **Score de Adocao** (/5) e as oportunidades de expansao.
+
+### Passo 4 -- Novo Pacote de Horas
+- Informe as **horas mensais adicionais** que o cliente precisa
+- O sistema calcula: Atual + Adicional = Novo pacote total
+- Use a Calculadora de Consumo: a estimativa desconta automaticamente as horas atuais
+- Exemplo: Cliente tem 50h, calculadora estima 308h -> campo recebe 258h adicionais
+
+### Passo 5 -- Integracao, WhatsApp e Adicionais
+- Configure os mesmos componentes de Novos Clientes
+- O diagnostico pode ajudar a pre-identificar oportunidades
+
+### Passo 6 -- Conferir e Gerar
+- Confira o **Comparativo Atual x Proposta** com o delta de valor
+- Confira o **Breakdown** com todos os sub-itens
 - Clique **"Gerar Proposta de Upsell"**
 
 ---
@@ -76,7 +98,7 @@ Configure os componentes de integracao conforme a necessidade do cliente:
 
 - Todas as propostas geradas ficam no historico compartilhado
 - Use os filtros para buscar por empresa, tipo, vendedor ou periodo
-- Altere o status: Enviada -> Negociacao -> Aprovada ou Perdida
+- Altere o status: Enviada -> Negociacao -> Aprovada ou Perdida (com motivo)
 - Exporte para CSV ou edite detalhes (empresa, contato, observacao interna)
 
 ---
@@ -96,10 +118,11 @@ Configure os componentes de integracao conforme a necessidade do cliente:
 | Supabase | URL e anon key (ja configurado) |
 | Webhook | URL e token do Make |
 | Template | URL e versao do template Google Slides |
-| Tabela de precos | Pacotes de horas e valores (50h-1000h) |
+| Tabela de precos (Novos) | Pacotes de horas e valores para Novos Clientes |
+| Tabela de precos (Base) | Pacotes de horas e valores para Clientes de Base (editavel independentemente) |
 | Faixas WhatsApp | Faixas de preco por quantidade de usuarios |
-| CRMs disponiveis | Lista de CRMs (3 nativos + customizados) |
-| VOIPs disponiveis | Lista de VOIPs inclusos (12 padrao + customizados) |
+| CRMs disponiveis | Lista de CRMs (3 nativos protegidos + customizados) |
+| VOIPs disponiveis | Lista de VOIPs inclusos |
 | Precos de integracao | Setup e MRR de cada componente |
 | Adicionais opcionais | Ativar/desativar e definir MRR de cada adicional |
 
