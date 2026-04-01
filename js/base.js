@@ -411,7 +411,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
   val.setDate(hoje.getDate() + 15) // Validade fixa: 15 dias
   const fmtD = (d) => d.toLocaleDateString('pt-BR')
   /* Build detalhamentos de integração */
-  const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(stateBase)
+  const { setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(stateBase)
   const setupDetailParts = []
   if (_sCrm > 0) setupDetailParts.push('CRM personalizado')
   if (_sRegras > 0) setupDetailParts.push('Personalização de regras')
@@ -419,7 +419,6 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
   if (_sTar > 0) setupDetailParts.push('Tarefas automáticas')
   if (_sCamp > 0) setupDetailParts.push(stateBase.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco)' : ' blocos)'))
   const isEmpty = !stateBase.crm || stateBase.crm === ''
-  const isCrmNat = isCrmNativo(stateBase.crm)
   const descSetup = isEmpty
     ? 'Sem integração de CRM'
     : setupDetailParts.length
@@ -434,6 +433,9 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     : mrrDetailParts.length
       ? mrrDetailParts.join(' + ')
       : 'Integração padrão incluída'
+  const mensalidadeParts = ['Horas']
+  if (_mTar > 0) mensalidadeParts.push('Tarefas automáticas')
+  if (_mCamp > 0) mensalidadeParts.push('Campos personalizados (' + stateBase.integCampos + ')')
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -469,20 +471,17 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${stateBase.empresa || 'Cliente'}`,
     pacote_horas: String(r.horasEfetivas),
     preco_mensalidade: `${fmt(precoFinal)}/mês`,
-    mensalidade_completa: mrrInteg > 0 ? fmt(precoFinal) + '/mês + ' + fmt(mrrInteg) + '/mês' : fmt(precoFinal) + '/mês',
+    mensalidade_completa_somada: fmt(precoFinal + mrrInteg) + '/mês',
+    mensalidade_detalhamento: mensalidadeParts.join(' + '),
     fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     preco_whatsapp: stateBase.whatsAtivo
       ? `${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`
       : 'Não incluso',
     total_geral_mes: fmt(totalMensal) + '/mês',
-    detalhe_desconto: 'Preço padrão',
-    preco_setup: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
-    descricao_setup: descSetup,
     vendedor_nome: u.nome || '',
     vendedor_email: u.email || '',
     vendedor_telefone: u.telefone || '',
     vendedor_cidade: u.cidade || '',
-    desconto_pct: 0,
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
@@ -503,9 +502,6 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
-    // Legado — backward compatibility
-    preco_setup_basico: (isCrmNat || isEmpty) ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
-    total_avancado: fmt(totalMensal) + '/mês'
   }
   const colored = JSON.stringify(payload, null, 2)
     .replace(/"([^"]+)":/g, `<span style="color:#93C5FD">"$1"</span>:`)

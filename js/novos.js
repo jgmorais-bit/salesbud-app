@@ -328,7 +328,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     val = new Date(hoje.getTime() + 15 * 86400000), // Validade fixa: 15 dias
     fmtD = (d) => d.toLocaleDateString('pt-BR')
   /* Build detalhamentos de integração */
-  const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(state)
+  const { setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(state)
   const setupDetailParts = []
   if (_sCrm > 0) setupDetailParts.push('CRM personalizado')
   if (_sRegras > 0) setupDetailParts.push('Personalização de regras')
@@ -336,7 +336,6 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
   if (_sTar > 0) setupDetailParts.push('Tarefas automáticas')
   if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco)' : ' blocos)'))
   const isEmpty = !state.crm || state.crm === ''
-  const isCrmNat = isCrmNativo(state.crm)
   const descSetup = isEmpty
     ? 'Sem integração de CRM'
     : setupDetailParts.length
@@ -351,6 +350,9 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     : mrrDetailParts.length
       ? mrrDetailParts.join(' + ')
       : 'Integração padrão incluída'
+  const mensalidadeParts = ['Horas']
+  if (_mTar > 0) mensalidadeParts.push('Tarefas automáticas')
+  if (_mCamp > 0) mensalidadeParts.push('Campos personalizados (' + state.integCampos + ')')
   /* Build adicionais list */
   const adicCfg = getAdicionaisConfig()
   const adicAtivos = []
@@ -373,23 +375,18 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${state.empresa || '(empresa)'}`,
     pacote_horas: String(horasEfetivas),
     preco_mensalidade: precoFinal ? fmt(precoFinal) + '/mês' : 'Sob consulta',
-    mensalidade_completa: precoFinal
-      ? (mrrInteg > 0 ? fmt(precoFinal) + '/mês + ' + fmt(mrrInteg) + '/mês' : fmt(precoFinal) + '/mês')
-      : 'Sob consulta',
+    mensalidade_completa_somada: precoFinal ? fmt(precoFinal + mrrInteg) + '/mês' : 'Sob consulta',
+    mensalidade_detalhamento: mensalidadeParts.join(' + '),
     fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     preco_whatsapp:
       state.whatsAtivo && state.whatsUsers > 0
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
         : 'Não incluso',
     total_geral_mes: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta',
-    detalhe_desconto: 'Preço padrão', // Valor fixo — desconto removido da UI
-    preco_setup: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
-    descricao_setup: descSetup,
     vendedor_nome: currentUser.nome,
     vendedor_email: currentUser.email,
     vendedor_telefone: currentUser.telefone || '',
     vendedor_cidade: currentUser.cidade || '',
-    desconto_pct: 0, // Valor fixo — desconto removido da UI
     template_url: cfg.templateUrl || '',
     template_versao: cfg.templateVersao || '',
     data_proposta: fmtD(hoje),
@@ -411,17 +408,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     mrr_integracao_detalhamento: mrrDetalhe,
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
-    adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
-    // Legado — backward compatibility
-    integ_regras: state.integRegras,
-    integ_pipelines: state.integPipelines,
-    integ_tarefas: state.integTarefas,
-    integ_campos: state.integCampos,
-    integ_voip: state.integVoip || 'Sem VOIP',
-    mrr_adicionais: mrrAdicionais,
-    adicionais_ativos: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
-    preco_setup_basico: (isCrmNat || isEmpty) ? 'Gratuito' : fmt(ip.crm_personalizado_setup),
-    total_avancado: totalGeral != null ? fmt(totalGeral) + '/mês' : 'Sob consulta'
+    adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso'
   }
   const colored = JSON.stringify(data, null, 2)
     .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
