@@ -330,11 +330,11 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
   /* Build detalhamentos de integração */
   const { ip, isRd, setupCrm: _sCrm, setupRegras: _sRegras, setupPipelines: _sPipe, setupTarefas: _sTar, setupCampos: _sCamp, blocosC: _bC, mrrTarefas: _mTar, mrrCampos: _mCamp } = calcIntegModular(state)
   const setupDetailParts = []
-  if (_sCrm > 0) setupDetailParts.push('CRM personalizado ' + fmt(_sCrm))
-  if (_sRegras > 0) setupDetailParts.push('Personalização de regras ' + fmt(_sRegras))
-  if (_sPipe > 0) setupDetailParts.push(state.integPipelines + (_sPipe / (ip.pipeline_adicional_setup || 400) === 1 ? ' pipeline adicional ' : ' pipelines adicionais ') + fmt(_sPipe))
-  if (_sTar > 0) setupDetailParts.push('Tarefas automáticas ' + fmt(_sTar))
-  if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco) ' : ' blocos) ') + fmt(_sCamp))
+  if (_sCrm > 0) setupDetailParts.push('CRM personalizado')
+  if (_sRegras > 0) setupDetailParts.push('Personalização de regras')
+  if (_sPipe > 0) setupDetailParts.push(state.integPipelines + (state.integPipelines === 1 ? ' pipeline adicional' : ' pipelines adicionais'))
+  if (_sTar > 0) setupDetailParts.push('Tarefas automáticas')
+  if (_sCamp > 0) setupDetailParts.push(state.integCampos + ' campos (' + _bC + (_bC === 1 ? ' bloco)' : ' blocos)'))
   const isEmpty = !state.crm || state.crm === ''
   const isCrmNat = isCrmNativo(state.crm)
   const descSetup = isEmpty
@@ -343,8 +343,8 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
       ? setupDetailParts.join(' + ')
       : 'CRM nativo — setup gratuito'
   const mrrDetailParts = []
-  if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
-  if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + state.integCampos + ') ' + fmt(_mCamp) + '/mês')
+  if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas')
+  if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + state.integCampos + ')')
   const isSemCrm = isEmpty
   const mrrDetalhe = isSemCrm
     ? ''
