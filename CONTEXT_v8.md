@@ -1,5 +1,5 @@
 # SalesBud Propostas -- Context Document v8
-> Ultima atualizacao: 31/03/2026 -- Fixes pos-Sprint 6: payload, login, reenviar, template slide unico
+> Ultima atualizacao: 01/04/2026 -- Sprint 7: modularizacao codebase + fixes sessao 2 (payload limpo, mensalidade padronizada)
 
 ## Projeto
 
@@ -9,7 +9,7 @@ Gerador de propostas comerciais interno para o time de vendas SalesBud. Frontend
 - **Repositorio**: https://github.com/jgmorais-bit/salesbud-app (publico)
 - **Pasta local**: ~/salesbud-propostas/
 - **Branch**: main (fixes diretos) | feature branches + PR para sprints
-- **Arquivos**: index.html + styles.css + app.js
+- **Arquivos**: index.html + styles.css + js/ (9 modulos) + app.js (deprecado, stub de compatibilidade)
 - **Desktop only** -- nao ha versao mobile, sem emojis
 
 ---
@@ -37,12 +37,25 @@ Gerador de propostas comerciais interno para o time de vendas SalesBud. Frontend
 - Fallback localStorage quando Supabase offline
 - Controle de acesso: vendedor vs admin
 
+### Codebase modularizado (Sprint 7)
+app.js separado em 9 modulos em js/:
+- config.js (347 linhas) -- globals, constantes, Supabase init, sync
+- pricing.js (333 linhas) -- calculos de preco, tabelas, WhatsApp
+- ui.js (173 linhas) -- telas, toast, utilitarios, breakdown
+- auth.js (318 linhas) -- login/logout, sessao, setup, senha
+- novos.js (515 linhas) -- formulario Novos Clientes
+- base.js (595 linhas) -- formulario Clientes de Base
+- historico.js (719 linhas) -- CRUD historico, export, PDF, reenviar
+- admin.js (769 linhas) -- config UI, tabelas, usuarios CRUD
+- main.js (278 linhas) -- DOMContentLoaded, iniciarApp, navTo, webhook
+
 ### Make -- automacao 100% operacional (8 modulos + Resume)
 ```
 Webhooks (1) -> Drive Copy (3) -> Slides Template (4) ->
 Slides API Call/Delete (14) -> [Resume] -> Tools Set Variable (20) ->
 Drive Download/PDF (11) -> Gmail Send (16) -> Webhooks Response (7)
 ```
+Plano: Core (~$9/mes)
 
 ### Seguranca
 - Supabase Auth com bcrypt
@@ -67,7 +80,7 @@ URL: https://jgmorais-bit.github.io/salesbud-app
 URL cenario: https://us2.make.com/2013800/scenarios/4420296/edit
 Webhook URL: https://hook.us2.make.com/zlre1nfzl93qufepv8vns9g5dgesclqc
 Scheduling: Immediately as data arrives
-Plano: Free (upgrade pra Core ~$9/mes quando liberar pro time)
+Plano: Core (~$9/mes)
 ```
 
 ### Supabase
@@ -210,7 +223,8 @@ O CS informa o consumo atual do cliente e propoe horas ADICIONAIS. O sistema cal
 4. CS informa horas mensais adicionais (campo direto ou calculadora de consumo)
    - totalHoras = horasAtuais + horasAdicionais
    - Linha informativa: "Atual: Xh + Adicional: Yh = Novo pacote: Zh"
-   - Calculadora: estimativa - horasAtuais = adicional (minimo 0)
+   - Calculadora: coloca estimativa diretamente como horas adicionais (SEM subtrair horasAtuais)
+     O CS insere os novos usuarios na calculadora -- o resultado ja sao as horas adicionais, nao o total
 5. CS configura componentes de integracao (mesmos de Novos Clientes)
 6. CS configura WhatsApp e adicionais opcionais
 7. App calcula:
@@ -282,7 +296,9 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | {{crm_cliente}} | HubSpot |
 | {{pacote_horas}} | 100 |
 | {{preco_mensalidade}} | R$ 599/mes |
-| {{fee_manutencao}} | R$ 150/mes ou "Nao incluso" |
+| {{mensalidade_completa_somada}} | R$ 749/mes |
+| {{mensalidade_detalhamento}} | Horas + Tarefas automaticas |
+| {{fee_manutencao}} | R$ 150/mes ou "" |
 | {{mrr_integracao_detalhamento}} | ver regras abaixo |
 | {{setup_total}} | R$ 1.400 ou "Gratuito" |
 | {{setup_detalhamento}} | ver regras abaixo |
@@ -291,10 +307,17 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | {{adicionais_lista}} | Chat com Bud R$ 150/mes |
 | {{total_geral_mes}} | R$ 2.790/mes |
 | {{vendedor_nome}} | Joao Silva |
-| {{data_proposta}} | 31/03/2026 |
+| {{data_proposta}} | 01/04/2026 |
+
+### Formato padronizado no template
+- Mensalidade: `Total: {{mensalidade_completa_somada}} || Ref: {{mensalidade_detalhamento}}`
+- Setup: `Total: {{setup_total}} || Ref: {{setup_detalhamento}}`
 
 ### Tags removidas do Make (obsoletas)
-- `preco_setup`, `preco_setup_basico`, `total_avancado`
+- `mensalidade_completa`, `preco_setup`, `preco_setup_basico`, `total_avancado`
+- `detalhe_desconto`, `desconto_pct`, `descricao_setup`
+- `integ_regras`, `integ_pipelines`, `integ_tarefas`, `integ_campos`, `integ_voip`
+- `mrr_adicionais`, `adicionais_ativos`
 
 ---
 
@@ -335,18 +358,16 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | contato_email | Email do contato |
 | titulo_proposta | "Salesbud - Apresentacao e Proposta - {empresa}" |
 | pacote_horas | Quantidade de horas do pacote |
-| preco_mensalidade | Preco mensal do pacote |
-| fee_manutencao | MRR de integracao formatado ou "Nao incluso" |
+| preco_mensalidade | Preco mensal so do pacote de horas |
+| mensalidade_completa_somada | Soma horas + MRR integracao (ex: "R$ 1.459/mes") |
+| mensalidade_detalhamento | Componentes MRR sem R$ (ex: "Horas + Tarefas automaticas") |
+| fee_manutencao | MRR de integracao formatado ou "" quando zero |
 | preco_whatsapp | WhatsApp formatado |
-| total_geral_mes | MRR total |
-| detalhe_desconto | "Preco padrao" (fixo) |
-| preco_setup | Setup total numerico (legado) |
-| descricao_setup | Identico a setup_detalhamento (ver regras abaixo) |
+| total_geral_mes | MRR total (horas + integ + adicionais + WhatsApp) |
 | vendedor_nome | Nome do vendedor |
 | vendedor_email | Email do vendedor |
 | vendedor_telefone | Telefone do vendedor |
 | vendedor_cidade | Cidade do vendedor |
-| desconto_pct | 0 (fixo) |
 | template_url | URL do template |
 | template_versao | Versao do template |
 | data_proposta | Data formatada |
@@ -362,28 +383,43 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 | voip_status | "Incluso" / "Consultar" / "Nao incluso" |
 | setup_total | "Gratuito" ou valor formatado (ex: "R$ 1.400") |
 | setup_detalhamento | ver regras abaixo |
-| mrr_integracao | MRR de integracao formatado |
+| mrr_integracao | MRR de integracao formatado ou "" quando zero |
 | mrr_integracao_detalhamento | ver regras abaixo |
 | adicionais_lista | Lista de adicionais ativos |
 | adicionais_total | Total de adicionais MRR |
 
-### Regras de formatacao do payload (6 cenarios cobertos)
+### Regras de formatacao do payload
+
+**`mensalidade_completa_somada`**
+- Sempre: `fmt(precoFinal + mrrInteg) + '/mes'`
+- Ex com integracao: `"R$ 1.459/mes"`, sem integracao: `"R$ 449/mes"`
+
+**`mensalidade_detalhamento`**
+- Sempre inclui "Horas"; adiciona componentes MRR ativos sem valores R$
+- Ex: `"Horas + Tarefas automaticas + Campos personalizados (5)"`, ou apenas `"Horas"`
+
+**`fee_manutencao`**
+- mrrInteg > 0: valor formatado, ex: `"R$ 150/mes"`
+- mrrInteg = 0: `""` (string vazia -- desaparece no template)
+
+**`mrr_integracao`**
+- mrrInteg > 0: `"R$ X/mes"`
+- mrrInteg = 0: `""`
 
 **`mrr_integracao_detalhamento`**
-- CRM nao selecionado: `"Sem integracao de CRM"`
-- CRM nativo, sem extras pagos: `"Integracao padrao incluida"`
-- Com extras: `"Tarefas automaticas R$ 50/mes + Campos personalizados (5) R$ 100/mes"`
+- CRM = "Sem CRM": `""` (string vazia)
+- CRM valido, sem extras MRR: `"Integracao padrao incluida"`
+- Com extras: componentes sem R$, ex: `"Tarefas automaticas + Campos personalizados (5)"`
 
 **`setup_total`**
 - Setup = 0: `"Gratuito"`
 - Setup > 0: valor formatado, ex: `"R$ 1.400"`
 
-**`setup_detalhamento` / `descricao_setup`** (identicos)
-- CRM nao selecionado: `"Sem integracao de CRM"`
+**`setup_detalhamento`**
+- CRM = "Sem CRM": `"Sem integracao de CRM"`
 - CRM nativo, sem extras de setup: `"CRM nativo -- setup gratuito"`
-- Com extras: itens joined por " + ", ex: `"CRM personalizado R$ 600 + Personalizacao de regras R$ 900"`
-  - Itens possiveis: "CRM personalizado R$X", "Personalizacao de regras R$X", "N pipeline(s) adicional(is) R$X", "Tarefas automaticas R$X", "N campos (B bloco(s)) R$X"
-  - "CRM nativo" nunca aparece no detalhamento de setup (e gratuito, nao e listado)
+- Com extras: componentes sem R$, ex: `"CRM personalizado + Personalizacao de regras + 2 pipelines adicionais"`
+  - Itens possiveis: "CRM personalizado", "Personalizacao de regras", "N pipeline(s) adicional(is)", "Tarefas automaticas", "N campos (B bloco(s))"
 
 **`voip_status`**
 - VOIP na lista de inclusos: `"Incluso"`
@@ -391,17 +427,7 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 - Sem VOIP selecionado: `"Nao incluso"`
 
 ### Variaveis exclusivas de Novos Clientes
-| Variavel | Descricao |
-|---|---|
-| integ_regras | Boolean (legado) |
-| integ_pipelines | Numerico (legado) |
-| integ_tarefas | Boolean (legado) |
-| integ_campos | Numerico (legado) |
-| integ_voip | String (legado) |
-| mrr_adicionais | Numerico (legado) |
-| adicionais_ativos | String (legado) |
-| preco_setup_basico | "Gratuito" (nativo ou sem CRM) ou valor CRM personalizado |
-| total_avancado | Total com tudo incluso |
+Nenhuma variavel exclusiva (alem das compartilhadas acima).
 
 ### Variaveis exclusivas de Base
 | Variavel | Descricao |
@@ -438,6 +464,11 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 14. **Template slide unico** -- 3 slides antigos (Basica/Intermediaria/Avancada) substituidos por 1 slide modular com tags novas. Template ID inalterado.
 15. **Loading screen anti-flash** -- overlay `screen-loading` cobre login/app durante verificacao de sessao. `screen-login` nao tem mais `active` por padrao. Timeout de 5s como fallback.
 16. **"Manter conectado" OFF** -- grava `salesbud_no_persist` no localStorage + `salesbud_session_temp` no sessionStorage. Ao reabrir o browser (sessionStorage limpo), init detecta e faz signOut automatico antes de restaurar sessao.
+17. **Codebase modularizado (Sprint 7)** -- app.js (3984 linhas) separado em 9 modulos em js/. app.js original substituido por stub de deprecacao. index.html carrega os 9 modulos na ordem correta.
+18. **Payload limpo** -- 14 variaveis legadas removidas. Sem "Nao incluso" em campos numericos: usa string vazia "" para fee_manutencao, mrr_integracao quando zero.
+19. **Calculadora Base sem subtracao** -- `aplicarBaseCalc()` coloca estimativa diretamente como horas adicionais, sem subtrair horasAtuais. CS insere apenas novos usuarios na calculadora.
+20. **Detalhamento sem R$** -- setup_detalhamento e mrr_integracao_detalhamento listam componentes por nome; valores ficam em setup_total e mrr_integracao respectivamente.
+21. **Mensalidade formato Total + Ref** -- padrao identico ao setup: mensalidade_completa_somada (total unico) + mensalidade_detalhamento (componentes sem R$).
 
 ---
 
@@ -451,9 +482,10 @@ Regras: linhas so aparecem se valor > 0. Se setup = 0, bloco omitido. Se VOIP = 
 
 ## Pendencias
 
-- Tabela de precos Base: CS vai definir valores especificos (hoje usa mesma V2 como default)
+- Tabela de precos Base: CS (Lilian/Carol) vai definir valores especificos (hoje usa mesma V2 como default)
+- Adicionais (Chat com Bud, Contas Enriquecimento): removidos do template por enquanto; reativar quando tiverem precos definidos
+- Testes automatizados: proximo passo apos estabilizacao do payload
 - Migracao de contas pessoais para organizacionais (GUIA_MIGRACAO.md)
-- Upgrade do Make para plano Core (~$9/mes)
 - Paginacao no historico (quando > 500 propostas)
 - V3 futura: emissao automatizada de minuta/contrato
 
