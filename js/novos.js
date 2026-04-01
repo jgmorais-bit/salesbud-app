@@ -345,8 +345,9 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
   const mrrDetailParts = []
   if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
   if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + state.integCampos + ') ' + fmt(_mCamp) + '/mês')
-  const mrrDetalhe = isEmpty
-    ? 'Sem integração de CRM'
+  const isSemCrm = isEmpty
+  const mrrDetalhe = isSemCrm
+    ? ''
     : mrrDetailParts.length
       ? mrrDetailParts.join(' + ')
       : 'Integração padrão incluída'
@@ -372,7 +373,10 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${state.empresa || '(empresa)'}`,
     pacote_horas: String(horasEfetivas),
     preco_mensalidade: precoFinal ? fmt(precoFinal) + '/mês' : 'Sob consulta',
-    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mensalidade_completa: precoFinal
+      ? (mrrInteg > 0 ? fmt(precoFinal) + '/mês + ' + fmt(mrrInteg) + '/mês' : fmt(precoFinal) + '/mês')
+      : 'Sob consulta',
+    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     preco_whatsapp:
       state.whatsAtivo && state.whatsUsers > 0
         ? `${fmt(whatsTotal)}/mês para ${state.whatsUsers} usuários`
@@ -403,7 +407,7 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     // Totais de integração
     setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
     setup_detalhamento: descSetup,
-    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     mrr_integracao_detalhamento: mrrDetalhe,
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
