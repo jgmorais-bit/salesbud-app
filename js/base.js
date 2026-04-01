@@ -117,9 +117,7 @@ function baseCalcPreview() {
 function aplicarBaseCalc() {
   const t = parseInt(document.getElementById('base-calc-resultado')?.dataset.valor) || 0
   if (!t) return
-  const horasAtuais = parseInt(document.getElementById('base-horas-atual')?.value) || 0
-  const totalDesejado = Math.max(50, t)
-  const adicional = Math.max(0, totalDesejado - horasAtuais)
+  const adicional = Math.max(0, t)
   document.getElementById('base-horas-input').value = adicional
   updateBase()
 }
@@ -430,8 +428,9 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
   const mrrDetailParts = []
   if (_mTar > 0) mrrDetailParts.push('Tarefas automáticas ' + fmt(_mTar) + '/mês')
   if (_mCamp > 0) mrrDetailParts.push('Campos personalizados (' + stateBase.integCampos + ') ' + fmt(_mCamp) + '/mês')
-  const mrrDetalhe = isEmpty
-    ? 'Sem integração de CRM'
+  const isSemCrm = isEmpty
+  const mrrDetalhe = isSemCrm
+    ? ''
     : mrrDetailParts.length
       ? mrrDetailParts.join(' + ')
       : 'Integração padrão incluída'
@@ -470,7 +469,8 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     titulo_proposta: `Salesbud - Apresentacao e Proposta - ${stateBase.empresa || 'Cliente'}`,
     pacote_horas: String(r.horasEfetivas),
     preco_mensalidade: `${fmt(precoFinal)}/mês`,
-    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mensalidade_completa: mrrInteg > 0 ? fmt(precoFinal) + '/mês + ' + fmt(mrrInteg) + '/mês' : fmt(precoFinal) + '/mês',
+    fee_manutencao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     preco_whatsapp: stateBase.whatsAtivo
       ? `${fmt(whatsTotal)}/mês para ${stateBase.whatsUsers} usuários`
       : 'Não incluso',
@@ -498,7 +498,7 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     // Totais de integração
     setup_total: setupTotal > 0 ? fmt(setupTotal) : 'Gratuito',
     setup_detalhamento: descSetup,
-    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : 'Não incluso',
+    mrr_integracao: mrrInteg > 0 ? fmt(mrrInteg) + '/mês' : '',
     mrr_integracao_detalhamento: mrrDetalhe,
     // Adicionais
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
