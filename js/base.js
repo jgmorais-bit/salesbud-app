@@ -503,6 +503,12 @@ function renderBasePayload(r, precoFinal, totalMensal, whatsTotal, whatsPreco, s
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso',
   }
+  // Sanitiza payload — Make rejeita replaceText vazio
+  Object.keys(payload).forEach(key => {
+    if (payload[key] === '' || payload[key] === null || payload[key] === undefined) {
+      payload[key] = '\u2014'
+    }
+  })
   const colored = JSON.stringify(payload, null, 2)
     .replace(/"([^"]+)":/g, `<span style="color:#93C5FD">"$1"</span>:`)
     .replace(/: "([^"]*)"/g, `: <span style="color:#86EFAC">"$1"</span>`)

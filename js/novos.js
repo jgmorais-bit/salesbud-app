@@ -410,6 +410,12 @@ function renderPayload(horasEfetivas, precoFinal, mensalSB, totalGeral, whatsTot
     adicionais_lista: adicAtivos.length ? adicAtivos.join('; ') : 'Nenhum',
     adicionais_total: adicTotal > 0 ? fmt(adicTotal) + '/mês' : 'Não incluso'
   }
+  // Sanitiza payload — Make rejeita replaceText vazio
+  Object.keys(data).forEach(key => {
+    if (data[key] === '' || data[key] === null || data[key] === undefined) {
+      data[key] = '\u2014'
+    }
+  })
   const colored = JSON.stringify(data, null, 2)
     .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
     .replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>')
