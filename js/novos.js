@@ -457,7 +457,7 @@ function calcPreviewHoras() {
     d = parseFloat(document.getElementById('calc-dias').value) || 0,
     t = Math.round(u * h * d),
     el = document.getElementById('calc-resultado')
-  el.textContent = '~' + t.toLocaleString('pt-BR') + 'h/mês'
+  el.textContent = t < 50 ? '50h/mês (mínimo)' : '~' + t.toLocaleString('pt-BR') + 'h/mês'
   el.dataset.valor = t
   document.getElementById('calc-formula').textContent = `${u} usuário(s) × ${h}h × ${d} dias`
 }

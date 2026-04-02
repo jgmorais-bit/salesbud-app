@@ -245,15 +245,15 @@
             <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px">
               <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px">Calculadora de consumo</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="calc-usuarios" value="7" min="1" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="calc-usuarios" value="1" min="1" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Horas/dia por user</label><input type="number" class="field-input" id="calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Dias úteis/mês</label><input type="number" class="field-input" id="calc-dias" value="22" min="1" max="31" oninput="calcPreviewHoras()" style="margin-top:4px;font-weight:700" /></div>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
                 <div>
                   <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa mensal</div>
-                  <div style="font-size:16px;font-weight:800;color:var(--navy)" id="calc-resultado">~308h/mês</div>
-                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="calc-formula">7 × 2h × 22 dias</div>
+                  <div style="font-size:16px;font-weight:800;color:var(--navy)" id="calc-resultado">50h/mês (mínimo)</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="calc-formula">1 usuário(s) × 2h × 22 dias</div>
                 </div>
                 <button onclick="aplicarCalcHoras()" style="padding:9px 16px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar esse valor</button>
               </div>
@@ -479,15 +479,15 @@
             <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px">
               <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px">Calculadora de consumo</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="7" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
+                <div><label class="field-label" style="font-size:10.5px">Usuários</label><input type="number" class="field-input" id="base-calc-usuarios" value="1" min="1" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Horas/dia</label><input type="number" class="field-input" id="base-calc-hdia" value="2" min="0.5" max="8" step="0.5" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
                 <div><label class="field-label" style="font-size:10.5px">Dias úteis</label><input type="number" class="field-input" id="base-calc-dias" value="22" min="1" max="31" oninput="baseCalcPreview()" style="margin-top:4px;font-weight:700" /></div>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px">
                 <div>
                   <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estimativa</div>
-                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">~308h</div>
-                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">7 x 2h x 22 dias</div>
+                  <div style="font-size:15px;font-weight:800;color:var(--navy)" id="base-calc-resultado">50h (mínimo)</div>
+                  <div style="font-size:10.5px;color:var(--text4);margin-top:1px" id="base-calc-formula">1 × 2h × 22 dias</div>
                 </div>
                 <button onclick="aplicarBaseCalc()" style="padding:8px 14px;background:var(--pink);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Usar esse valor</button>
               </div>

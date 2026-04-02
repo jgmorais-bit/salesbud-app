@@ -108,7 +108,7 @@ function baseCalcPreview() {
     t = Math.round(u * h * d),
     el = document.getElementById('base-calc-resultado')
   if (el) {
-    el.textContent = '~' + t.toLocaleString('pt-BR') + 'h'
+    el.textContent = t < 50 ? '50h (mínimo)' : '~' + t.toLocaleString('pt-BR') + 'h'
     el.dataset.valor = t
   }
   const f = document.getElementById('base-calc-formula')
