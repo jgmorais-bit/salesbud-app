@@ -119,6 +119,11 @@ function validarCampos() {
 /* ════════════════════════════════════════
    UPDATE / CALCULOS (Novos Clientes)
 ════════════════════════════════════════ */
+function enforceHorasMin() {
+  const el = document.getElementById('horas-input')
+  const v = parseInt(el.value) || 0
+  if (v < 50) { el.value = 50; update() }
+}
 function update() {
   state.empresa = document.getElementById('empresa').value.trim()
   state.crm = document.getElementById('crm').value
@@ -157,7 +162,6 @@ function update() {
   state.whatsUsers = parseInt(document.getElementById('whats-users')?.value) || 0
 
   let hd = parseInt(document.getElementById('horas-input').value) || 0
-  if (hd > 0 && hd < 50) { hd = 50; document.getElementById('horas-input').value = 50 }
   const r = calcPrecoExato(hd)
   const aA = document.getElementById('horas-acima-aviso'),
     aI = document.getElementById('horas-interpolado-aviso')
