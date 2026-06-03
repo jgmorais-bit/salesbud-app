@@ -1,0 +1,5 @@
+
+# Segredos locais — nunca versionar
+.env
+.env.*
+!.env.example
