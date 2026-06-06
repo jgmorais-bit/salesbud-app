@@ -774,11 +774,12 @@
           </div>
           <div style="background:var(--navy);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;position:relative">
             <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">SQL — cole no Supabase SQL Editor</div>
-            <pre id="supabase-sql" style="font-family:'DM Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.7);white-space:pre-wrap;line-height:1.6;margin:0">-- Tabela de propostas (histórico compartilhado)
+            <pre id="supabase-sql" style="font-family:'DM Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.7);white-space:pre-wrap;line-height:1.6;margin:0">-- Tabela de propostas
 CREATE TABLE IF NOT EXISTS propostas (
   id            BIGSERIAL PRIMARY KEY,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   vendedor_id   INTEGER,
+  vendedor_uuid UUID,
   vendedor_nome TEXT,
   tipo_proposta TEXT DEFAULT 'novo',
   nome_empresa  TEXT,
@@ -797,15 +798,30 @@ CREATE TABLE IF NOT EXISTS propostas (
   data_proposta TEXT,
   validade_proposta TEXT
 );
+-- garante a coluna de dono mesmo em instalacao antiga
+ALTER TABLE propostas ADD COLUMN IF NOT EXISTS vendedor_uuid UUID;
 
 -- Habilita RLS (Row Level Security)
 ALTER TABLE propostas ENABLE ROW LEVEL SECURITY;
 
--- Policy: todos os usuários autenticados podem ler e inserir
-CREATE POLICY "Acesso total para autenticados"
-  ON propostas FOR ALL
-  USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');</pre>
+-- Helper: checa admin server-side (SECURITY DEFINER; evita recursao; requer a tabela public.perfis ja existente)
+CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean
+  LANGUAGE sql SECURITY DEFINER SET search_path = public STABLE AS $$
+  SELECT EXISTS (SELECT 1 FROM public.perfis WHERE id = auth.uid() AND perfil = 'admin');
+$$;
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
+-- Policies por dono: cada vendedor ve SO as suas; admin ve todas
+CREATE POLICY propostas_select ON propostas FOR SELECT TO authenticated
+  USING (vendedor_uuid = auth.uid() OR public.is_admin());
+CREATE POLICY propostas_insert ON propostas FOR INSERT TO authenticated
+  WITH CHECK (vendedor_uuid = auth.uid() OR public.is_admin());
+CREATE POLICY propostas_update ON propostas FOR UPDATE TO authenticated
+  USING (vendedor_uuid = auth.uid() OR public.is_admin())
+  WITH CHECK (vendedor_uuid = auth.uid() OR public.is_admin());
+CREATE POLICY propostas_delete ON propostas FOR DELETE TO authenticated
+  USING (public.is_admin());</pre>
             <button onclick="copySql()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;font-family:inherit">Copiar SQL</button>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">

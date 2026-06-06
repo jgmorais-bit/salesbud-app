@@ -670,7 +670,7 @@ async function renderTabela() {
   tbody.innerHTML = filtered
     .map(
       (u) =>
-        `<tr><td><div class="td-name"><div class="td-avatar">${initials(u.nome)}</div>${esc(u.nome)}</div></td><td>${esc(u.cargo || '—')}</td><td>${esc(u.email)}</td><td>${esc(u.telefone || '—')}</td><td><span class="badge ${u.perfil === 'admin' ? 'badge-admin' : 'badge-seller'}">${u.perfil === 'admin' ? 'Admin' : 'Vendedor'}</span></td><td><span class="badge ${u.status === 'ativo' ? 'badge-active' : 'badge-inactive'}">${u.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td><td><div class="row-actions"><button class="btn-icon" onclick="editarUsuario('${u.id}')">Editar</button>${String(u.id) !== String(currentUser.id) ? `<button class="btn-icon danger" onclick="toggleStatus('${u.id}')">${u.status === 'ativo' ? 'Desativar' : 'Ativar'}</button>` : ''}</div></td></tr>`
+        `<tr><td><div class="td-name"><div class="td-avatar">${initials(u.nome)}</div>${esc(u.nome)}</div></td><td>${esc(u.cargo || '—')}</td><td>${esc(u.email)}</td><td>${esc(u.telefone || '—')}</td><td><span class="badge ${u.perfil === 'admin' ? 'badge-admin' : 'badge-seller'}">${u.perfil === 'admin' ? 'Admin' : 'Vendedor'}</span></td><td><span class="badge ${u.status === 'ativo' ? 'badge-active' : 'badge-inactive'}">${u.status === 'ativo' ? 'Ativo' : u.status === 'pendente' ? 'Pendente' : 'Inativo'}</span></td><td><div class="row-actions"><button class="btn-icon" onclick="editarUsuario('${u.id}')">Editar</button>${String(u.id) !== String(currentUser.id) ? `<button class="btn-icon danger" onclick="toggleStatus('${u.id}')">${u.status === 'ativo' ? 'Desativar' : 'Ativar'}</button>` : ''}</div></td></tr>`
     )
     .join('')
 }
@@ -732,8 +732,8 @@ async function salvarUsuario() {
     errEl.style.display = 'block'
     return
   }
-  if (senha && senha.length < 6) {
-    errEl.textContent = 'Senha: mín. 6 caracteres.'
+  if (senha && senha.length < 12) {
+    errEl.textContent = 'Senha: mín. 12 caracteres.'
     errEl.style.display = 'block'
     return
   }

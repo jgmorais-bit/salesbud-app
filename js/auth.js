@@ -80,6 +80,16 @@ async function fazerLogin() {
           }
           return
         }
+        if (perfil && perfil.status !== 'ativo') {
+          await supabaseClient.auth.signOut().catch(() => {})
+          errEl.textContent = 'Conta aguardando ativação pelo administrador.'
+          errEl.style.display = 'block'
+          if (btnEl) {
+            btnEl.disabled = false
+            btnEl.textContent = 'Entrar'
+          }
+          return
+        }
       }
     } catch (e) {
       console.warn('fazerLogin Supabase:', e.message)
@@ -148,16 +158,16 @@ async function concluirSetup() {
     errEl = document.getElementById('setup-error')
   const adminOk = inputs.some((inp) => {
     const u = DB.users.find((u) => u.id === parseInt(inp.dataset.uid))
-    return u?.perfil === 'admin' && inp.value.trim().length >= 6
+    return u?.perfil === 'admin' && inp.value.trim().length >= 12
   })
   if (!adminOk) {
-    errEl.textContent = 'Defina a senha de pelo menos um administrador (mínimo 6 caracteres).'
+    errEl.textContent = 'Defina a senha de pelo menos um administrador (mínimo 12 caracteres).'
     errEl.style.display = 'block'
     return
   }
   for (const inp of inputs) {
     const val = inp.value.trim()
-    if (val.length >= 6) {
+    if (val.length >= 12) {
       const u = DB.users.find((u) => u.id === parseInt(inp.dataset.uid))
       if (u) u.senha = await _h(val)
     }
@@ -221,8 +231,8 @@ async function confirmarNovaSenha() {
   const nova = document.getElementById('reset-nova-senha').value,
     conf = document.getElementById('reset-confirmar-senha').value,
     msg = document.getElementById('reset-msg')
-  if (nova.length < 6) {
-    msg.textContent = 'Senha deve ter no mínimo 6 caracteres.'
+  if (nova.length < 12) {
+    msg.textContent = 'Senha deve ter no mínimo 12 caracteres.'
     msg.style.cssText = 'display:block;color:var(--red);background:var(--red-bg)'
     return
   }
@@ -277,8 +287,8 @@ async function salvarNovaSenha() {
   const nova = document.getElementById('senha-nova').value,
     conf = document.getElementById('senha-confirmar').value,
     errEl = document.getElementById('modal-senha-error')
-  if (nova.length < 6) {
-    errEl.textContent = 'Senha deve ter no mínimo 6 caracteres.'
+  if (nova.length < 12) {
+    errEl.textContent = 'Senha deve ter no mínimo 12 caracteres.'
     errEl.style.display = 'block'
     return
   }
