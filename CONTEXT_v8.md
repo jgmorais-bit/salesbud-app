@@ -103,8 +103,8 @@ APIs: Drive, Slides, Gmail
 ### Google Drive
 ```
 Template Slides ID: 1noZ8EHZJ4EPUrvuowd2UZjl24Lj9QXKH2ErPClZT_XA
-Pasta Propostas: 1AZCtwIErvLvMZgHwie3xU9XtoFk0HrwC
-Permissao: Qualquer pessoa com o link = Editor
+Pasta Propostas: <REDIGIDO — Folder ID nao publicar; ver config interna>
+Permissao: Restrito (corrigido 2026-06)
 ```
 
 ---
@@ -496,10 +496,10 @@ Nenhuma variavel exclusiva (alem das compartilhadas acima).
 | Recurso | ID |
 |---|---|
 | Google Slides template | 1noZ8EHZJ4EPUrvuowd2UZjl24Lj9QXKH2ErPClZT_XA |
-| Google Drive folder | 1AZCtwIErvLvMZgHwie3xU9XtoFk0HrwC |
+| Google Drive folder | <REDIGIDO> |
 | Supabase project | nrmfjyjxppbbdpsfhcft.supabase.co |
-| Make scenario | https://us2.make.com/2013800/scenarios/4420296/edit |
-| Make webhook | https://hook.us2.make.com/zlre1nfzl93qufepv8vns9g5dgesclqc |
+| Make scenario | <REDIGIDO — nao publicar> |
+| Make webhook | <REDIGIDO — endpoint; rotacionar no Make (ja foi publico)> |
 
 ---
 
