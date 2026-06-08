@@ -77,8 +77,8 @@ URL: https://jgmorais-bit.github.io/salesbud-app
 
 ### Make
 ```
-URL cenario: https://us2.make.com/2013800/scenarios/4420296/edit
-Webhook URL: https://hook.us2.make.com/zlre1nfzl93qufepv8vns9g5dgesclqc
+URL cenario: <REDIGIDO — nao publicar>
+Webhook URL: <REDIGIDO — endpoint; ROTACIONAR no Make; exposto publicamente ate 2026-06-08>
 Scheduling: Immediately as data arrives
 Plano: Core (~$9/mes)
 ```
